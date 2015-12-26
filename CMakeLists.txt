@@ -71,6 +71,7 @@ set(CMAKE_CXX_FLAGS "-Wall -std=c++11 -O2 -ffast-math -ftree-vectorize ${EXTRA_F
 set(sdmnbase_SOURCES
     sdmnbase/Filter.cpp
     sdmnbase/FmDecode.cpp
+    sdmnbase/UDPSink.cpp
     sdmnbase/AudioOutput.cpp 
 )
 
@@ -78,6 +79,7 @@ set(sdmnbase_HEADERS
     include/AudioOutput.h
     include/Filter.h
     include/FmDecode.h
+    include/UDPSink.h
     include/MovingAverage.h
     include/Source.h
     include/SDRDaemon.h

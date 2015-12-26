@@ -32,7 +32,8 @@
 
 #include "util.h"
 #include "DataBuffer.h"
-#include "FmDecode.h"
+#include "Downsampler.h"
+#include "UDPSink.h"
 #include "AudioOutput.h"
 #include "MovingAverage.h"
 
@@ -59,12 +60,14 @@ void adjust_gain(SampleVector& samples, double gain)
  *
  * This code runs in a separate thread.
  */
-void write_output_data(AudioOutput *output, DataBuffer<Sample> *buf,
-                       unsigned int buf_minfill)
+void write_output_data(UDPSink *output,
+		DataBuffer<IQSample> *buf,
+        std::size_t buf_minfill)
 {
-    while (!stop_flag.load()) {
-
-        if (buf->queued_samples() == 0) {
+    while (!stop_flag.load())
+    {
+        if (buf->queued_samples() == 0)
+        {
             // The buffer is empty. Perhaps the output stream is consuming
             // samples faster than we can produce them. Wait until the buffer
             // is back at its nominal level to make sure this does not happen
@@ -72,16 +75,19 @@ void write_output_data(AudioOutput *output, DataBuffer<Sample> *buf,
             buf->wait_buffer_fill(buf_minfill);
         }
 
-        if (buf->pull_end_reached()) {
+        if (buf->pull_end_reached())
+        {
             // Reached end of stream.
             break;
         }
 
         // Get samples from buffer and write to output.
-        SampleVector samples = buf->pull();
+        IQSampleVector samples = buf->pull();
         output->write(samples);
-        if (!(*output)) {
-            fprintf(stderr, "ERROR: AudioOutput: %s\n", output->error().c_str());
+
+        if (!(*output))
+        {
+            fprintf(stderr, "ERROR: Output: %s\n", output->error().c_str());
         }
     }
 }
@@ -386,9 +392,10 @@ int main(int argc, char **argv)
         fprintf(stderr, "WARNING: can not install SIGTERM handler (%s)\n", strerror(errno));
     }
 
-    // Calculate number of samples in audio buffer.
-    unsigned int outputbuf_samples = 0;
+    // Calculate number of samples in output buffer.
+    unsigned int outputbuf_samples = 250000; // arbitrary
 
+    /*
     if (bufsecs < 0 && (outmode == MODE_ALSA || (outmode == MODE_RAW && filename == "-")))
     {
         // Set default buffer to 1 second for interactive output streams.
@@ -405,28 +412,29 @@ int main(int argc, char **argv)
        fprintf(stderr, "output buffer:     %.1f seconds\n", outputbuf_samples / double(pcmrate));
     }
 
-    // Prepare output writer.
-    std::unique_ptr<AudioOutput> audio_output;
 
     switch (outmode)
     {
         case MODE_RAW:
             fprintf(stderr, "writing raw 16-bit audio samples to '%s'\n", filename.c_str());
-            audio_output.reset(new RawAudioOutput(filename));
+            udp_output.reset(new RawAudioOutput(filename));
             break;
         case MODE_WAV:
             fprintf(stderr, "writing audio samples to '%s'\n", filename.c_str());
-            audio_output.reset(new WavAudioOutput(filename, pcmrate, stereo));
+            udp_output.reset(new WavAudioOutput(filename, pcmrate, stereo));
             break;
         case MODE_ALSA:
             fprintf(stderr, "playing audio to ALSA device '%s'\n", alsadev.c_str());
-            audio_output.reset(new AlsaAudioOutput(alsadev, pcmrate, stereo));
+            udp_output.reset(new AlsaAudioOutput(alsadev, pcmrate, stereo));
             break;
-    }
+    }*/
 
-    if (!(*audio_output))
+    // Prepare output writer.
+    std::unique_ptr<UDPSink> udp_output;
+
+    if (!(*udp_output))
     {
-        fprintf(stderr, "ERROR: AudioOutput: %s\n", audio_output->error().c_str());
+        fprintf(stderr, "ERROR: UDP Output: %s\n", udp_output->error().c_str());
         exit(1);
     }
 
@@ -460,8 +468,8 @@ int main(int argc, char **argv)
     double ifrate = srcsdr->get_sample_rate();
     fprintf(stderr, "IF sample rate:    %.0f Hz\n", ifrate);
 
-    double delta_if = tuner_freq - freq;
-    MovingAverage<float> ppm_average(40, 0.0f);
+    //double delta_if = tuner_freq - freq;
+    //MovingAverage<float> ppm_average(40, 0.0f);
 
     srcsdr->print_specific_parms();
 
@@ -476,11 +484,13 @@ int main(int argc, char **argv)
     //std::thread source_thread(read_source_data, std::move(up_srcsdr), &source_buffer);
     up_srcsdr->start(&source_buffer, &stop_flag);
 
-    if (!up_srcsdr) {
+    if (!up_srcsdr)
+    {
     	fprintf(stderr, "ERROR: source: %s\n", up_srcsdr->error().c_str());
     	exit(1);
     }
 
+    /*
     // The baseband signal is empty above 100 kHz, so we can
     // downsample to ~ 200 kS/s without loss of information.
     // This will speed up later processing stages.
@@ -491,35 +501,28 @@ int main(int argc, char **argv)
     double bandwidth_pcm = std::min(FmDecoder::default_bandwidth_pcm, 0.45 * pcmrate);
     fprintf(stderr, "audio sample rate: %u Hz\n", pcmrate);
     fprintf(stderr, "audio bandwidth:   %.3f kHz\n", bandwidth_pcm * 1.0e-3);
+    */
 
-    // Prepare decoder.
-    FmDecoder fm(ifrate,                            // sample_rate_if
-                 freq - tuner_freq,                 // tuning_offset
-                 pcmrate,                           // sample_rate_pcm
-                 stereo,                            // stereo
-                 FmDecoder::default_deemphasis,     // deemphasis,
-                 FmDecoder::default_bandwidth_if,   // bandwidth_if
-                 FmDecoder::default_freq_dev,       // freq_dev
-                 bandwidth_pcm,                     // bandwidth_pcm
-                 downsample);                       // downsample
+    // Prepare downsampler.
+    Downsampler dn;
 
     // If buffering enabled, start background output thread.
-    DataBuffer<Sample> output_buffer;
+    DataBuffer<IQSample> output_buffer;
     std::thread output_thread;
 
     if (outputbuf_samples > 0)
     {
         unsigned int nchannel = stereo ? 2 : 1;
         output_thread = std::thread(write_output_data,
-                               audio_output.get(),
+                               udp_output.get(),
                                &output_buffer,
                                outputbuf_samples * nchannel);
     }
 
-    SampleVector audiosamples;
+    IQSampleVector outsamples;
     bool inbuf_length_warning = false;
-    double audio_level = 0;
-    bool got_stereo = false;
+    //double audio_level = 0;
+    //bool got_stereo = false;
 
     double block_time = get_time();
 
@@ -544,6 +547,10 @@ int main(int argc, char **argv)
 
         block_time = get_time();
 
+        // Possible downsampling
+        dn.process(iqsamples, outsamples);
+
+        /*
         // Decode FM signal.
         fm.process(iqsamples, audiosamples);
 
@@ -591,6 +598,7 @@ int main(int argc, char **argv)
                 fprintf(stderr, "\nlost stereo signal\n");
             }
         }
+        */
 
         // Throw away first block. It is noisy because IF filters
         // are still starting up.
@@ -600,12 +608,12 @@ int main(int argc, char **argv)
             if (outputbuf_samples > 0)
             {
                 // Buffered write.
-                output_buffer.push(move(audiosamples));
+                output_buffer.push(move(outsamples));
             }
             else
             {
                 // Direct write.
-                audio_output->write(audiosamples);
+                udp_output->write(outsamples);
             }
         }
     }

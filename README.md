@@ -1,11 +1,11 @@
-SDRDaemon
+SDRdaemon
 =========
 
-**SDRDaemon** can be used to send I/Q samples read from a SDR device over the network via UDP.
+**SDRdaemon** can be used to send I/Q samples read from a SDR device over the network via UDP.
 
 <h1>Introduction</h1>
 
-**SDRDaemon** is a basic software-defined radio receiver that just sends the I/Q samples over the network via UDP. It was developed on the base of SDRDaemon (also found in this Github repo: https://github.com/f4exb/SDRDaemon) and shares a lot of the code for the interface with the SDR hardware devices.
+**SDRdaemon** is a basic software-defined radio receiver that just sends the I/Q samples over the network via UDP. It was developed on the base of SDRdaemon (also found in this Github repo: https://github.com/f4exb/SDRdaemon) and shares a lot of the code for the interface with the SDR hardware devices.
 
 Hardware supported:
 
@@ -14,9 +14,9 @@ Hardware supported:
   - **Airspy** is supported with _libairspy_ library.
   - **BladeRF** is supported with _libbladerf_ library.
 
-SDRDaemon can be used conveniently along with SDRAngel (found in this Github repo: https://github.com/f4exb/sdrangel) as the client application. So in this remote type of configuration you will need both an angel and a daemon :-)
+SDRdaemon can be used conveniently along with SDRAngel (found in this Github repo: https://github.com/f4exb/sdrangel) as the client application. So in this remote type of configuration you will need both an angel and a daemon :-)
 
-SDRDaemon requires:
+SDRdaemon requires:
 
  - Linux
  - C++11
@@ -27,7 +27,7 @@ SDRDaemon requires:
  - supported RTL-SDR DVB-T receiver or HackRF Rx/Tx
  - A computer or embedded device such as the Raspberry Pi 2. Raspberry Pi B can be used but will run high on CPU so you must provide adequate cooling for a sustained use.
 
-For the latest version, see https://github.com/f4exb/sdrdaemon
+For the latest version, see https://github.com/f4exb/SDRdaemon
 
 Branches:
 
@@ -44,9 +44,9 @@ Branches:
 
 <h2>RTL-SDR support</h2>
 
-The Osmocom RTL-SDR library must be installed before you can build SDRDaemon.
+The Osmocom RTL-SDR library must be installed before you can build SDRdaemon.
 See http://sdr.osmocom.org/trac/wiki/rtl-sdr for more information.
-SDRDaemon has been tested successfully with RTL-SDR 0.5.3. Normally your distribution should provide the appropriate librtlsdr package.
+SDRdaemon has been tested successfully with RTL-SDR 0.5.3. Normally your distribution should provide the appropriate librtlsdr package.
 If you go with your own installation of librtlsdr you have to specify the include path and library path. For example if you installed it in `/opt/install/librtlsdr` you have to add `-DRTLSDR_INCLUDE_DIR=/opt/install/librtlsdr/include -DRTLSDR_LIBRARY=/opt/install/librtlsdr/lib/librtlsdr.a` to the cmake options
 
 To install the library from a Debian/Ubuntu installation just do: 
@@ -87,7 +87,7 @@ Note: for the BladeRF to work effectively on FM broadcast frequencies you have t
   
 <h1>Installing</h1>
 
-To install SDRDaemon, download and unpack the source code and go to the
+To install SDRdaemon, download and unpack the source code and go to the
 top level directory. Then do like this:
 
  - `mkdir build`
@@ -112,11 +112,11 @@ Compile and install
 
 Basic usage:
 
- - `./sdrdaemon -t rrtlsdr -c freq=94600000` Use RTL-SDR device #0 and start tuned to 94.6 MHz
+ - `./SDRdaemon -t rrtlsdr -c freq=94600000` Use RTL-SDR device #0 and start tuned to 94.6 MHz
 
 Specify gain:
 
- - `./sdrdaemon -t rtlsdr -c freq=94600000,gain=22.9` Use RTL-SDR device #0 and start tuned to 94.6 MHz with a gain of 22.9 dB
+ - `./SDRdaemon -t rtlsdr -c freq=94600000,gain=22.9` Use RTL-SDR device #0 and start tuned to 94.6 MHz with a gain of 22.9 dB
 
 <h2>All options</h2>
 
@@ -150,7 +150,7 @@ Note that these options can be used both as the initial configuration as the arg
 <h3>HackRF</h3>
 
   - `freq=<int>` Desired tune frequency in Hz. Valid range from 1M to 6G. (default 100M: `100000000`)
-  - `srate=<int>` Device sample rate (default `5000000`). Valid values from 1M to 20M. In fact rates lower than 10M are not specified in the datasheets of the ADC chip however a rate of `1000000` (1M) still works well with SDRDaemon.
+  - `srate=<int>` Device sample rate (default `5000000`). Valid values from 1M to 20M. In fact rates lower than 10M are not specified in the datasheets of the ADC chip however a rate of `1000000` (1M) still works well with SDRdaemon.
   - `decim=<int>` log2 of the decimation factor. Samples collected from the device are downsampled by two to the power of this value. For a value greater than 0 (thus an effective downsampling) the size of the samples is increased to 2x16 bits.  
   - `lgain=<x>` LNA gain in dB. Valid values are: `0, 8, 16, 24, 32, 40, list`. `list` lists valid values and exits. (default `16`)
   - `vgain=<x>` VGA gain in dB. Valid values are: `0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52, 54, 56, 58, 60, 62, list`. `list` lists valid values and exits. (default `22`)
@@ -192,7 +192,7 @@ A string of comma separated key=value pairs in the same format as described in t
 
 <h1>License</h1>
 
-**SDRDaemon**, copyright (C) 2015, Edouard Griffiths, F4EXB
+**SDRdaemon**, copyright (C) 2015, Edouard Griffiths, F4EXB
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

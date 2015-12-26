@@ -34,7 +34,6 @@
 #include "DataBuffer.h"
 #include "Downsampler.h"
 #include "UDPSink.h"
-#include "AudioOutput.h"
 #include "MovingAverage.h"
 
 #include "RtlSdrSource.h"
@@ -121,10 +120,6 @@ void usage()
             "  -d devidx      Device index, 'list' to show device list (default 0)\n"
             "  -r pcmrate     Audio sample rate in Hz (default 48000 Hz)\n"
             "  -M             Disable stereo decoding\n"
-            "  -R filename    Write audio data as raw S16_LE samples\n"
-            "                 use filename '-' to write to stdout\n"
-            "  -W filename    Write audio data to .WAV file\n"
-            "  -P [device]    Play audio via ALSA device (default 'default')\n"
             "  -T filename    Write pulse-per-second timestamps\n"
             "                 use filename '-' to write to stdout\n"
             "  -b seconds     Set audio buffer size in seconds\n"
@@ -290,8 +285,6 @@ int main(int argc, char **argv)
     int     devidx  = 0;
     int     pcmrate = 48000;
     bool    stereo  = true;
-    enum OutputMode { MODE_RAW, MODE_WAV, MODE_ALSA };
-    OutputMode outmode = MODE_ALSA;
     std::string  filename;
     std::string  alsadev("default");
     double  bufsecs = -1;
@@ -299,8 +292,8 @@ int main(int argc, char **argv)
     std::string devtype_str;
     std::vector<std::string> devnames;
     std::string ip_address;
-    int     dataport;
-    int     cfgport;
+    unsigned int dataport = 9090;
+    unsigned int cfgport = 9091;
     Source  *srcsdr = 0;
 
     fprintf(stderr,
@@ -312,9 +305,6 @@ int main(int argc, char **argv)
         { "dev",        1, NULL, 'd' },
         { "pcmrate",    1, NULL, 'r' },
         { "mono",       0, NULL, 'M' },
-        { "raw",        1, NULL, 'R' },
-        { "wav",        1, NULL, 'W' },
-        { "play",       2, NULL, 'P' },
         { "buffer",     1, NULL, 'b' },
         { "address",    2, NULL, 'I' },
         { "dport",      1, NULL, 'D' },
@@ -323,7 +313,7 @@ int main(int argc, char **argv)
 
     int c, longindex;
     while ((c = getopt_long(argc, argv,
-                            "t:c:d:r:MR:W:P::b:I:D:C:",
+                            "t:c:d:r:M:b:I:D:C:",
                             longopts, &longindex)) >= 0) {
         switch (c) {
             case 't':
@@ -343,19 +333,6 @@ int main(int argc, char **argv)
                 break;
             case 'M':
                 stereo = false;
-                break;
-            case 'R':
-                outmode = MODE_RAW;
-                filename = optarg;
-                break;
-            case 'W':
-                outmode = MODE_WAV;
-                filename = optarg;
-                break;
-            case 'P':
-                outmode = MODE_ALSA;
-                if (optarg != NULL)
-                    alsadev = optarg;
                 break;
             case 'b':
                 if (!parse_dbl(optarg, bufsecs) || bufsecs < 0) {
@@ -411,26 +388,11 @@ int main(int argc, char **argv)
     {
        fprintf(stderr, "output buffer:     %.1f seconds\n", outputbuf_samples / double(pcmrate));
     }
-
-
-    switch (outmode)
-    {
-        case MODE_RAW:
-            fprintf(stderr, "writing raw 16-bit audio samples to '%s'\n", filename.c_str());
-            udp_output.reset(new RawAudioOutput(filename));
-            break;
-        case MODE_WAV:
-            fprintf(stderr, "writing audio samples to '%s'\n", filename.c_str());
-            udp_output.reset(new WavAudioOutput(filename, pcmrate, stereo));
-            break;
-        case MODE_ALSA:
-            fprintf(stderr, "playing audio to ALSA device '%s'\n", alsadev.c_str());
-            udp_output.reset(new AlsaAudioOutput(alsadev, pcmrate, stereo));
-            break;
-    }*/
+    */
 
     // Prepare output writer.
-    std::unique_ptr<UDPSink> udp_output;
+    UDPSink udp_output_instance(dataport);
+    std::unique_ptr<UDPSink> udp_output(&udp_output_instance);
 
     if (!(*udp_output))
     {
@@ -468,9 +430,6 @@ int main(int argc, char **argv)
     double ifrate = srcsdr->get_sample_rate();
     fprintf(stderr, "IF sample rate:    %.0f Hz\n", ifrate);
 
-    //double delta_if = tuner_freq - freq;
-    //MovingAverage<float> ppm_average(40, 0.0f);
-
     srcsdr->print_specific_parms();
 
     // Create source data queue.
@@ -490,19 +449,6 @@ int main(int argc, char **argv)
     	exit(1);
     }
 
-    /*
-    // The baseband signal is empty above 100 kHz, so we can
-    // downsample to ~ 200 kS/s without loss of information.
-    // This will speed up later processing stages.
-    unsigned int downsample = std::max(1, int(ifrate / 215.0e3));
-    fprintf(stderr, "baseband downsampling factor %u\n", downsample);
-
-    // Prevent aliasing at very low output sample rates.
-    double bandwidth_pcm = std::min(FmDecoder::default_bandwidth_pcm, 0.45 * pcmrate);
-    fprintf(stderr, "audio sample rate: %u Hz\n", pcmrate);
-    fprintf(stderr, "audio bandwidth:   %.3f kHz\n", bandwidth_pcm * 1.0e-3);
-    */
-
     // Prepare downsampler.
     Downsampler dn;
 
@@ -512,17 +458,14 @@ int main(int argc, char **argv)
 
     if (outputbuf_samples > 0)
     {
-        unsigned int nchannel = stereo ? 2 : 1;
         output_thread = std::thread(write_output_data,
                                udp_output.get(),
                                &output_buffer,
-                               outputbuf_samples * nchannel);
+                               outputbuf_samples);
     }
 
     IQSampleVector outsamples;
     bool inbuf_length_warning = false;
-    //double audio_level = 0;
-    //bool got_stereo = false;
 
     double block_time = get_time();
 
@@ -549,56 +492,6 @@ int main(int argc, char **argv)
 
         // Possible downsampling
         dn.process(iqsamples, outsamples);
-
-        /*
-        // Decode FM signal.
-        fm.process(iqsamples, audiosamples);
-
-        // Measure audio level.
-        double audio_mean, audio_rms;
-        samples_mean_rms(audiosamples, audio_mean, audio_rms);
-        audio_level = 0.95 * audio_level + 0.05 * audio_rms;
-
-        // Set nominal audio volume.
-        adjust_gain(audiosamples, 0.5);
-
-        ppm_average.feed(((fm.get_tuning_offset() + delta_if) / tuner_freq) * -1.0e6); // the minus factor is to show the ppm correction to make and not the one made
-
-        // Show statistics.
-        fprintf(stderr,
-                "\rblk=%6d  freq=%10.6fMHz  ppm=%+6.2f  IF=%+5.1fdB  BB=%+5.1fdB  audio=%+5.1fdB ",
-                block,
-                (tuner_freq + fm.get_tuning_offset()) * 1.0e-6,
-                ppm_average.average(),
-                //((fm.get_tuning_offset() + delta_if) / tuner_freq) * 1.0e6,
-                20*log10(fm.get_if_level()),
-                20*log10(fm.get_baseband_level()) + 3.01,
-                20*log10(audio_level) + 3.01);
-
-        if (outputbuf_samples > 0)
-        {
-            unsigned int nchannel = stereo ? 2 : 1;
-            std::size_t buflen = output_buffer.queued_samples();
-            fprintf(stderr, " buf=%.1fs ", buflen / nchannel / double(pcmrate));
-        }
-
-        fflush(stderr);
-
-        // Show stereo status.
-        if (fm.stereo_detected() != got_stereo)
-        {
-            got_stereo = fm.stereo_detected();
-
-            if (got_stereo)
-            {
-                fprintf(stderr, "\ngot stereo signal (pilot level = %f)\n", fm.get_pilot_level());
-            }
-            else
-            {
-                fprintf(stderr, "\nlost stereo signal\n");
-            }
-        }
-        */
 
         // Throw away first block. It is noisy because IF filters
         // are still starting up.

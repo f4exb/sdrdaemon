@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// SoftFM - Software decoder for FM broadcast radio with stereo support          //
+// SDRdaemon - send I/Q samples read from a SDR device over the network via UDP. //
 //                                                                               //
 // Copyright (C) 2015 Edouard Griffiths, F4EXB                                   //
 //                                                                               //
@@ -14,7 +14,7 @@
 //                                                                               //
 // You should have received a copy of the GNU General Public License             //
 // along with this program. If not, see <http://www.gnu.org/licenses/>.          //
-/////////////////////////////////////////////////////////////////////////////////// 
+///////////////////////////////////////////////////////////////////////////////////
 
 #ifndef SOFTFM_RTLSDRSOURCE_H
 #define SOFTFM_RTLSDRSOURCE_H

@@ -6,6 +6,7 @@ find_package(PkgConfig)
 find_package(Boost 1.47)
 
 # Find Airspy library.
+pkg_check_modules(PKG_AIRSPY libairspy)
 find_path(AIRSPY_INCLUDE_DIR airspy.h
           HINT ${PKG_AIRSPY_INCLUDE_DIRS})
 find_library(AIRSPY_LIBRARY libairspy.a
@@ -19,6 +20,7 @@ find_library(BLADERF_LIBRARY libbladeRF.so
           HINT ${PKG_BLADERF_LIBRARY_DIRS})
 
 # Find HackRF library.
+pkg_check_modules(PKG_HACKRF libhackrf)
 find_path(HACKRF_INCLUDE_DIR hackrf.h
           HINT ${PKG_HACKRF_INCLUDE_DIRS})
 find_library(HACKRF_LIBRARY libhackrf.a

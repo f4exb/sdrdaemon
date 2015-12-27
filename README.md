@@ -42,32 +42,11 @@ Branches:
 
   - `sudo apt-get install cmake pkg-config libusb-1.0-0-dev libasound2-dev libboost-all-dev`
 
-<h2>RTL-SDR support</h2>
-
-The Osmocom RTL-SDR library must be installed before you can build SDRdaemon.
-See http://sdr.osmocom.org/trac/wiki/rtl-sdr for more information.
-SDRdaemon has been tested successfully with RTL-SDR 0.5.3. Normally your distribution should provide the appropriate librtlsdr package.
-If you go with your own installation of librtlsdr you have to specify the include path and library path. For example if you installed it in `/opt/install/librtlsdr` you have to add `-DRTLSDR_INCLUDE_DIR=/opt/install/librtlsdr/include -DRTLSDR_LIBRARY=/opt/install/librtlsdr/lib/librtlsdr.a` to the cmake options
-
-To install the library from a Debian/Ubuntu installation just do: 
-
-  - `sudo apt-get install librtlsdr-dev`
-  
-<h2>HackRF support</h2>
-
-For now HackRF support must be installed even if no HackRF device is connected.
-
-If you install from source (https://github.com/mossmann/hackrf/tree/master/host/libhackrf) in your own installation path you have to specify the include path and library path. For example if you installed it in `/opt/install/libhackrf` you have to add `-DHACKRF_INCLUDE_DIR=/opt/install/libhackrf/include -DHACKRF_LIBRARY=/opt/install/libhackrf/lib/libhackrf.a` to the cmake options.
-
-To install the library from a Debian/Ubuntu installation just do: 
-
-  - `sudo apt-get install libhackrf-dev`
-  
 <h2>Airspy support</h2>
 
 For now Airspy support must be installed even if no Airspy device is connected.
 
-If you install from source (https://github.com/airspy/host/tree/master/libairspy) in your own installation path you have to specify the include path and library path. For example if you installed it in `/opt/install/libairspy` you have to add `-DAIRSPY_INCLUDE_DIR=/opt/install/libairspy/include -DHACKRF_LIBRARY=/opt/install/libairspy/lib/libairspy.a` to the cmake options.
+If you install from source (https://github.com/airspy/host/tree/master/libairspy) in your own installation path you have to specify the include path and library path. For example if you installed it in `/opt/install/libairspy` you have to add `-DAIRSPY_INCLUDE_DIR=/opt/install/libairspy/include -DAIRSPY_LIBRARY=/opt/install/libairspy/lib/libairspy.a` to the cmake options.
 
 To install the library from a Debian/Ubuntu installation just do: 
 
@@ -84,6 +63,27 @@ To install the library from a Debian/Ubuntu installation just do:
   - `sudo apt-get install libbladerf-dev`
   
 Note: for the BladeRF to work effectively on FM broadcast frequencies you have to fit it with the XB200 extension board.
+  
+<h2>HackRF support</h2>
+
+For now HackRF support must be installed even if no HackRF device is connected.
+
+If you install from source (https://github.com/mossmann/hackrf/tree/master/host/libhackrf) in your own installation path you have to specify the include path and library path. For example if you installed it in `/opt/install/libhackrf` you have to add `-DHACKRF_INCLUDE_DIR=/opt/install/libhackrf/include -DHACKRF_LIBRARY=/opt/install/libhackrf/lib/libhackrf.a` to the cmake options.
+
+To install the library from a Debian/Ubuntu installation just do: 
+
+  - `sudo apt-get install libhackrf-dev`
+  
+<h2>RTL-SDR support</h2>
+
+The Osmocom RTL-SDR library must be installed before you can build SDRdaemon.
+See http://sdr.osmocom.org/trac/wiki/rtl-sdr for more information.
+SDRdaemon has been tested successfully with RTL-SDR 0.5.3. Normally your distribution should provide the appropriate librtlsdr package.
+If you go with your own installation of librtlsdr you have to specify the include path and library path. For example if you installed it in `/opt/install/librtlsdr` you have to add `-DRTLSDR_INCLUDE_DIR=/opt/install/librtlsdr/include -DRTLSDR_LIBRARY=/opt/install/librtlsdr/lib/librtlsdr.a` to the cmake options
+
+To install the library from a Debian/Ubuntu installation just do: 
+
+  - `sudo apt-get install librtlsdr-dev`
   
 <h1>Installing</h1>
 

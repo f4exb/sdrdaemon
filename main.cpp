@@ -31,6 +31,7 @@
 #include <sys/time.h>
 
 #include "util.h"
+#include "parsekv.h"
 #include "DataBuffer.h"
 #include "Downsampler.h"
 #include "UDPSink.h"
@@ -140,7 +141,8 @@ void usage()
             "                 (valid ranges: [225001, 300000], [900001, 3200000]))\n"
             "  gain=<float>   Set LNA gain in dB, or 'auto',\n"
             "                 or 'list' to just get a list of valid values (default auto)\n"
-            "  blklen=<int>   Set audio buffer size in seconds (default RTL-SDR default)\n"
+            "  blklen=<int>   Set read buffer size in seconds (default RTL-SDR default)\n"
+            "  ppm=<int>      Set LO correction in PPM (default 0)\n"
             "  agc            Enable RTL AGC mode (default disabled)\n"
             "\n"
             "Configuration options for HackRF devices\n"
@@ -402,11 +404,32 @@ int main(int argc, char **argv)
         exit(1);
     }
 
-
     // Configure device and start streaming.
-    if (!srcsdr->configure(config_str))
+
+    namespace qi = boost::spirit::qi;
+    parsekv::key_value_sequence<std::string::iterator> p;
+    parsekv::pairs_type m;
+
+    if (!qi::parse(config_str.begin(), config_str.end(), p, m))
     {
-        fprintf(stderr, "ERROR: configuration: %s\n", srcsdr->error().c_str());
+    	fprintf(stderr, "Configuration parsing failed\n");
+    	delete srcsdr;
+        return false;
+    }
+
+    if (!srcsdr->configure(m))
+    {
+        fprintf(stderr, "ERROR: source configuration: %s\n", srcsdr->error().c_str());
+        delete srcsdr;
+        exit(1);
+    }
+
+    // Prepare downsampler.
+    Downsampler dn;
+
+    if (!dn.configure(m))
+    {
+        fprintf(stderr, "ERROR: downsampler configuration: %s\n", dn.error().c_str());
         delete srcsdr;
         exit(1);
     }
@@ -438,9 +461,6 @@ int main(int argc, char **argv)
     	fprintf(stderr, "ERROR: source: %s\n", up_srcsdr->error().c_str());
     	exit(1);
     }
-
-    // Prepare downsampler.
-    Downsampler dn;
 
     // If buffering enabled, start background output thread.
     DataBuffer<IQSample> output_buffer;
@@ -480,24 +500,41 @@ int main(int argc, char **argv)
 
         block_time = get_time();
 
-        // Possible downsampling
-        dn.process(iqsamples, outsamples);
+        // Possible downsampling and write to UDP
 
-        // Throw away first block. It is noisy because IF filters
-        // are still starting up.
-        if (block > 0)
+        if (dn.noDecimation())
         {
-            // Write samples to output.
-            if (outputbuf_samples > 0)
-            {
-                // Buffered write.
-                output_buffer.push(move(outsamples));
-            }
-            else
-            {
-                // Direct write.
-                udp_output->write(outsamples);
-            }
+        	if (outputbuf_samples > 0)
+        	{
+				// Buffered write.
+				output_buffer.push(move(iqsamples));
+        	}
+			else
+			{
+				// Direct write.
+				udp_output->write(iqsamples);
+			}
+        }
+        else
+        {
+			dn.process(iqsamples, outsamples);
+
+			// Throw away first block. It is noisy because IF filters
+			// are still starting up.
+			if (block > 0)
+			{
+				// Write samples to output.
+				if (outputbuf_samples > 0)
+				{
+					// Buffered write.
+					output_buffer.push(move(outsamples));
+				}
+				else
+				{
+					// Direct write.
+					udp_output->write(outsamples);
+				}
+			}
         }
     }
 

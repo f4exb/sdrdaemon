@@ -20,6 +20,7 @@
 #define INCLUDE_DOWNSAMPLER_H_
 
 #include "SDRDaemon.h"
+#include "parsekv.h"
 
 class Downsampler
 {
@@ -43,14 +44,35 @@ public:
 	/** Destroy Downsampler */
 	~Downsampler();
 
+	/** Configure downsampler dynamically */
+	bool configure(parsekv::pairs_type& m);
+
+	/** Return true if no decimation takes place */
+	bool noDecimation() const { return m_decim == 0; }
+
     /**
      * Process samples.
      */
     void process(const IQSampleVector& samples_in, IQSampleVector& samples_out);
 
+    /** State operator */
+    operator bool() const
+	{
+    	return m_error.empty();
+	}
+
+    /** Return the last error, or return an empty string if there is no error. */
+    std::string error()
+    {
+        std::string ret(m_error);
+        m_error.clear();
+        return ret;
+    }
+
 private:
     unsigned int m_decim;
     fcPos_t      m_fcPos;
+    std::string  m_error;
 };
 
 #endif /* INCLUDE_DOWNSAMPLER_H_ */

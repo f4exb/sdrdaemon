@@ -23,6 +23,7 @@
 #include <atomic>
 #include <memory>
 
+#include "parsekv.h"
 #include "DataBuffer.h"
 #include "SDRDaemon.h"
 
@@ -35,7 +36,7 @@ public:
     /**
      * Configure device and prepare for streaming.
      */
-    virtual bool configure(std::string configuration) = 0;
+    virtual bool configure(parsekv::pairs_type& m) = 0;
 
     /** Return current sample frequency in Hz. */
     virtual std::uint32_t get_sample_rate() = 0;

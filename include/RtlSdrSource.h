@@ -38,7 +38,7 @@ public:
     /** Close RTL-SDR device. */
     virtual ~RtlSdrSource();
 
-    virtual bool configure(std::string configuration);
+    virtual bool configure(parsekv::pairs_type& m);
 
     /** Return current sample frequency in Hz. */
     virtual std::uint32_t get_sample_rate();
@@ -67,6 +67,7 @@ private:
      *
      * sample_rate  :: desired sample rate in Hz.
      * frequency    :: desired center frequency in Hz.
+     * ppm          :: LO PPM correction.
      * tuner_gain   :: desired tuner gain in 0.1 dB, or INT_MIN for auto-gain.
      * block_length :: preferred number of samples per block.
      *
@@ -74,6 +75,7 @@ private:
      */
     bool configure(std::uint32_t sample_rate,
                    std::uint32_t frequency,
+				   std::int32_t  ppm,
                    int tuner_gain,
                    int block_length=default_block_length,
                    bool agcmode=false);

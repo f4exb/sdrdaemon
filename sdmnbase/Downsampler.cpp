@@ -29,6 +29,43 @@ Downsampler::~Downsampler()
 {
 }
 
+bool Downsampler::configure(parsekv::pairs_type& m)
+{
+	if (m.find("decim") != m.end())
+	{
+		std::cerr << "Downsampler::configure: decim: " << m["decim"] << std::endl;
+		int log2Decim = atoi(m["decim"].c_str());
+
+		if ((log2Decim < 0) || (log2Decim > 6))
+		{
+			m_error = "Invalid log2 decimation factor";
+			return false;
+		}
+		else
+		{
+			m_decim = log2Decim;
+		}
+	}
+
+	if (m.find("fcpos") != m.end())
+	{
+		std::cerr << "Downsampler::configure: fcpos: " << m["fcpos"] << std::endl;
+		int fcPosIndex = atoi(m["fcpos"].c_str());
+
+		if ((fcPosIndex < (int) FC_POS_INFRA) || (fcPosIndex > (int) FC_POS_CENTER))
+		{
+			m_error = "Invalid Fc position index";
+			return false;
+		}
+		else
+		{
+			m_fcPos = (fcPos_t) fcPosIndex;
+		}
+	}
+
+	return true;
+}
+
 void Downsampler::process(const IQSampleVector& samples_in, IQSampleVector& samples_out)
 {
 	if (m_decim == 0)

@@ -37,7 +37,7 @@ public:
     /** Close BladeRF device. */
     virtual ~BladeRFSource();
 
-    virtual bool configure(std::string configuration);
+    virtual bool configure(parsekv::pairs_type& m);
 
     /** Return current sample frequency in Hz. */
     virtual std::uint32_t get_sample_rate();

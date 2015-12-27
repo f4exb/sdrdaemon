@@ -183,12 +183,8 @@ BladeRFSource::~BladeRFSource()
     m_this = 0;
 }
 
-bool BladeRFSource::configure(std::string configurationStr)
+bool BladeRFSource::configure(parsekv::pairs_type& m)
 {
-    namespace qi = boost::spirit::qi;
-    std::string::iterator begin = configurationStr.begin();
-    std::string::iterator end = configurationStr.end();
-
     uint32_t sample_rate = 1000000;
     uint32_t frequency = 300000000;
     uint32_t bandwidth = 1500000;
@@ -196,132 +192,121 @@ bool BladeRFSource::configure(std::string configurationStr)
     int vga1Gain = 20;
     int vga2Gain = 9;
 
-    parsekv::key_value_sequence<std::string::iterator> p;
-    parsekv::pairs_type m;
+	if (m.find("srate") != m.end())
+	{
+		std::cerr << "BladeRFSource::configure: srate: " << m["srate"] << std::endl;
+		sample_rate = atoi(m["srate"].c_str());
 
-    if (!qi::parse(begin, end, p, m))
-    {
-        m_error = "Configuration parsing failed\n";
-        return false;
-    }
-    else
-    {
-        if (m.find("srate") != m.end())
-        {
-            std::cerr << "BladeRFSource::configure: srate: " << m["srate"] << std::endl;
-            sample_rate = atoi(m["srate"].c_str());
+		if ((sample_rate < 48000) || (sample_rate > 40000000))
+		{
+			m_error = "Invalid sample rate";
+			return false;
+		}
+	}
 
-            if ((sample_rate < 48000) || (sample_rate > 40000000))
-            {
-                m_error = "Invalid sample rate";
-                return false;
-            }
-        }
+	if (m.find("freq") != m.end())
+	{
+		std::cerr << "BladeRFSource::configure: freq: " << m["freq"] << std::endl;
+		frequency = atoi(m["freq"].c_str());
 
-        if (m.find("freq") != m.end())
-        {
-            std::cerr << "BladeRFSource::configure: freq: " << m["freq"] << std::endl;
-            frequency = atoi(m["freq"].c_str());
+		if ((frequency < m_minFrequency) || (frequency > 3800000000))
+		{
+			m_error = "Invalid frequency";
+			return false;
+		}
+	}
 
-            if ((frequency < m_minFrequency) || (frequency > 3800000000))
-            {
-                m_error = "Invalid frequency";
-                return false;
-            }
-        }
+	if (m.find("bw") != m.end())
+	{
+		std::cerr << "BladeRFSource::configure: bw: " << m["bw"] << std::endl;
 
-        if (m.find("bw") != m.end())
-        {
-            std::cerr << "BladeRFSource::configure: bw: " << m["bw"] << std::endl;
+		if (strcasecmp(m["bw"].c_str(), "list") == 0)
+		{
+			m_error = "Available bandwidths (Hz): " + m_bwfiltStr;
+			return false;
+		}
 
-            if (strcasecmp(m["bw"].c_str(), "list") == 0)
-            {
-                m_error = "Available bandwidths (Hz): " + m_bwfiltStr;
-                return false;
-            }
+		bandwidth = atoi(m["bw"].c_str());
 
-            bandwidth = atoi(m["bw"].c_str());
+		if (bandwidth < 0)
+		{
+			m_error = "Invalid bandwidth";
+			return false;
+		}
+	}
 
-            if (bandwidth < 0)
-            {
-                m_error = "Invalid bandwidth";
-                return false;
-            }
-        }
+	if (m.find("v1gain") != m.end())
+	{
+		std::cerr << "BladeRFSource::configure: v1gain: " << m["v1gain"] << std::endl;
 
-        if (m.find("v1gain") != m.end())
-        {
-            std::cerr << "BladeRFSource::configure: v1gain: " << m["v1gain"] << std::endl;
+		if (strcasecmp(m["v1gain"].c_str(), "list") == 0)
+		{
+			m_error = "Available VGA1 gains (dB): " + m_vga1GainsStr;
+			return false;
+		}
 
-            if (strcasecmp(m["v1gain"].c_str(), "list") == 0)
-            {
-                m_error = "Available VGA1 gains (dB): " + m_vga1GainsStr;
-                return false;
-            }
+		vga1Gain = atoi(m["v1gain"].c_str());
 
-            vga1Gain = atoi(m["v1gain"].c_str());
+		if (find(m_vga1Gains.begin(), m_vga1Gains.end(), vga1Gain) == m_vga1Gains.end())
+		{
+			m_error = "VGA1 gain not supported. Available gains (dB): " + m_vga1GainsStr;
+			return false;
+		}
+	}
 
-            if (find(m_vga1Gains.begin(), m_vga1Gains.end(), vga1Gain) == m_vga1Gains.end())
-            {
-                m_error = "VGA1 gain not supported. Available gains (dB): " + m_vga1GainsStr;
-                return false;
-            }
-        }
+	if (m.find("v2gain") != m.end())
+	{
+		std::cerr << "BladeRFSource::configure: v2gain: " << m["v2gain"] << std::endl;
 
-        if (m.find("v2gain") != m.end())
-        {
-            std::cerr << "BladeRFSource::configure: v2gain: " << m["v2gain"] << std::endl;
+		if (strcasecmp(m["v2gain"].c_str(), "list") == 0)
+		{
+			m_error = "Available VGA2 gains (dB): " + m_vga2GainsStr;
+			return false;
+		}
 
-            if (strcasecmp(m["v2gain"].c_str(), "list") == 0)
-            {
-                m_error = "Available VGA2 gains (dB): " + m_vga2GainsStr;
-                return false;
-            }
+		vga1Gain = atoi(m["v2gain"].c_str());
 
-            vga1Gain = atoi(m["v2gain"].c_str());
+		if (find(m_vga2Gains.begin(), m_vga2Gains.end(), vga2Gain) == m_vga2Gains.end())
+		{
+			m_error = "VGA2 gain not supported. Available gains (dB): " + m_vga2GainsStr;
+			return false;
+		}
+	}
 
-            if (find(m_vga2Gains.begin(), m_vga2Gains.end(), vga2Gain) == m_vga2Gains.end())
-            {
-                m_error = "VGA2 gain not supported. Available gains (dB): " + m_vga2GainsStr;
-                return false;
-            }
-        }
+	if (m.find("lgain") != m.end())
+	{
+		std::cerr << "BladeRFSource::configure: lgain: " << m["lgain"] << std::endl;
 
-        if (m.find("lgain") != m.end())
-        {
-            std::cerr << "BladeRFSource::configure: lgain: " << m["lgain"] << std::endl;
+		if (strcasecmp(m["lgain"].c_str(), "list") == 0)
+		{
+			m_error = "Available LNA gains (dB): " + m_lnaGainsStr;
+			return false;
+		}
 
-            if (strcasecmp(m["lgain"].c_str(), "list") == 0)
-            {
-                m_error = "Available LNA gains (dB): " + m_lnaGainsStr;
-                return false;
-            }
+		int lnaGain = atoi(m["lgain"].c_str());
+		uint32_t i;
 
-            int lnaGain = atoi(m["lgain"].c_str());
-            uint32_t i;
+		for (i = 0; i < m_lnaGains.size(); i++)
+		{
+			if (m_lnaGains[i] == lnaGain)
+			{
+				lnaGainIndex = i+1;
+				break;
+			}
+		}
 
-            for (i = 0; i < m_lnaGains.size(); i++)
-            {
-                if (m_lnaGains[i] == lnaGain)
-                {
-                    lnaGainIndex = i+1;
-                    break;
-                }
-            }
+		if (i == m_lnaGains.size())
+		{
+			m_error = "Invalid LNA gain";
+			return false;
+		}
+	}
 
-            if (i == m_lnaGains.size())
-            {
-                m_error = "Invalid LNA gain";
-                return false;
-            }
-        }
+	// Intentionally tune at a higher frequency to avoid DC offset.
+	m_confFreq = frequency;
+	double tuner_freq = frequency + 0.25 * sample_rate;
 
-        // Intentionally tune at a higher frequency to avoid DC offset.
-        m_confFreq = frequency;
-        double tuner_freq = frequency + 0.25 * sample_rate;
-
-        return configure(sample_rate, tuner_freq, bandwidth, lnaGainIndex, vga1Gain, vga2Gain);
-    }
+	return configure(sample_rate, tuner_freq, bandwidth, lnaGainIndex, vga1Gain, vga2Gain);
 }
 
 // Configure RTL-SDR tuner and prepare for streaming.

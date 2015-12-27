@@ -348,12 +348,8 @@ bool AirspySource::configure(int sampleRateIndex,
     return true;
 }
 
-bool AirspySource::configure(std::string configurationStr)
+bool AirspySource::configure(parsekv::pairs_type& m)
 {
-    namespace qi = boost::spirit::qi;
-    std::string::iterator begin = configurationStr.begin();
-    std::string::iterator end = configurationStr.end();
-
     int sampleRateIndex = 0;
     uint32_t frequency = 100000000;
     int lnaGain = 8;
@@ -363,132 +359,121 @@ bool AirspySource::configure(std::string configurationStr)
     bool lnaAGC = false;
     bool mixAGC = false;
 
-    parsekv::key_value_sequence<std::string::iterator> p;
-    parsekv::pairs_type m;
+	if (m.find("srate") != m.end())
+	{
+		std::cerr << "AirspySource::configure: srate: " << m["srate"] << std::endl;
 
-    if (!qi::parse(begin, end, p, m))
-    {
-        m_error = "Configuration parsing failed\n";
-        return false;
-    }
-    else
-    {
-        if (m.find("srate") != m.end())
-        {
-            std::cerr << "AirspySource::configure: srate: " << m["srate"] << std::endl;
+		if (strcasecmp(m["srate"].c_str(), "list") == 0)
+		{
+			m_error = "Available sample rates (Hz): " + m_sratesStr;
+			return false;
+		}
 
-            if (strcasecmp(m["srate"].c_str(), "list") == 0)
-            {
-                m_error = "Available sample rates (Hz): " + m_sratesStr;
-                return false;
-            }
+		m_sampleRate = atoi(m["srate"].c_str());
+		uint32_t i;
 
-            m_sampleRate = atoi(m["srate"].c_str());
-            uint32_t i;
+		for (i = 0; i < m_srates.size(); i++)
+		{
+			if (m_srates[i] == static_cast<int>(m_sampleRate))
+			{
+				sampleRateIndex = i;
+				break;
+			}
+		}
 
-            for (i = 0; i < m_srates.size(); i++)
-            {
-                if (m_srates[i] == static_cast<int>(m_sampleRate))
-                {
-                    sampleRateIndex = i;
-                    break;
-                }
-            }
+		if (i == m_srates.size())
+		{
+			m_error = "Invalid sample rate";
+			m_sampleRate = 0;
+			return false;
+		}
+	}
 
-            if (i == m_srates.size())
-            {
-                m_error = "Invalid sample rate";
-                m_sampleRate = 0;
-                return false;
-            }
-        }
+	if (m.find("freq") != m.end())
+	{
+		std::cerr << "AirspySource::configure: freq: " << m["freq"] << std::endl;
+		frequency = atoi(m["freq"].c_str());
 
-        if (m.find("freq") != m.end())
-        {
-            std::cerr << "AirspySource::configure: freq: " << m["freq"] << std::endl;
-            frequency = atoi(m["freq"].c_str());
+		if ((frequency < 24000000) || (frequency > 1800000000))
+		{
+			m_error = "Invalid frequency";
+			return false;
+		}
+	}
 
-            if ((frequency < 24000000) || (frequency > 1800000000))
-            {
-                m_error = "Invalid frequency";
-                return false;
-            }
-        }
+	if (m.find("lgain") != m.end())
+	{
+		std::cerr << "AirspySource::configure: lgain: " << m["lgain"] << std::endl;
 
-        if (m.find("lgain") != m.end())
-        {
-            std::cerr << "AirspySource::configure: lgain: " << m["lgain"] << std::endl;
+		if (strcasecmp(m["lgain"].c_str(), "list") == 0)
+		{
+			m_error = "Available LNA gains (dB): " + m_lgainsStr;
+			return false;
+		}
 
-            if (strcasecmp(m["lgain"].c_str(), "list") == 0)
-            {
-                m_error = "Available LNA gains (dB): " + m_lgainsStr;
-                return false;
-            }
+		lnaGain = atoi(m["lgain"].c_str());
 
-            lnaGain = atoi(m["lgain"].c_str());
+		if (find(m_lgains.begin(), m_lgains.end(), lnaGain) == m_lgains.end())
+		{
+			m_error = "LNA gain not supported. Available gains (dB): " + m_lgainsStr;
+			return false;
+		}
+	}
 
-            if (find(m_lgains.begin(), m_lgains.end(), lnaGain) == m_lgains.end())
-            {
-                m_error = "LNA gain not supported. Available gains (dB): " + m_lgainsStr;
-                return false;
-            }
-        }
+	if (m.find("mgain") != m.end())
+	{
+		std::cerr << "AirspySource::configure: mgain: " << m["mgain"] << std::endl;
 
-        if (m.find("mgain") != m.end())
-        {
-            std::cerr << "AirspySource::configure: mgain: " << m["mgain"] << std::endl;
+		if (strcasecmp(m["mgain"].c_str(), "list") == 0)
+		{
+			m_error = "Available mixer gains (dB): " + m_mgainsStr;
+			return false;
+		}
 
-            if (strcasecmp(m["mgain"].c_str(), "list") == 0)
-            {
-                m_error = "Available mixer gains (dB): " + m_mgainsStr;
-                return false;
-            }
+		mixGain = atoi(m["mgain"].c_str());
 
-            mixGain = atoi(m["mgain"].c_str());
+		if (find(m_mgains.begin(), m_mgains.end(), mixGain) == m_mgains.end())
+		{
+			m_error = "Mixer gain not supported. Available gains (dB): " + m_mgainsStr;
+			return false;
+		}
+	}
 
-            if (find(m_mgains.begin(), m_mgains.end(), mixGain) == m_mgains.end())
-            {
-                m_error = "Mixer gain not supported. Available gains (dB): " + m_mgainsStr;
-                return false;
-            }
-        }
+	if (m.find("vgain") != m.end())
+	{
+		std::cerr << "AirspySource::configure: vgain: " << m["vgain"] << std::endl;
+		vgaGain = atoi(m["vgain"].c_str());
 
-        if (m.find("vgain") != m.end())
-        {
-            std::cerr << "AirspySource::configure: vgain: " << m["vgain"] << std::endl;
-            vgaGain = atoi(m["vgain"].c_str());
+		if (strcasecmp(m["vgain"].c_str(), "list") == 0)
+		{
+			m_error = "Available VGA gains (dB): " + m_vgainsStr;
+			return false;
+		}
 
-            if (strcasecmp(m["vgain"].c_str(), "list") == 0)
-            {
-                m_error = "Available VGA gains (dB): " + m_vgainsStr;
-                return false;
-            }
+		if (find(m_vgains.begin(), m_vgains.end(), vgaGain) == m_vgains.end())
+		{
+			m_error = "VGA gain not supported. Available gains (dB): " + m_vgainsStr;
+			return false;
+		}
+	}
 
-            if (find(m_vgains.begin(), m_vgains.end(), vgaGain) == m_vgains.end())
-            {
-                m_error = "VGA gain not supported. Available gains (dB): " + m_vgainsStr;
-                return false;
-            }
-        }
+	if (m.find("antbias") != m.end())
+	{
+		std::cerr << "AirspySource::configure: antbias" << std::endl;
+		antBias = true;
+	}
 
-        if (m.find("antbias") != m.end())
-        {
-            std::cerr << "AirspySource::configure: antbias" << std::endl;
-            antBias = true;
-        }
+	if (m.find("lagc") != m.end())
+	{
+		std::cerr << "AirspySource::configure: lagc" << std::endl;
+		lnaAGC = true;
+	}
 
-        if (m.find("lagc") != m.end())
-        {
-            std::cerr << "AirspySource::configure: lagc" << std::endl;
-            lnaAGC = true;
-        }
-
-        if (m.find("magc") != m.end())
-        {
-            std::cerr << "AirspySource::configure: magc" << std::endl;
-            mixAGC = true;
-        }
-    }
+	if (m.find("magc") != m.end())
+	{
+		std::cerr << "AirspySource::configure: magc" << std::endl;
+		mixAGC = true;
+	}
 
     m_confFreq = frequency;
     double tuner_freq = frequency + 0.25 * m_srates[sampleRateIndex];

@@ -282,12 +282,8 @@ bool HackRFSource::configure(uint32_t sample_rate,
     return true;
 }
 
-bool HackRFSource::configure(std::string configurationStr)
+bool HackRFSource::configure(parsekv::pairs_type& m)
 {
-    namespace qi = boost::spirit::qi;
-    std::string::iterator begin = configurationStr.begin();
-    std::string::iterator end = configurationStr.end();
-
     uint32_t sampleRate = 5000000;
     uint32_t frequency = 100000000;
     int lnaGain = 16;
@@ -296,128 +292,117 @@ bool HackRFSource::configure(std::string configurationStr)
     bool extAmp = false;
     bool antBias = false;
 
-    parsekv::key_value_sequence<std::string::iterator> p;
-    parsekv::pairs_type m;
+	if (m.find("srate") != m.end())
+	{
+		std::cerr << "HackRFSource::configure: srate: " << m["srate"] << std::endl;
+		sampleRate = atoi(m["srate"].c_str());
 
-    if (!qi::parse(begin, end, p, m))
-    {
-        m_error = "Configuration parsing failed\n";
-        return false;
-    }
-    else
-    {
-        if (m.find("srate") != m.end())
-        {
-            std::cerr << "HackRFSource::configure: srate: " << m["srate"] << std::endl;
-            sampleRate = atoi(m["srate"].c_str());
+		if ((sampleRate < 1000000) || (sampleRate > 20000000))
+		{
+			m_error = "Invalid sample rate";
+			return false;
+		}
+	}
 
-            if ((sampleRate < 1000000) || (sampleRate > 20000000))
-            {
-                m_error = "Invalid sample rate";
-                return false;
-            }
-        }
+	if (m.find("freq") != m.end())
+	{
+		std::cerr << "HackRFSource::configure: freq: " << m["freq"] << std::endl;
+		frequency = strtoll(m["freq"].c_str(), 0, 10);
 
-        if (m.find("freq") != m.end())
-        {
-            std::cerr << "HackRFSource::configure: freq: " << m["freq"] << std::endl;
-            frequency = strtoll(m["freq"].c_str(), 0, 10);
+		if ((frequency < 1000000) || (frequency > 6000000000))
+		{
+			m_error = "Invalid frequency";
+			return false;
+		}
+	}
 
-            if ((frequency < 1000000) || (frequency > 6000000000))
-            {
-                m_error = "Invalid frequency";
-                return false;
-            }
-        }
+	if (m.find("lgain") != m.end())
+	{
+		std::cerr << "HackRFSource::configure: lgain: " << m["lgain"] << std::endl;
 
-        if (m.find("lgain") != m.end())
-        {
-            std::cerr << "HackRFSource::configure: lgain: " << m["lgain"] << std::endl;
+		if (strcasecmp(m["lgain"].c_str(), "list") == 0)
+		{
+			m_error = "Available LNA gains (dB): " + m_lgainsStr;
+			return false;
+		}
 
-            if (strcasecmp(m["lgain"].c_str(), "list") == 0)
-            {
-                m_error = "Available LNA gains (dB): " + m_lgainsStr;
-                return false;
-            }
+		lnaGain = atoi(m["lgain"].c_str());
 
-            lnaGain = atoi(m["lgain"].c_str());
+		if (find(m_lgains.begin(), m_lgains.end(), lnaGain) == m_lgains.end())
+		{
+			m_error = "LNA gain not supported. Available gains (dB): " + m_lgainsStr;
+			return false;
+		}
+	}
 
-            if (find(m_lgains.begin(), m_lgains.end(), lnaGain) == m_lgains.end())
-            {
-                m_error = "LNA gain not supported. Available gains (dB): " + m_lgainsStr;
-                return false;
-            }
-        }
+	if (m.find("vgain") != m.end())
+	{
+		std::cerr << "HackRFSource::configure: vgain: " << m["vgain"] << std::endl;
+		vgaGain = atoi(m["vgain"].c_str());
 
-        if (m.find("vgain") != m.end())
-        {
-            std::cerr << "HackRFSource::configure: vgain: " << m["vgain"] << std::endl;
-            vgaGain = atoi(m["vgain"].c_str());
+		if (strcasecmp(m["vgain"].c_str(), "list") == 0)
+		{
+			m_error = "Available VGA gains (dB): " + m_vgainsStr;
+			return false;
+		}
 
-            if (strcasecmp(m["vgain"].c_str(), "list") == 0)
-            {
-                m_error = "Available VGA gains (dB): " + m_vgainsStr;
-                return false;
-            }
+		if (find(m_vgains.begin(), m_vgains.end(), vgaGain) == m_vgains.end())
+		{
+			m_error = "VGA gain not supported. Available gains (dB): " + m_vgainsStr;
+			return false;
+		}
+	}
 
-            if (find(m_vgains.begin(), m_vgains.end(), vgaGain) == m_vgains.end())
-            {
-                m_error = "VGA gain not supported. Available gains (dB): " + m_vgainsStr;
-                return false;
-            }
-        }
+	if (m.find("bwfilter") != m.end())
+	{
+		std::cerr << "HackRFSource::configure: bwfilter: " << m["bwfilter"] << std::endl;
+		bandwidth = atoi(m["bwfilter"].c_str());
 
-        if (m.find("bwfilter") != m.end())
-        {
-            std::cerr << "HackRFSource::configure: bwfilter: " << m["bwfilter"] << std::endl;
-            bandwidth = atoi(m["bwfilter"].c_str());
+		if (strcasecmp(m["bwfilter"].c_str(), "list") == 0)
+		{
+			m_error = "Available filter bandwidths (MHz): " + m_bwfiltStr;
+			return false;
+		}
 
-            if (strcasecmp(m["bwfilter"].c_str(), "list") == 0)
-            {
-                m_error = "Available filter bandwidths (MHz): " + m_bwfiltStr;
-                return false;
-            }
+		double tmpbwd;
 
-            double tmpbwd;
+		if (!parse_dbl(m["bwfilter"].c_str(), tmpbwd))
+		{
+			m_error = "Invalid filter bandwidth";
+			return false;
+		}
+		else
+		{
+			long int tmpbwi = lrint(tmpbwd * 1000000);
 
-            if (!parse_dbl(m["bwfilter"].c_str(), tmpbwd))
-            {
-                m_error = "Invalid filter bandwidth";
-                return false;
-            }
-            else
-            {
-                long int tmpbwi = lrint(tmpbwd * 1000000);
+			if (tmpbwi <= INT_MIN || tmpbwi >= INT_MAX) {
+				m_error = "Invalid filter bandwidth";
+				return false;
+			}
+			else
+			{
+				bandwidth = tmpbwi;
 
-                if (tmpbwi <= INT_MIN || tmpbwi >= INT_MAX) {
-                    m_error = "Invalid filter bandwidth";
-                    return false;
-                }
-                else
-                {
-                    bandwidth = tmpbwi;
+				if (find(m_bwfilt.begin(), m_bwfilt.end(), bandwidth) == m_bwfilt.end())
+				{
+					m_error = "Filter bandwidth not supported. Available bandwidths (MHz): " + m_bwfiltStr;
+					return false;
+				}
+			}
+		}
+	}
 
-                    if (find(m_bwfilt.begin(), m_bwfilt.end(), bandwidth) == m_bwfilt.end())
-                    {
-                        m_error = "Filter bandwidth not supported. Available bandwidths (MHz): " + m_bwfiltStr;
-                        return false;
-                    }
-                }
-            }
-        }
+	if (m.find("extamp") != m.end())
+	{
+		std::cerr << "HackRFSource::configure: extamp" << std::endl;
+		extAmp = true;
+	}
 
-        if (m.find("extamp") != m.end())
-        {
-            std::cerr << "HackRFSource::configure: extamp" << std::endl;
-            extAmp = true;
-        }
-
-        if (m.find("antbias") != m.end())
-        {
-            std::cerr << "HackRFSource::configure: antbias" << std::endl;
-            antBias = true;
-        }
-    }
+	if (m.find("antbias") != m.end())
+	{
+		std::cerr << "HackRFSource::configure: antbias" << std::endl;
+		antBias = true;
+	}
 
     m_confFreq = frequency;
     double tuner_freq = frequency + 0.25 * sampleRate;

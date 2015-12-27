@@ -20,6 +20,7 @@
 #define INCLUDE_UDPSINK_H_
 
 #include "SDRDaemon.h"
+#include "UDPSocket.h"
 
 /** Downsampler and UDP sink for samples read from the device */
 class UDPSink
@@ -30,7 +31,7 @@ public:
 	 *
 	 * port             :: UDP port where the samples are sent
 	 */
-	UDPSink(unsigned int port);
+	UDPSink(const std::string& address, unsigned int port);
 
 	/** Destroy UDP sink */
 	~UDPSink();
@@ -55,9 +56,11 @@ public:
     }
 
 private:
-	unsigned int m_port;
+    std::string  m_address; //!< UDP foreign address
+	unsigned int m_port;    //!< UDP foreign port
     std::string  m_error;
     bool         m_zombie;
+    UDPSocket    m_socket;
 };
 
 

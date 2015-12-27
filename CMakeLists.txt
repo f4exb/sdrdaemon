@@ -72,17 +72,18 @@ set(sdmnbase_SOURCES
     sdmnbase/Filter.cpp
     sdmnbase/Downsampler.cpp
     sdmnbase/UDPSink.cpp
+    sdmnbase/UDPSocket.cpp
 )
 
 set(sdmnbase_HEADERS
     include/Filter.h
     include/Downsampler.h
     include/UDPSink.h
+    include/UDPSocket.h
     include/MovingAverage.h
     include/Source.h
     include/SDRDaemon.h
     include/DataBuffer.h
-    include/fastatan2.h
     include/parsekv.h
     include/util.h
 )

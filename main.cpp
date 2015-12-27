@@ -119,10 +119,7 @@ void usage()
     		"                 or just key for switches. See below for valid values per device type\n"
             "  -d devidx      Device index, 'list' to show device list (default 0)\n"
             "  -r pcmrate     Audio sample rate in Hz (default 48000 Hz)\n"
-            "  -M             Disable stereo decoding\n"
-            "  -T filename    Write pulse-per-second timestamps\n"
-            "                 use filename '-' to write to stdout\n"
-            "  -b seconds     Set audio buffer size in seconds\n"
+            "  -b samples     Set audio buffer size in number of samples\n"
             "  -I address     IP address. Samples are sent to this address\n"
             "  -D port        Data port. Samples are sent on this UDP port\n"
             "  -C port        Configuration port (future). The configuration string as described below\n"
@@ -283,18 +280,17 @@ static bool get_device(std::vector<std::string> &devnames, std::string& devtype,
 int main(int argc, char **argv)
 {
     int     devidx  = 0;
-    int     pcmrate = 48000;
-    bool    stereo  = true;
     std::string  filename;
     std::string  alsadev("default");
     double  bufsecs = -1;
     std::string config_str;
     std::string devtype_str;
     std::vector<std::string> devnames;
-    std::string ip_address;
+    std::string dataaddress;
     unsigned int dataport = 9090;
     unsigned int cfgport = 9091;
     Source  *srcsdr = 0;
+    unsigned int outputbuf_samples = 250000;
 
     fprintf(stderr,
             "SDRDaemon - Collect samples from SDR device and send it over the network via UDP\n");
@@ -303,19 +299,19 @@ int main(int argc, char **argv)
         { "devtype",    2, NULL, 't' },
         { "config",     2, NULL, 'c' },
         { "dev",        1, NULL, 'd' },
-        { "pcmrate",    1, NULL, 'r' },
-        { "mono",       0, NULL, 'M' },
         { "buffer",     1, NULL, 'b' },
-        { "address",    2, NULL, 'I' },
+        { "daddress",   2, NULL, 'I' },
         { "dport",      1, NULL, 'D' },
         { "cport",      1, NULL, 'C' },
         { NULL,         0, NULL, 0 } };
 
-    int c, longindex;
+    int c, longindex, value;
     while ((c = getopt_long(argc, argv,
-                            "t:c:d:r:M:b:I:D:C:",
-                            longopts, &longindex)) >= 0) {
-        switch (c) {
+    		"t:c:d:b:I:D:C:",
+			longopts, &longindex)) >= 0)
+    {
+        switch (c)
+        {
             case 't':
                 devtype_str.assign(optarg);
                 break;
@@ -326,17 +322,28 @@ int main(int argc, char **argv)
                 if (!parse_int(optarg, devidx))
                     devidx = -1;
                 break;
-            case 'r':
-                if (!parse_int(optarg, pcmrate, true) || pcmrate < 1) {
-                    badarg("-r");
+            case 'b':
+                if (!parse_int(optarg, value) || (value < 0)) {
+                    badarg("-b");
+                } else {
+                	outputbuf_samples = value;
                 }
                 break;
-            case 'M':
-                stereo = false;
+            case 'I':
+                dataaddress.assign(optarg);
                 break;
-            case 'b':
-                if (!parse_dbl(optarg, bufsecs) || bufsecs < 0) {
-                    badarg("-b");
+            case 'D':
+                if (!parse_int(optarg, value) || (value < 0)) {
+                    badarg("-D");
+                } else {
+               		dataport = value;
+                }
+                break;
+            case 'C':
+                if (!parse_int(optarg, value) || (value < 0)) {
+                    badarg("-C");
+                } else {
+               		cfgport = value;
                 }
                 break;
             default:
@@ -369,29 +376,8 @@ int main(int argc, char **argv)
         fprintf(stderr, "WARNING: can not install SIGTERM handler (%s)\n", strerror(errno));
     }
 
-    // Calculate number of samples in output buffer.
-    unsigned int outputbuf_samples = 250000; // arbitrary
-
-    /*
-    if (bufsecs < 0 && (outmode == MODE_ALSA || (outmode == MODE_RAW && filename == "-")))
-    {
-        // Set default buffer to 1 second for interactive output streams.
-        outputbuf_samples = pcmrate;
-    }
-    else if (bufsecs > 0)
-    {
-        // Calculate nr of samples for configured buffer length.
-        outputbuf_samples = (unsigned int)(bufsecs * pcmrate);
-    }
-
-    if (outputbuf_samples > 0)
-    {
-       fprintf(stderr, "output buffer:     %.1f seconds\n", outputbuf_samples / double(pcmrate));
-    }
-    */
-
     // Prepare output writer.
-    UDPSink udp_output_instance(dataport);
+    UDPSink udp_output_instance(dataaddress, dataport);
     std::unique_ptr<UDPSink> udp_output(&udp_output_instance);
 
     if (!(*udp_output))

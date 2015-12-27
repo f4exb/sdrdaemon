@@ -18,9 +18,10 @@
 
 #include "UDPSink.h"
 
-UDPSink::UDPSink(const std::string& address, unsigned int port) :
+UDPSink::UDPSink(const std::string& address, unsigned int port, unsigned int udpSize) :
         m_address(address),
 		m_port(port),
+		m_udpSize(udpSize),
 		m_zombie(false)
 {
 }
@@ -31,5 +32,8 @@ UDPSink::~UDPSink()
 
 void UDPSink::write(const IQSampleVector& samples_in)
 {
-	m_socket.SendDataGram((const void *) &samples_in[0], (int) samples_in.size() * 8, m_address, m_port);
+	for (unsigned int i = 0; i < samples_in.size(); i += m_udpSize)
+	{
+		m_socket.SendDataGram((const void *) &samples_in[i], (int) m_udpSize * 8, m_address, m_port);
+	}
 }

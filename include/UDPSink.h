@@ -29,9 +29,11 @@ public:
 	/**
 	 * Construct UDP sink
 	 *
+	 * address          :: Address where the samples are sent
 	 * port             :: UDP port where the samples are sent
+	 * udpSize          :: Size of UDP block in number of samples
 	 */
-	UDPSink(const std::string& address, unsigned int port);
+	UDPSink(const std::string& address, unsigned int port, unsigned int udpSize);
 
 	/** Destroy UDP sink */
 	~UDPSink();
@@ -58,6 +60,7 @@ public:
 private:
     std::string  m_address; //!< UDP foreign address
 	unsigned int m_port;    //!< UDP foreign port
+	unsigned int m_udpSize; //!< Size of UDP block in number of samples
     std::string  m_error;
     bool         m_zombie;
     UDPSocket    m_socket;

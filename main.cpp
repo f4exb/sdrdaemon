@@ -42,6 +42,8 @@
 #include "BladeRFSource.h"
 #include "include/SDRDaemon.h"
 
+#define UDPSIZE 512
+
 /** Flag is set on SIGINT / SIGTERM. */
 static std::atomic_bool stop_flag(false);
 
@@ -116,21 +118,26 @@ void usage()
             "                   - airspy: Airspy\n"
             "                   - bladerf: BladeRF\n"
             "  -c config      Startup configuration. Comma separated key=value configuration pairs\n"
-    		"                 or just key for switches. See below for valid values per device type\n"
+    		"                 or just key for switches. See below for valid values\n"
             "  -d devidx      Device index, 'list' to show device list (default 0)\n"
-            "  -r pcmrate     Audio sample rate in Hz (default 48000 Hz)\n"
-            "  -b samples     Set audio buffer size in number of samples\n"
-            "  -I address     IP address. Samples are sent to this address\n"
-            "  -D port        Data port. Samples are sent on this UDP port\n"
-            "  -C port        Configuration port (future). The configuration string as described below\n"
+            "  -b blocks      Set buffer size in number of UDP blocks (default: 480 512 samples blocks)\n"
+            "  -I address     IP address. Samples are sent to this address (default: 127.0.0.1)\n"
+            "  -D port        Data port. Samples are sent on this UDP port (default 9090)\n"
+            "  -C port        Configuration port (default 9091, future). The configuration string as described below\n"
     		"                 is sent on this port via UDP to control the device\n"
+            "\n"
+    		"Configuration options for the decimator:\n"
+            "  decim=<int>    log2 of decimation factor (default 0: no decimation)\n"
+            "  fcpos=<int>    Center frequency position (default 2: center):\n"
+            "                   - 0: Infradyne\n"
+            "                   - 1: Supradyne\n"
+            "                   - 2: Centered\n"
             "\n"
             "Configuration options for RTL-SDR devices\n"
             "  freq=<int>     Frequency of radio station in Hz (default 100000000)\n"
     		"                 valid values: 10M to 2.2G (working range depends on device)\n"
             "  srate=<int>    IF sample rate in Hz (default 1000000)\n"
             "                 (valid ranges: [225001, 300000], [900001, 3200000]))\n"
-            "  decim=<int>    log2 of decimation factor\n"
             "  gain=<float>   Set LNA gain in dB, or 'auto',\n"
             "                 or 'list' to just get a list of valid values (default auto)\n"
             "  blklen=<int>   Set audio buffer size in seconds (default RTL-SDR default)\n"
@@ -141,7 +148,6 @@ void usage()
     		"                 valid values: 1M to 6G\n"
             "  srate=<int>    IF sample rate in Hz (default 5000000)\n"
             "                 (valid ranges: [2500000,20000000]))\n"
-            "  decim=<int>    log2 of decimation factor\n"
             "  lgain=<int>    LNA gain in dB. 'list' to just get a list of valid values: (default 16)\n"
             "  vgain=<int>    VGA gain in dB. 'list' to just get a list of valid values: (default 22)\n"
             "  bwfilter=<int> Filter bandwidth in MHz. 'list' to just get a list of valid values: (default 2.5)\n"
@@ -153,7 +159,6 @@ void usage()
     		"                 valid values: 24M to 1.8G\n"
             "  srate=<int>    IF sample rate in Hz. Depends on Airspy firmware and libairspy support\n"
     		"                 Airspy firmware and library must support dynamic sample rate query. (default 10000000)\n"
-            "  decim=<int>    log2 of decimation factor\n"
             "  lgain=<int>    LNA gain in dB. 'list' to just get a list of valid values: (default 8)\n"
             "  mgain=<int>    Mixer gain in dB. 'list' to just get a list of valid values: (default 8)\n"
             "  vgain=<int>    VGA gain in dB. 'list' to just get a list of valid values: (default 8)\n"
@@ -166,7 +171,6 @@ void usage()
     		"                 valid values (with XB200): 100k to 3.8G\n"
     		"                 valid values (without XB200): 300M to 3.8G\n"
             "  srate=<int>    IF sample rate in Hz. Valid values: 48k to 40M (default 1000000)\n"
-            "  decim=<int>    log2 of decimation factor\n"
             "  bw=<int>       Bandwidth in Hz. 'list' to just get a list of valid values: (default 1500000)\n"
             "  lgain=<int>    LNA gain in dB. 'list' to just get a list of valid values: (default 3)\n"
             "  v1gain=<int>   VGA1 gain in dB. 'list' to just get a list of valid values: (default 20)\n"
@@ -286,11 +290,11 @@ int main(int argc, char **argv)
     std::string config_str;
     std::string devtype_str;
     std::vector<std::string> devnames;
-    std::string dataaddress;
+    std::string dataaddress("127.0.0.1");
     unsigned int dataport = 9090;
     unsigned int cfgport = 9091;
     Source  *srcsdr = 0;
-    unsigned int outputbuf_samples = 250000;
+    unsigned int outputbuf_samples = 48 * UDPSIZE;
 
     fprintf(stderr,
             "SDRDaemon - Collect samples from SDR device and send it over the network via UDP\n");
@@ -377,8 +381,8 @@ int main(int argc, char **argv)
     }
 
     // Prepare output writer.
-    UDPSink udp_output_instance(dataaddress, dataport);
-    std::unique_ptr<UDPSink> udp_output(&udp_output_instance);
+    UDPSink *udp_output_instance = new UDPSink(dataaddress, dataport, UDPSIZE);
+    std::unique_ptr<UDPSink> udp_output(udp_output_instance);
 
     if (!(*udp_output))
     {

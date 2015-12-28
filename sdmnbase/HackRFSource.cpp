@@ -485,11 +485,13 @@ void HackRFSource::callback(const char* buf, int len)
 
     for (int i = 0; i < len/4; i++)
     {
-        uint8_t re_0 = buf[4*i];
-        uint8_t im_0 = buf[4*i+1];
-        uint8_t re_1 = buf[4*i+2];
-        uint8_t im_1 = buf[4*i+3];
-        iqsamples[i] = IQSample((re_0<<8) + im_0, (re_1<<8) + im_1);
+    	// pack 8 bit samples onto 16 bit samples vector
+    	// invert I and Q because of the little Indians
+        int16_t re_0 = buf[4*i] - 128;
+        int16_t im_0 = buf[4*i+1] - 128;
+        int16_t re_1 = buf[4*i+2] - 128;
+        int16_t im_1 = buf[4*i+3] - 128;
+        iqsamples[i] = IQSample((im_0<<8) | (re_0 & 0xFF), (im_1<<8) | (re_1 & 0xFF));
     }
 
     m_buf->push(move(iqsamples));

@@ -378,11 +378,13 @@ bool RtlSdrSource::get_samples(IQSampleVector *samples)
 
     for (int i = 0; i < m_this->m_block_length; i++)
     {
-        int16_t re_0 = buf[4*i];
-        int16_t im_0 = buf[4*i+1];
-        int16_t re_1 = buf[4*i+2];
-        int16_t im_1 = buf[4*i+3];
-        (*samples)[i] = IQSample((re_0<<8) | im_0, (re_1<<8) | im_1);
+    	// pack 8 bit samples onto 16 bit samples vector
+    	// invert I and Q because of the little Indians
+        int16_t re_0 = buf[4*i] - 128;
+        int16_t im_0 = buf[4*i+1] - 128;
+        int16_t re_1 = buf[4*i+2] - 128;
+        int16_t im_1 = buf[4*i+3] - 128;
+        (*samples)[i] = IQSample((im_0<<8) | (re_0 & 0xFF), (im_1<<8) | (re_1 & 0xFF));
     }
 
     return true;

@@ -34,6 +34,6 @@ void UDPSink::write(const IQSampleVector& samples_in)
 {
 	for (unsigned int i = 0; i < samples_in.size(); i += m_udpSize)
 	{
-		m_socket.SendDataGram((const void *) &samples_in[i], (int) m_udpSize * 8, m_address, m_port);
+		m_socket.SendDataGram((const void *) &samples_in[i], (int) m_udpSize * 4, m_address, m_port);
 	}
 }

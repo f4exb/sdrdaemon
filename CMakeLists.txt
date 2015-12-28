@@ -58,7 +58,6 @@ set(CMAKE_CXX_FLAGS "-Wall -std=c++11 -O2 -ffast-math -ftree-vectorize ${EXTRA_F
 
 set(sdmnbase_SOURCES
     sdmnbase/Downsampler.cpp
-    sdmnbase/Filter.cpp
     sdmnbase/UDPSink.cpp
     sdmnbase/UDPSocket.cpp
 )
@@ -66,7 +65,6 @@ set(sdmnbase_SOURCES
 set(sdmnbase_HEADERS
     include/DataBuffer.h
     include/Downsampler.h
-    include/Filter.h
     include/parsekv.h
     include/Source.h
     include/UDPSink.h

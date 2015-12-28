@@ -358,9 +358,9 @@ bool RtlSdrSource::get_samples(IQSampleVector *samples)
         return false;
     }
 
-    std::vector<uint8_t> buf(2 * m_this->m_block_length);
+    std::vector<uint8_t> buf(4 * m_this->m_block_length);
 
-    r = rtlsdr_read_sync(m_this->m_dev, buf.data(), 2 * m_this->m_block_length, &n_read);
+    r = rtlsdr_read_sync(m_this->m_dev, buf.data(), 4 * m_this->m_block_length, &n_read);
 
     if (r < 0)
     {
@@ -368,7 +368,7 @@ bool RtlSdrSource::get_samples(IQSampleVector *samples)
         return false;
     }
 
-    if (n_read != 2 *m_this-> m_block_length)
+    if (n_read != 4 * m_this-> m_block_length)
     {
         m_this->m_error = "short read, samples lost";
         return false;
@@ -378,10 +378,11 @@ bool RtlSdrSource::get_samples(IQSampleVector *samples)
 
     for (int i = 0; i < m_this->m_block_length; i++)
     {
-        int32_t re = buf[2*i];
-        int32_t im = buf[2*i+1];
-        (*samples)[i] = IQSample( (re - 128) / IQSample::value_type(128),
-                               (im - 128) / IQSample::value_type(128) );
+        uint8_t re_0 = buf[4*i];
+        uint8_t im_0 = buf[4*i+1];
+        uint8_t re_1 = buf[4*i+2];
+        uint8_t im_1 = buf[4*i+3];
+        (*samples)[i] = IQSample((re_0<<8) + im_0, (re_1<<8) + im_1);
     }
 
     return true;

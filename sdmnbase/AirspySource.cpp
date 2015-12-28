@@ -556,10 +556,9 @@ void AirspySource::callback(const short* buf, int len)
 
     for (int i = 0, j = 0; i < len; i+=2, j++)
     {
-        int32_t re = buf[i];
-        int32_t im = buf[i+1];
-        iqsamples[j] = IQSample( re / IQSample::value_type(1<<11),   // 12 bits samples
-                                 im / IQSample::value_type(1<<11) );
+        int16_t re = buf[i];
+        int16_t im = buf[i+1];
+        iqsamples[j] = IQSample(re, im);
     }
 
     m_buf->push(move(iqsamples));

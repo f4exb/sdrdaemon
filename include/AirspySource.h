@@ -40,6 +40,9 @@ public:
 
     virtual bool configure(parsekv::pairs_type& m);
 
+    /** Return sample size in bits */
+    virtual std::uint32_t get_sample_size() { return 12; }
+
     /** Return current sample frequency in Hz. */
     virtual std::uint32_t get_sample_rate();
 

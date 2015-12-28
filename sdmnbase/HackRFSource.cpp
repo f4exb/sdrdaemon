@@ -481,13 +481,15 @@ void HackRFSource::callback(const char* buf, int len)
 {
     IQSampleVector iqsamples;
 
-    iqsamples.resize(len/2);
+    iqsamples.resize(len/4);
 
-    for (int i = 0; i < len/2; i++) {
-        int32_t re = buf[2*i];
-        int32_t im = buf[2*i+1];
-        iqsamples[i] = IQSample( (re - 128) / IQSample::value_type(128),
-                               (im - 128) / IQSample::value_type(128) );
+    for (int i = 0; i < len/4; i++)
+    {
+        uint8_t re_0 = buf[4*i];
+        uint8_t im_0 = buf[4*i+1];
+        uint8_t re_1 = buf[4*i+2];
+        uint8_t im_1 = buf[4*i+3];
+        iqsamples[i] = IQSample((re_0<<8) + im_0, (re_1<<8) + im_1);
     }
 
     m_buf->push(move(iqsamples));

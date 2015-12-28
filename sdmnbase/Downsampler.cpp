@@ -66,10 +66,12 @@ bool Downsampler::configure(parsekv::pairs_type& m)
 	return true;
 }
 
-void Downsampler::process(const IQSampleVector& samples_in, IQSampleVector& samples_out)
+void Downsampler::process(unsigned int& sampleSize, const IQSampleVector& samples_in, IQSampleVector& samples_out)
 {
 	if (m_decim == 0)
 	{
 		samples_out = samples_in;
 	}
+
+	sampleSize += m_decim;
 }

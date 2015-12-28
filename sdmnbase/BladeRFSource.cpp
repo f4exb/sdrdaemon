@@ -437,10 +437,9 @@ bool BladeRFSource::get_samples(IQSampleVector *samples)
 
     for (int i = 0; i < m_blockSize; i++)
     {
-        int32_t re = buf[2*i];
-        int32_t im = buf[2*i+1];
-        (*samples)[i] = IQSample( re / IQSample::value_type(1<<11),
-                                  im / IQSample::value_type(1<<11) );
+        int16_t re = buf[2*i];
+        int16_t im = buf[2*i+1];
+        (*samples)[i] = IQSample(re, im);
     }
 
     return true;

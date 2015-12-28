@@ -47,13 +47,13 @@ public:
 	/** Configure downsampler dynamically */
 	bool configure(parsekv::pairs_type& m);
 
-	/** Return true if no decimation takes place */
-	bool noDecimation() const { return m_decim == 0; }
+	/** Return log2 of decimation */
+	bool getLog2Decimation() const { return m_decim; }
 
     /**
      * Process samples.
      */
-    void process(const IQSampleVector& samples_in, IQSampleVector& samples_out);
+    void process(unsigned int& sampleSize, const IQSampleVector& samples_in, IQSampleVector& samples_out);
 
     /** State operator */
     operator bool() const

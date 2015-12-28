@@ -19,32 +19,35 @@
 #ifndef SOFTFM_H
 #define SOFTFM_H
 
-#include <complex>
+#include <cstdint>
 #include <vector>
 
-typedef std::complex<float> IQSample;
-typedef std::vector<IQSample> IQSampleVector;
+typedef std::int16_t FixReal;
 
-typedef double Sample;
-typedef std::vector<Sample> SampleVector;
-
-
-/** Compute mean and RMS over a sample vector. */
-inline void samples_mean_rms(const SampleVector& samples,
-                             double& mean, double& rms)
+#pragma pack(push, 1)
+struct IQSample
 {
-    Sample vsum = 0;
-    Sample vsumsq = 0;
+	IQSample() : m_real(0), m_imag(0) {}
+	IQSample(FixReal real) : m_real(real), m_imag(0) {}
+	IQSample(FixReal real, FixReal imag) : m_real(real), m_imag(imag) {}
+	IQSample(const IQSample& other) : m_real(other.m_real), m_imag(other.m_imag) {}
+	inline IQSample& operator=(const IQSample& other) { m_real = other.m_real; m_imag = other.m_imag; return *this; }
 
-    unsigned int n = samples.size();
-    for (unsigned int i = 0; i < n; i++) {
-        Sample v = samples[i];
-        vsum   += v;
-        vsumsq += v * v;
-    }
+	inline IQSample& operator+=(const IQSample& other) { m_real += other.m_real; m_imag += other.m_imag; return *this; }
+	inline IQSample& operator-=(const IQSample& other) { m_real -= other.m_real; m_imag -= other.m_imag; return *this; }
 
-    mean = vsum / n;
-    rms  = sqrt(vsumsq / n);
-}
+	inline void setReal(FixReal v) { m_real = v; }
+	inline void setImag(FixReal v) { m_imag = v; }
+
+	inline FixReal real() const { return m_real; }
+	inline FixReal imag() const { return m_imag; }
+
+	FixReal m_real;
+	FixReal m_imag;
+};
+#pragma pack(pop)
+
+typedef std::vector<IQSample> IQSampleVector;
+typedef std::vector<FixReal> SampleVector;
 
 #endif

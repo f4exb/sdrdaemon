@@ -502,7 +502,7 @@ int main(int argc, char **argv)
 
         // Possible downsampling and write to UDP
 
-        if (dn.noDecimation())
+        if (dn.getLog2Decimation() == 0)
         {
         	if (outputbuf_samples > 0)
         	{
@@ -517,7 +517,8 @@ int main(int argc, char **argv)
         }
         else
         {
-			dn.process(iqsamples, outsamples);
+        	unsigned int sampleSize = srcsdr->get_sample_size();
+			dn.process(sampleSize, iqsamples, outsamples);
 
 			// Throw away first block. It is noisy because IF filters
 			// are still starting up.

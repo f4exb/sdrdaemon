@@ -405,7 +405,8 @@ bool HackRFSource::configure(parsekv::pairs_type& m)
 	}
 
     m_confFreq = frequency;
-    double tuner_freq = frequency + 0.25 * sampleRate;
+    //double tuner_freq = frequency + 0.25 * sampleRate;
+    double tuner_freq = frequency;
     return configure(sampleRate, tuner_freq, extAmp, antBias, lnaGain, vgaGain, bandwidth);
 }
 

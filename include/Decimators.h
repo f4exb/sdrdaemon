@@ -28,6 +28,12 @@ public:
 	static void decimate2_inf(unsigned int& sampleSize, const IQSampleVector& in, IQSampleVector& out);
 	static void decimate2_sup(unsigned int& sampleSize, const IQSampleVector& in, IQSampleVector& out);
 	void decimate2_cen(unsigned int& sampleSize, const IQSampleVector& in, IQSampleVector& out);
+	static void decimate4_inf(unsigned int& sampleSize, const IQSampleVector& in, IQSampleVector& out);
+	static void decimate4_sup(unsigned int& sampleSize, const IQSampleVector& in, IQSampleVector& out);
+	void decimate4_cen(unsigned int& sampleSize, const IQSampleVector& in, IQSampleVector& out);
+	void decimate8_inf(unsigned int& sampleSize, const IQSampleVector& in, IQSampleVector& out);
+	void decimate8_sup(unsigned int& sampleSize, const IQSampleVector& in, IQSampleVector& out);
+	void decimate8_cen(unsigned int& sampleSize, const IQSampleVector& in, IQSampleVector& out);
 
 private:
 	IntHalfbandFilter m_decimator2;  // 1st stages

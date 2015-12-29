@@ -16,65 +16,26 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.          //
 ///////////////////////////////////////////////////////////////////////////////////
 
-#ifndef INCLUDE_DOWNSAMPLER_H_
-#define INCLUDE_DOWNSAMPLER_H_
+#ifndef INCLUDE_DECIMATORS_H_
+#define INCLUDE_DECIMATORS_H_
 
-#include "Decimators.h"
 #include "SDRDaemon.h"
-#include "parsekv.h"
+#include "IntHalfbandFilter.h"
 
-class Downsampler
+class Decimators
 {
 public:
-	/** Center frequency relative position when downsampling */
-	typedef enum {
-		FC_POS_INFRA = 0,
-		FC_POS_SUPRA,
-		FC_POS_CENTER
-	} fcPos_t;
-
-	/**
-	 * Construct Downsampler
-	 *
-     * decim            :: log2 of decimation factor
-     * fcpos            :: Position of center frequency
-	 */
-	Downsampler(unsigned int decim = 0,
-			fcPos_t fcPos = FC_POS_CENTER);
-
-	/** Destroy Downsampler */
-	~Downsampler();
-
-	/** Configure downsampler dynamically */
-	bool configure(parsekv::pairs_type& m);
-
-	/** Return log2 of decimation */
-	bool getLog2Decimation() const { return m_decim; }
-
-    /**
-     * Process samples.
-     */
-    void process(unsigned int& sampleSize, const IQSampleVector& samples_in, IQSampleVector& samples_out);
-
-    /** State operator */
-    operator bool() const
-	{
-    	return m_error.empty();
-	}
-
-    /** Return the last error, or return an empty string if there is no error. */
-    std::string error()
-    {
-        std::string ret(m_error);
-        m_error.clear();
-        return ret;
-    }
+	static void decimate2_inf(unsigned int& sampleSize, const IQSampleVector& in, IQSampleVector& out);
+	static void decimate2_sup(unsigned int& sampleSize, const IQSampleVector& in, IQSampleVector& out);
+	void decimate2_cen(unsigned int& sampleSize, const IQSampleVector& in, IQSampleVector& out);
 
 private:
-    unsigned int m_decim;
-    fcPos_t      m_fcPos;
-    Decimators   m_decimators;
-    std::string  m_error;
+	IntHalfbandFilter m_decimator2;  // 1st stages
+	IntHalfbandFilter m_decimator4;  // 2nd stages
+	IntHalfbandFilter m_decimator8;  // 3rd stages
+	IntHalfbandFilter m_decimator16; // 4th stages
+	IntHalfbandFilter m_decimator32; // 5th stages
+	IntHalfbandFilter m_decimator64; // 6th stages
 };
 
-#endif /* INCLUDE_DOWNSAMPLER_H_ */
+#endif /* INCLUDE_DECIMATORS_H_ */

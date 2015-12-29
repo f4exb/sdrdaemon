@@ -16,18 +16,7 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.          //
 ///////////////////////////////////////////////////////////////////////////////////
 
-#ifndef INCLUDE_DECIMATORS_H_
-#define INCLUDE_DECIMATORS_H_
-
-#include "SDRDaemon.h"
-
-class Decimators
-{
-public:
-	static void decimate2_inf(unsigned int& sampleSize, const IQSampleVector& in, IQSampleVector& out);
-	static void decimate2_sup(unsigned int& sampleSize, const IQSampleVector& in, IQSampleVector& out);
-	//void decimate2_cen(unsigned int sampleSize, const IQSampleVector& in, IQSampleVector& out);
-};
+#include "Decimators.h"
 
 /** double byte samples to double byte samples decimation by 2 low band */
 void Decimators::decimate2_inf(unsigned int& sampleSize, const IQSampleVector& in, IQSampleVector& out)
@@ -51,19 +40,6 @@ void Decimators::decimate2_inf(unsigned int& sampleSize, const IQSampleVector& i
         it->setReal(xreal >> decimation_shift);
         it->setImag(yimag >> decimation_shift);
         ++it;
-
-        /*
-		xreal = (buf[pos+0] - buf[pos+3]) << decimation_shifts<SdrBits, InputBits>::pre2;
-		yimag = (buf[pos+1] + buf[pos+2]) << decimation_shifts<SdrBits, InputBits>::pre2;
-		(**it).setReal(xreal >> decimation_shifts<SdrBits, InputBits>::post2);
-		(**it).setImag(yimag >> decimation_shifts<SdrBits, InputBits>::post2);
-		++(*it);
-
-		xreal = (buf[pos+7] - buf[pos+4]) << decimation_shifts<SdrBits, InputBits>::pre2;
-		yimag = (- buf[pos+5] - buf[pos+6]) << decimation_shifts<SdrBits, InputBits>::pre2;
-		(**it).setReal(xreal >> decimation_shifts<SdrBits, InputBits>::post2);
-		(**it).setImag(yimag >> decimation_shifts<SdrBits, InputBits>::post2);
-		++(*it);*/
 	}
 
 	sampleSize += (1 - decimation_shift);
@@ -96,4 +72,28 @@ void Decimators::decimate2_sup(unsigned int& sampleSize, const IQSampleVector& i
 	sampleSize += (1 - decimation_shift);
 }
 
-#endif /* INCLUDE_DECIMATORS_H_ */
+/** double byte samples to double byte samples decimation by 2 centered */
+void Decimators::decimate2_cen(unsigned int& sampleSize, const IQSampleVector& in, IQSampleVector& out)
+{
+	std::size_t len = in.size();
+	out.resize(len/2);
+	IQSampleVector::iterator it = out.begin();
+	unsigned int decimation_shift = (sampleSize < 15 ? 0 : sampleSize - 15);
+	int32_t intbuf[2];
+
+	for (unsigned int pos = 0; pos < len - 1; pos += 2)
+	{
+		intbuf[0]  = in[pos+1].real();
+		intbuf[1]  = in[pos+1].imag();
+
+		m_decimator2.myDecimate(
+				in[pos+0].real(),
+				in[pos+0].imag(),
+				&intbuf[0],
+				&intbuf[1]);
+
+		it->setReal(intbuf[0] >> decimation_shift);
+		it->setImag(intbuf[1] >> decimation_shift);
+		++it;
+	}
+}

@@ -17,7 +17,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
 
 #include "Downsampler.h"
-#include "decimators.h"
 
 Downsampler::Downsampler(unsigned int decim,
 		fcPos_t fcPos) :
@@ -92,6 +91,17 @@ void Downsampler::process(unsigned int& sampleSize, const IQSampleVector& sample
 			{
 			case 1:
 				Decimators::decimate2_sup(sampleSize, samples_in, samples_out);
+				break;
+			default:
+				break;
+			}
+		}
+		else // centered
+		{
+			switch (m_decim)
+			{
+			case 1:
+				m_decimators.decimate2_cen(sampleSize, samples_in, samples_out);
 				break;
 			default:
 				break;

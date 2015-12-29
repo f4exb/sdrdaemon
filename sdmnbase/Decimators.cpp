@@ -487,3 +487,282 @@ void Decimators::decimate16_cen(unsigned int& sampleSize, const IQSampleVector& 
 	sampleSize += (4 - decimation_shift);
 }
 
+/** double byte samples to double byte samples decimation by 32 low band */
+void Decimators::decimate32_inf(unsigned int& sampleSize, const IQSampleVector& in, IQSampleVector& out)
+{
+	std::size_t len = in.size();
+	out.resize(len/32);
+	IQSampleVector::iterator it = out.begin();
+	unsigned int decimation_shift = (sampleSize < 11 ? 0 : sampleSize - 11);
+
+	std::int32_t xreal[8], yimag[8];
+
+	for (unsigned int pos = 0; pos < len - 31; )
+	{
+		for (int i = 0; i < 8; i++)
+		{
+			xreal[i] = in[pos+0].real() - in[pos+1].imag() + in[pos+3].imag() - in[pos+2].real();
+			yimag[i] = in[pos+0].imag() - in[pos+2].imag() + in[pos+1].real() - in[pos+3].real();
+			pos += 4;
+		}
+
+		m_decimator2.myDecimate(xreal[0], yimag[0], &xreal[1], &yimag[1]);
+		m_decimator2.myDecimate(xreal[2], yimag[2], &xreal[3], &yimag[3]);
+		m_decimator2.myDecimate(xreal[4], yimag[4], &xreal[5], &yimag[5]);
+		m_decimator2.myDecimate(xreal[6], yimag[6], &xreal[7], &yimag[7]);
+
+		m_decimator4.myDecimate(xreal[1], yimag[1], &xreal[3], &yimag[3]);
+		m_decimator4.myDecimate(xreal[5], yimag[5], &xreal[7], &yimag[7]);
+
+		m_decimator8.myDecimate(xreal[3], yimag[3], &xreal[7], &yimag[7]);
+
+		it->setReal(xreal[7] >> decimation_shift);
+        it->setImag(yimag[7] >> decimation_shift);
+        ++it;
+	}
+
+	sampleSize += (5 - decimation_shift);
+}
+
+/** double byte samples to double byte samples decimation by 32 high band */
+void Decimators::decimate32_sup(unsigned int& sampleSize, const IQSampleVector& in, IQSampleVector& out)
+{
+	std::size_t len = in.size();
+	out.resize(len/32);
+	IQSampleVector::iterator it = out.begin();
+	unsigned int decimation_shift = (sampleSize < 11 ? 0 : sampleSize - 11);
+
+	std::int32_t xreal[8], yimag[8];
+
+	for (unsigned int pos = 0; pos < len - 31; )
+	{
+		for (int i = 0; i < 8; i++)
+		{
+			xreal[i] =  in[pos+0].imag() - in[pos+1].real() - in[pos+2].imag() + in[pos+3].real();
+			yimag[i] = -in[pos+0].real() - in[pos+1].imag() + in[pos+2].real() + in[pos+3].imag();
+			pos += 4;
+		}
+
+		m_decimator2.myDecimate(xreal[0], yimag[0], &xreal[1], &yimag[1]);
+		m_decimator2.myDecimate(xreal[2], yimag[2], &xreal[3], &yimag[3]);
+		m_decimator2.myDecimate(xreal[4], yimag[4], &xreal[5], &yimag[5]);
+		m_decimator2.myDecimate(xreal[6], yimag[6], &xreal[7], &yimag[7]);
+
+		m_decimator4.myDecimate(xreal[1], yimag[1], &xreal[3], &yimag[3]);
+		m_decimator4.myDecimate(xreal[5], yimag[5], &xreal[7], &yimag[7]);
+
+		m_decimator8.myDecimate(xreal[3], yimag[3], &xreal[7], &yimag[7]);
+
+		it->setReal(xreal[7] >> decimation_shift);
+        it->setImag(yimag[7] >> decimation_shift);
+        ++it;
+	}
+
+	sampleSize += (5 - decimation_shift);
+}
+
+/** double byte samples to double byte samples decimation by 32 centered */
+void Decimators::decimate32_cen(unsigned int& sampleSize, const IQSampleVector& in, IQSampleVector& out)
+{
+	std::size_t len = in.size();
+	out.resize(len/32);
+	IQSampleVector::iterator it = out.begin();
+	unsigned int decimation_shift = (sampleSize < 11 ? 0 : sampleSize - 11);
+	int32_t intbuf[32];
+
+	for (unsigned int pos = 0; pos < len - 31; pos += 32)
+	{
+		intbuf[0]  = in[pos+1].real();
+		intbuf[1]  = in[pos+1].imag();
+		intbuf[2]  = in[pos+3].real();
+		intbuf[3]  = in[pos+3].imag();
+		intbuf[4]  = in[pos+5].real();
+		intbuf[5]  = in[pos+5].imag();
+		intbuf[6]  = in[pos+7].real();
+		intbuf[7]  = in[pos+7].imag();
+		intbuf[8]  = in[pos+9].real();
+		intbuf[9]  = in[pos+9].imag();
+		intbuf[10] = in[pos+11].real();
+		intbuf[11] = in[pos+11].imag();
+		intbuf[12] = in[pos+13].real();
+		intbuf[13] = in[pos+13].imag();
+		intbuf[14] = in[pos+15].real();
+		intbuf[15] = in[pos+15].imag();
+		intbuf[16] = in[pos+17].real();
+		intbuf[17] = in[pos+17].imag();
+		intbuf[18] = in[pos+19].real();
+		intbuf[19] = in[pos+19].imag();
+		intbuf[20] = in[pos+21].real();
+		intbuf[21] = in[pos+21].imag();
+		intbuf[22] = in[pos+23].real();
+		intbuf[23] = in[pos+23].imag();
+		intbuf[24] = in[pos+25].real();
+		intbuf[25] = in[pos+25].imag();
+		intbuf[26] = in[pos+27].real();
+		intbuf[27] = in[pos+27].imag();
+		intbuf[28] = in[pos+29].real();
+		intbuf[29] = in[pos+29].imag();
+		intbuf[30] = in[pos+31].real();
+		intbuf[31] = in[pos+31].imag();
+
+		m_decimator2.myDecimate(
+				in[pos+0].real(),
+				in[pos+0].imag(),
+				&intbuf[0],
+				&intbuf[1]);
+		m_decimator2.myDecimate(
+				in[pos+2].real(),
+				in[pos+2].imag(),
+				&intbuf[2],
+				&intbuf[3]);
+		m_decimator2.myDecimate(
+				in[pos+4].real(),
+				in[pos+4].imag(),
+				&intbuf[4],
+				&intbuf[5]);
+		m_decimator2.myDecimate(
+				in[pos+6].real(),
+				in[pos+6].imag(),
+				&intbuf[6],
+				&intbuf[7]);
+		m_decimator2.myDecimate(
+				in[pos+8].real(),
+				in[pos+8].imag(),
+				&intbuf[8],
+				&intbuf[9]);
+		m_decimator2.myDecimate(
+				in[pos+10].real(),
+				in[pos+10].imag(),
+				&intbuf[10],
+				&intbuf[11]);
+		m_decimator2.myDecimate(
+				in[pos+12].real(),
+				in[pos+12].imag(),
+				&intbuf[12],
+				&intbuf[13]);
+		m_decimator2.myDecimate(
+				in[pos+14].real(),
+				in[pos+14].imag(),
+				&intbuf[14],
+				&intbuf[15]);
+		m_decimator2.myDecimate(
+				in[pos+16].real(),
+				in[pos+16].imag(),
+				&intbuf[16],
+				&intbuf[17]);
+		m_decimator2.myDecimate(
+				in[pos+18].real(),
+				in[pos+18].imag(),
+				&intbuf[18],
+				&intbuf[19]);
+		m_decimator2.myDecimate(
+				in[pos+20].real(),
+				in[pos+20].imag(),
+				&intbuf[20],
+				&intbuf[21]);
+		m_decimator2.myDecimate(
+				in[pos+22].real(),
+				in[pos+22].imag(),
+				&intbuf[22],
+				&intbuf[23]);
+		m_decimator2.myDecimate(
+				in[pos+24].real(),
+				in[pos+24].imag(),
+				&intbuf[24],
+				&intbuf[25]);
+		m_decimator2.myDecimate(
+				in[pos+26].real(),
+				in[pos+26].imag(),
+				&intbuf[26],
+				&intbuf[27]);
+		m_decimator2.myDecimate(
+				in[pos+28].real(),
+				in[pos+28].imag(),
+				&intbuf[28],
+				&intbuf[29]);
+		m_decimator2.myDecimate(
+				in[pos+30].real(),
+				in[pos+30].imag(),
+				&intbuf[30],
+				&intbuf[31]);
+
+		m_decimator4.myDecimate(
+				intbuf[0],
+				intbuf[1],
+				&intbuf[2],
+				&intbuf[3]);
+		m_decimator4.myDecimate(
+				intbuf[4],
+				intbuf[5],
+				&intbuf[6],
+				&intbuf[7]);
+		m_decimator4.myDecimate(
+				intbuf[8],
+				intbuf[9],
+				&intbuf[10],
+				&intbuf[11]);
+		m_decimator4.myDecimate(
+				intbuf[12],
+				intbuf[13],
+				&intbuf[14],
+				&intbuf[15]);
+		m_decimator4.myDecimate(
+				intbuf[16],
+				intbuf[17],
+				&intbuf[18],
+				&intbuf[19]);
+		m_decimator4.myDecimate(
+				intbuf[20],
+				intbuf[21],
+				&intbuf[22],
+				&intbuf[23]);
+		m_decimator4.myDecimate(
+				intbuf[24],
+				intbuf[25],
+				&intbuf[26],
+				&intbuf[27]);
+		m_decimator4.myDecimate(
+				intbuf[28],
+				intbuf[29],
+				&intbuf[30],
+				&intbuf[31]);
+
+		m_decimator8.myDecimate(
+				intbuf[2],
+				intbuf[3],
+				&intbuf[6],
+				&intbuf[7]);
+		m_decimator8.myDecimate(
+				intbuf[10],
+				intbuf[11],
+				&intbuf[14],
+				&intbuf[15]);
+		m_decimator8.myDecimate(
+				intbuf[18],
+				intbuf[19],
+				&intbuf[22],
+				&intbuf[23]);
+		m_decimator8.myDecimate(
+				intbuf[26],
+				intbuf[27],
+				&intbuf[30],
+				&intbuf[31]);
+
+		m_decimator16.myDecimate(
+				intbuf[6],
+				intbuf[7],
+				&intbuf[14],
+				&intbuf[15]);
+		m_decimator16.myDecimate(
+				intbuf[22],
+				intbuf[23],
+				&intbuf[30],
+				&intbuf[31]);
+
+		it->setReal(intbuf[30] >> decimation_shift);
+		it->setImag(intbuf[31] >> decimation_shift);
+		++it;
+	}
+
+	sampleSize += (5 - decimation_shift);
+}

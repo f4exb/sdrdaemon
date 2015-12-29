@@ -90,6 +90,9 @@ void Downsampler::process(unsigned int& sampleSize, const IQSampleVector& sample
 			case 4:
 				m_decimators.decimate16_inf(sampleSize, samples_in, samples_out);
 				break;
+			case 5:
+				m_decimators.decimate32_inf(sampleSize, samples_in, samples_out);
+				break;
 			default:
 				break;
 			}
@@ -110,6 +113,9 @@ void Downsampler::process(unsigned int& sampleSize, const IQSampleVector& sample
 			case 4:
 				m_decimators.decimate16_sup(sampleSize, samples_in, samples_out);
 				break;
+			case 5:
+				m_decimators.decimate32_sup(sampleSize, samples_in, samples_out);
+				break;
 			default:
 				break;
 			}
@@ -129,6 +135,9 @@ void Downsampler::process(unsigned int& sampleSize, const IQSampleVector& sample
 				break;
 			case 4:
 				m_decimators.decimate16_cen(sampleSize, samples_in, samples_out);
+				break;
+			case 5:
+				m_decimators.decimate32_cen(sampleSize, samples_in, samples_out);
 				break;
 			default:
 				break;

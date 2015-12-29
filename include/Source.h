@@ -30,7 +30,7 @@
 class Source
 {
 public:
-    Source() : m_confFreq(0), m_buf(0) {}
+    Source() : m_confFreq(0), m_decim(0), m_fcPos(2), m_buf(0) {}
     virtual ~Source() {}
 
     /**
@@ -84,6 +84,8 @@ protected:
     std::string          m_devname;
     std::string          m_error;
     uint32_t             m_confFreq;
+    unsigned int         m_decim;
+    int                  m_fcPos;
     DataBuffer<IQSample> *m_buf;
     std::atomic_bool     *m_stop_flag;
 };

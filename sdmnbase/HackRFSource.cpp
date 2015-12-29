@@ -291,6 +291,7 @@ bool HackRFSource::configure(parsekv::pairs_type& m)
     uint32_t bandwidth = 2500000;
     bool extAmp = false;
     bool antBias = false;
+    int fcpos = 2; // default centered
 
 	if (m.find("srate") != m.end())
 	{
@@ -404,9 +405,33 @@ bool HackRFSource::configure(parsekv::pairs_type& m)
 		antBias = true;
 	}
 
+	if (m.find("fcpos") != m.end())
+	{
+		std::cerr << "HackRFSource::configure: fcpos: " << m["fcpos"] << std::endl;
+		fcpos = atoi(m["fcpos"].c_str());
+
+		if ((fcpos < 0) || (fcpos > 2))
+		{
+			m_error = "Invalid center frequency position";
+			return false;
+		}
+		else
+		{
+			m_fcPos = fcpos;
+		}
+	}
+
     m_confFreq = frequency;
-    //double tuner_freq = frequency + 0.25 * sampleRate;
-    double tuner_freq = frequency;
+	double tuner_freq;
+
+	if (m_fcPos == 0) { // Infradyne
+		tuner_freq = frequency + 0.25 * sampleRate;
+	} else if (m_fcPos == 1) { // Supradyne
+		tuner_freq = frequency - 0.25 * sampleRate;
+	} else { // Centered
+		tuner_freq = frequency;
+	}
+
     return configure(sampleRate, tuner_freq, extAmp, antBias, lnaGain, vgaGain, bandwidth);
 }
 
@@ -482,17 +507,30 @@ void HackRFSource::callback(const char* buf, int len)
 {
     IQSampleVector iqsamples;
 
-    iqsamples.resize(len/4);
-
-    for (int i = 0; i < len/4; i++)
+    if (m_decim == 0) // no decimation will take place
     {
-    	// pack 8 bit samples onto 16 bit samples vector
-    	// invert I and Q because of the little Indians
-        int16_t re_0 = buf[4*i] - 128;
-        int16_t im_0 = buf[4*i+1] - 128;
-        int16_t re_1 = buf[4*i+2] - 128;
-        int16_t im_1 = buf[4*i+3] - 128;
-        iqsamples[i] = IQSample((im_0<<8) | (re_0 & 0xFF), (im_1<<8) | (re_1 & 0xFF));
+		iqsamples.resize(len/4);
+
+		for (int i = 0; i < len/4; i++)
+		{
+			// pack 8 bit samples onto 16 bit samples vector
+			// invert I and Q because of the little Indians
+			int16_t re_0 = buf[4*i] - 128;
+			int16_t im_0 = buf[4*i+1] - 128;
+			int16_t re_1 = buf[4*i+2] - 128;
+			int16_t im_1 = buf[4*i+3] - 128;
+			iqsamples[i] = IQSample((im_0<<8) | (re_0 & 0xFF), (im_1<<8) | (re_1 & 0xFF));
+		}
+    }
+    else // as decimation will take place store samples in 16 bit slots
+    {
+		iqsamples.resize(len/2);
+
+		for (int i = 0; i < len/4; i++)
+		{
+			iqsamples[2*i]   = IQSample(buf[4*i]   - 128, buf[4*i+1] - 128);
+			iqsamples[2*i+1] = IQSample(buf[4*i+2] - 128, buf[4*i+3] - 128);
+		}
     }
 
     m_buf->push(move(iqsamples));

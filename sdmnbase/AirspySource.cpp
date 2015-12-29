@@ -358,6 +358,7 @@ bool AirspySource::configure(parsekv::pairs_type& m)
     bool antBias = false;
     bool lnaAGC = false;
     bool mixAGC = false;
+    int fcpos = 2; // default centered
 
 	if (m.find("srate") != m.end())
 	{
@@ -475,8 +476,33 @@ bool AirspySource::configure(parsekv::pairs_type& m)
 		mixAGC = true;
 	}
 
-    m_confFreq = frequency;
-    double tuner_freq = frequency + 0.25 * m_srates[sampleRateIndex];
+	if (m.find("fcpos") != m.end())
+	{
+		std::cerr << "AirspySource::configure: fcpos: " << m["fcpos"] << std::endl;
+		fcpos = atoi(m["fcpos"].c_str());
+
+		if ((fcpos < 0) || (fcpos > 2))
+		{
+			m_error = "Invalid center frequency position";
+			return false;
+		}
+		else
+		{
+			m_fcPos = fcpos;
+		}
+	}
+
+	m_confFreq = frequency;
+	double tuner_freq;
+
+	if (m_fcPos == 0) { // Infradyne
+		tuner_freq = frequency + 0.25 * m_srates[sampleRateIndex];
+	} else if (m_fcPos == 1) { // Supradyne
+		tuner_freq = frequency - 0.25 * m_srates[sampleRateIndex];
+	} else { // Centered
+		tuner_freq = frequency;
+	}
+
     return configure(sampleRateIndex, tuner_freq, antBias, lnaGain, mixGain, vgaGain, lnaAGC, mixAGC);
 }
 

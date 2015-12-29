@@ -191,6 +191,7 @@ bool BladeRFSource::configure(parsekv::pairs_type& m)
     int lnaGainIndex = 2; // 3 dB
     int vga1Gain = 20;
     int vga2Gain = 9;
+    int fcpos = 2; // default centered
 
 	if (m.find("srate") != m.end())
 	{
@@ -302,9 +303,33 @@ bool BladeRFSource::configure(parsekv::pairs_type& m)
 		}
 	}
 
+	if (m.find("fcpos") != m.end())
+	{
+		std::cerr << "BladeRFSource::configure: fcpos: " << m["fcpos"] << std::endl;
+		fcpos = atoi(m["fcpos"].c_str());
+
+		if ((fcpos < 0) || (fcpos > 2))
+		{
+			m_error = "Invalid center frequency position";
+			return false;
+		}
+		else
+		{
+			m_fcPos = fcpos;
+		}
+	}
+
 	// Intentionally tune at a higher frequency to avoid DC offset.
 	m_confFreq = frequency;
-	double tuner_freq = frequency + 0.25 * sample_rate;
+	double tuner_freq;
+
+	if (m_fcPos == 0) { // Infradyne
+		tuner_freq = frequency + 0.25 * sample_rate;
+	} else if (m_fcPos == 1) { // Supradyne
+		tuner_freq = frequency - 0.25 * sample_rate;
+	} else { // Centered
+		tuner_freq = frequency;
+	}
 
 	return configure(sample_rate, tuner_freq, bandwidth, lnaGainIndex, vga1Gain, vga2Gain);
 }

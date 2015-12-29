@@ -86,6 +86,7 @@ bool RtlSdrSource::configure(parsekv::pairs_type& m)
     int tuner_gain = INT_MIN;
     int block_length =  default_block_length;
     bool agcmode = false;
+    int fcpos = 2; // default is center
 
 	if (m.find("srate") != m.end())
 	{
@@ -176,11 +177,50 @@ bool RtlSdrSource::configure(parsekv::pairs_type& m)
 		agcmode = true;
 	}
 
+	if (m.find("fcpos") != m.end())
+	{
+		std::cerr << "RtlSdrSource::configure: fcpos: " << m["fcpos"] << std::endl;
+		fcpos = atoi(m["fcpos"].c_str());
+
+		if ((fcpos < 0) || (fcpos > 2))
+		{
+			m_error = "Invalid center frequency position";
+			return false;
+		}
+		else
+		{
+			m_fcPos = fcpos;
+		}
+	}
+
+	if (m.find("decim") != m.end())
+	{
+		std::cerr << "RtlSdrSource::configure: decim: " << m["decim"] << std::endl;
+		int log2Decim = atoi(m["decim"].c_str());
+
+		if ((log2Decim < 0) || (log2Decim > 6))
+		{
+			m_error = "Invalid log2 decimation factor";
+			return false;
+		}
+		else
+		{
+			m_decim = log2Decim;
+		}
+	}
+
 	// Intentionally tune at a higher frequency to avoid DC offset.
 	m_confFreq = frequency;
 	m_confAgc = agcmode;
-	//double tuner_freq = frequency + 0.25 * sample_rate; // TODO: detune is now handled by the decimator
-	double tuner_freq = frequency;
+	double tuner_freq;
+
+	if (m_fcPos == 0) { // Infradyne
+		tuner_freq = frequency + 0.25 * sample_rate;
+	} else if (m_fcPos == 1) { // Supradyne
+		tuner_freq = frequency - 0.25 * sample_rate;
+	} else { // Centered
+		tuner_freq = frequency;
+	}
 
 	return configure(sample_rate, tuner_freq, ppm, tuner_gain, block_length, agcmode);
 }
@@ -374,18 +414,31 @@ bool RtlSdrSource::get_samples(IQSampleVector *samples)
         return false;
     }
 
-    samples->resize(m_this->m_block_length);
+	if (m_this->m_decim == 0) // no decimation will take place
+	{
+	    samples->resize(m_this->m_block_length);
 
-    for (int i = 0; i < m_this->m_block_length; i++)
-    {
-    	// pack 8 bit samples onto 16 bit samples vector
-    	// invert I and Q because of the little Indians
-        int16_t re_0 = buf[4*i] - 128;
-        int16_t im_0 = buf[4*i+1] - 128;
-        int16_t re_1 = buf[4*i+2] - 128;
-        int16_t im_1 = buf[4*i+3] - 128;
-        (*samples)[i] = IQSample((im_0<<8) | (re_0 & 0xFF), (im_1<<8) | (re_1 & 0xFF));
-    }
+		for (int i = 0; i < m_this->m_block_length; i++)
+		{
+			// pack 8 bit samples onto 16 bit samples vector
+			// invert I and Q because of the little Indians
+			int16_t re_0 = buf[4*i] - 128;
+			int16_t im_0 = buf[4*i+1] - 128;
+			int16_t re_1 = buf[4*i+2] - 128;
+			int16_t im_1 = buf[4*i+3] - 128;
+			(*samples)[i] = IQSample((im_0<<8) | (re_0 & 0xFF), (im_1<<8) | (re_1 & 0xFF));
+    	}
+	}
+   	else // as decimation will take place store samples in 16 bit slots
+	{
+	    samples->resize(2 * m_this->m_block_length);
+
+		for (int i = 0; i < m_this->m_block_length; i++)
+		{
+			(*samples)[2*i]   = IQSample(buf[4*i]   - 128, buf[4*i+1] - 128);
+			(*samples)[2*i+1] = IQSample(buf[4*i+2] - 128, buf[4*i+3] - 128);
+		}
+	}
 
     return true;
 }

@@ -40,6 +40,9 @@ public:
 	void decimate32_inf(unsigned int& sampleSize, const IQSampleVector& in, IQSampleVector& out);
 	void decimate32_sup(unsigned int& sampleSize, const IQSampleVector& in, IQSampleVector& out);
 	void decimate32_cen(unsigned int& sampleSize, const IQSampleVector& in, IQSampleVector& out);
+	void decimate64_inf(unsigned int& sampleSize, const IQSampleVector& in, IQSampleVector& out);
+	void decimate64_sup(unsigned int& sampleSize, const IQSampleVector& in, IQSampleVector& out);
+	void decimate64_cen(unsigned int& sampleSize, const IQSampleVector& in, IQSampleVector& out);
 
 private:
 	IntHalfbandFilter m_decimator2;  // 1st stages

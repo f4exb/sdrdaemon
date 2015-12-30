@@ -190,6 +190,10 @@ Note that these options can be used both as the initial configuration as the arg
 
 A string of comma separated key=value pairs in the same format as described in the device related options can be sent on the UDP configuration port to dynamically control the device. 
 
+<h1>GNUradio supoort</h1>
+
+A source block is available in the _gr-sdrdaemon_ subdirectory. This subdirectory is a complete OOT module that can be built independently following GNUradio standards. Please refer to the documentation found in this directory for further information.
+
 <h1>License</h1>
 
 **SDRdaemon**, copyright (C) 2015, Edouard Griffiths, F4EXB

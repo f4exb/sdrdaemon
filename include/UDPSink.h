@@ -26,6 +26,22 @@
 class UDPSink
 {
 public:
+#pragma pack(push, 1)
+	struct MetaData
+	{
+		uint32_t m_tv_sec;            //!< 04 seconds of timestamp at start time of frame processing
+		uint32_t m_tv_usec;           //!< 08 microseconds of timestamp at start time of frame processing
+		uint64_t m_centerFrequency;   //!< 16 center frequency in Hz
+		uint32_t m_sampleRate;        //!< 20 sample rate in Hz
+		uint8_t  m_sampleBytes;       //!< 21 number of bytes per sample + MSB: remainder sent first in meta block
+		uint8_t  m_sampleBits;        //!< 22 number of effective bits per sample
+		uint16_t m_samplesPerBlock;   //!< 24 number of I/Q samples per block
+		uint16_t m_remainderSamples;  //!< 26 number of remainder I/Q samples
+		uint16_t m_nbCompleteBlocks;  //!< 28 number of blocks full of samples
+		uint64_t m_crc;               //!< 36 64 bit CRC of the above
+	};
+#pragma pack(pop)
+
 	/**
 	 * Construct UDP sink
 	 *

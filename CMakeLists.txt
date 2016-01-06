@@ -57,6 +57,7 @@ set(RTLSDR_LIBRARIES    ${RTLSDR_LIBRARY} ${LIBUSB_LIBRARY})
 set(CMAKE_CXX_FLAGS "-Wall -std=c++11 -O2 -ffast-math -ftree-vectorize ${EXTRA_FLAGS}")
 
 set(sdmnbase_SOURCES
+    sdmnbase/CRC64.cpp
     sdmnbase/Decimators.cpp
     sdmnbase/Downsampler.cpp
     sdmnbase/IntHalfbandFilter.cpp
@@ -65,6 +66,7 @@ set(sdmnbase_SOURCES
 )
 
 set(sdmnbase_HEADERS
+    include/CRC64.h
     include/DataBuffer.h
     include/Decimators.h
     include/Downsampler.h

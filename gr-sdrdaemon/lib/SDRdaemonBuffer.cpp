@@ -1,5 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////
 // SDRdaemon - send I/Q samples read from a SDR device over the network via UDP. //
+//             GNUradio interface.                                               //
+//                                                                               //
+// This is an adaptation of the GNUradio UDP source                              //
 //                                                                               //
 // Copyright (C) 2015 Edouard Griffiths, F4EXB                                   //
 //                                                                               //
@@ -16,65 +19,37 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.          //
 ///////////////////////////////////////////////////////////////////////////////////
 
-#ifndef INCLUDE_DOWNSAMPLER_H_
-#define INCLUDE_DOWNSAMPLER_H_
+#include <cassert>
+#include <cstring>
+#include "SDRdaemonBuffer.h"
 
-#include "Decimators.h"
-#include "SDRDaemon.h"
-#include "parsekv.h"
-
-class Downsampler
+SDRdaemonBuffer::SDRdaemonBuffer(std::size_t blockSize) :
+	m_blockSize(blockSize)
 {
-public:
-	/** Center frequency relative position when downsampling */
-	typedef enum {
-		FC_POS_INFRA = 0,
-		FC_POS_SUPRA,
-		FC_POS_CENTER
-	} fcPos_t;
+	m_buf = new uint8_t[blockSize];
+}
 
-	/**
-	 * Construct Downsampler
-	 *
-     * decim            :: log2 of decimation factor
-     * fcpos            :: Position of center frequency
-	 */
-	Downsampler(unsigned int decim = 0,
-			fcPos_t fcPos = FC_POS_CENTER);
+SDRdaemonBuffer::~SDRdaemonBuffer()
+{
+	delete[] m_buf;
+}
 
-	/** Destroy Downsampler */
-	~Downsampler();
+bool SDRdaemonBuffer::writeAndRead(uint8_t *array, std::size_t length, uint8_t *data, std::size_t& dataLength)
+{
+	assert(length == m_blockSize); // TODO: allow fragmented blocks with larger size
+	MetaData *metaData = (MetaData *) array;
 
-	/** Configure downsampler dynamically */
-	bool configure(parsekv::pairs_type& m);
-
-	/** Return log2 of decimation */
-	unsigned int getLog2Decimation() const { return m_decim; }
-
-    /**
-     * Process samples.
-     */
-    void process(unsigned int& sampleSize, const IQSampleVector& samples_in, IQSampleVector& samples_out);
-
-    /** State operator */
-    operator bool() const
+	if (m_crc64.calculate_crc(array, sizeof(MetaData) - 8) == metaData->m_crc)
 	{
-    	return m_error.empty();
+		m_currentMeta = *metaData;
+		dataLength = 0;
+		return false;
 	}
+	else
+	{
+		std::memcpy((void *) data, (const void *) array, length);
+		dataLength = length;
+		return true;
+	}
+}
 
-    /** Return the last error, or return an empty string if there is no error. */
-    std::string error()
-    {
-        std::string ret(m_error);
-        m_error.clear();
-        return ret;
-    }
-
-private:
-    unsigned int m_decim;
-    fcPos_t      m_fcPos;
-    Decimators   m_decimators;
-    std::string  m_error;
-};
-
-#endif /* INCLUDE_DOWNSAMPLER_H_ */

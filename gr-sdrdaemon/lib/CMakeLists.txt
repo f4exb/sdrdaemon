@@ -23,6 +23,8 @@ include(GrPlatform) #define LIB_SUFFIX
 include(GrMiscUtils)
 
 add_library(gnuradio-sdrdaemon SHARED
+    CRC64.cpp
+    SDRdaemonBuffer.cpp
     sdrdmnsource_impl.cc
 )
 target_link_libraries(gnuradio-sdrdaemon ${Boost_LIBRARIES}  ${GNURADIO_ALL_LIBRARIES})

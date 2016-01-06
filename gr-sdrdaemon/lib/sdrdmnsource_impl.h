@@ -27,57 +27,55 @@
 #include <gnuradio/thread/thread.h>
 
 #include "sdrdaemon/sdrdmnsource.h"
+#include "SDRdaemonBuffer.h"
 
 namespace gr {
 namespace sdrdaemon {
 
-class sdrdmn_source_impl : public sdrdmn_source
+class sdrdmn_source_impl: public sdrdmn_source
 {
 private:
-  std::size_t  d_itemsize;
-  int          d_payload_size; // maximum transmission unit (packet length)
-  bool         d_eof;          // look for an EOF signal
-  bool         d_connected;    // are we connected?
-  char        *d_rxbuf;        // get UDP buffer items
-  char        *d_residbuf;     // hold buffer between calls
-  ssize_t      d_residual;     // hold information about number of bytes stored in residbuf
-  ssize_t      d_sent;         // track how much of d_residbuf we've outputted
-  std::size_t  d_offset;       // point to residbuf location offset
+	std::size_t d_itemsize;
+	int d_payload_size; // maximum transmission unit (packet length)
+	bool d_eof;          // look for an EOF signal
+	bool d_connected;    // are we connected?
+	char *d_rxbuf;        // get UDP buffer items
+	char *d_residbuf;     // hold buffer between calls
+	SDRdaemonBuffer d_sdrdmnbuf;
+	ssize_t d_residual; // hold information about number of bytes stored in residbuf
+	ssize_t d_sent;         // track how much of d_residbuf we've outputted
+	std::size_t d_offset;       // point to residbuf location offset
 
-  static const int BUF_SIZE_PAYLOADS; //!< The d_residbuf size in multiples of d_payload_size
+	static const int BUF_SIZE_PAYLOADS; //!< The d_residbuf size in multiples of d_payload_size
 
-  std::string d_host;
-  unsigned short d_port;
+	std::string d_host;
+	unsigned short d_port;
 
-  boost::asio::ip::udp::socket *d_socket;
-  boost::asio::ip::udp::endpoint d_endpoint;
-  boost::asio::ip::udp::endpoint d_endpoint_rcvd;
-  boost::asio::io_service d_io_service;
+	boost::asio::ip::udp::socket *d_socket;
+	boost::asio::ip::udp::endpoint d_endpoint;
+	boost::asio::ip::udp::endpoint d_endpoint_rcvd;
+	boost::asio::io_service d_io_service;
 
-  gr::thread::condition_variable d_cond_wait;
-  gr::thread::mutex d_udp_mutex;
-  gr::thread::thread d_udp_thread;
+	gr::thread::condition_variable d_cond_wait;
+	gr::thread::mutex d_udp_mutex;
+	gr::thread::thread d_udp_thread;
 
-  void start_receive();
-  void handle_read(const boost::system::error_code& error,
-                   std::size_t bytes_transferred);
-  void run_io_service() { d_io_service.run(); }
+	void start_receive();
+	void handle_read(const boost::system::error_code& error, std::size_t bytes_transferred);
+	void run_io_service() {	d_io_service.run();	}
 
 public:
-  sdrdmn_source_impl(std::size_t itemsize,
-              const std::string &host, int port,
-              int payload_size, bool eof);
-  ~sdrdmn_source_impl();
+	sdrdmn_source_impl(std::size_t itemsize, const std::string &host, int port,	int payload_size, bool eof);
+	~sdrdmn_source_impl();
 
-  void connect(const std::string &host, int port);
-  void disconnect();
+	void connect(const std::string &host, int port);
+	void disconnect();
 
-  int payload_size() { return d_payload_size; }
-  int get_port();
+	int payload_size() { return d_payload_size;	}
+	int get_port();
+	int get_center_freq_khz();
 
-  int work(int noutput_items,
-           gr_vector_const_void_star &input_items,
-           gr_vector_void_star &output_items);
+	int work(int noutput_items, gr_vector_const_void_star &input_items,	gr_vector_void_star &output_items);
 };
 
 } /* namespace sdrdaemon */

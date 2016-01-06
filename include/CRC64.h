@@ -16,65 +16,25 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.          //
 ///////////////////////////////////////////////////////////////////////////////////
 
-#ifndef INCLUDE_DOWNSAMPLER_H_
-#define INCLUDE_DOWNSAMPLER_H_
+#ifndef INCLUDE_CRC64_H_
+#define INCLUDE_CRC64_H_
 
-#include "Decimators.h"
-#include "SDRDaemon.h"
-#include "parsekv.h"
+#include <stdint.h>
 
-class Downsampler
+class CRC64
 {
 public:
-	/** Center frequency relative position when downsampling */
-	typedef enum {
-		FC_POS_INFRA = 0,
-		FC_POS_SUPRA,
-		FC_POS_CENTER
-	} fcPos_t;
-
-	/**
-	 * Construct Downsampler
-	 *
-     * decim            :: log2 of decimation factor
-     * fcpos            :: Position of center frequency
-	 */
-	Downsampler(unsigned int decim = 0,
-			fcPos_t fcPos = FC_POS_CENTER);
-
-	/** Destroy Downsampler */
-	~Downsampler();
-
-	/** Configure downsampler dynamically */
-	bool configure(parsekv::pairs_type& m);
-
-	/** Return log2 of decimation */
-	unsigned int getLog2Decimation() const { return m_decim; }
-
-    /**
-     * Process samples.
-     */
-    void process(unsigned int& sampleSize, const IQSampleVector& samples_in, IQSampleVector& samples_out);
-
-    /** State operator */
-    operator bool() const
-	{
-    	return m_error.empty();
-	}
-
-    /** Return the last error, or return an empty string if there is no error. */
-    std::string error()
-    {
-        std::string ret(m_error);
-        m_error.clear();
-        return ret;
-    }
+    CRC64();
+    ~CRC64();
+    uint64_t calculate_crc(uint8_t *stream, int length);
 
 private:
-    unsigned int m_decim;
-    fcPos_t      m_fcPos;
-    Decimators   m_decimators;
-    std::string  m_error;
+    void build_crc_table();
+
+    uint64_t m_crcTable[256];
+    static const uint64_t m_poly;
 };
 
-#endif /* INCLUDE_DOWNSAMPLER_H_ */
+
+
+#endif /* INCLUDE_CRC64_H_ */

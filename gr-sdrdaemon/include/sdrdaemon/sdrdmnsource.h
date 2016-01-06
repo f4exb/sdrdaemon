@@ -68,6 +68,9 @@ public:
 
 	/*! \brief return the port number of the socket */
 	virtual int get_port() = 0;
+
+	/*! \brief return the center frequency in kHz */
+	virtual int get_center_freq_khz() = 0;
 };
 
 } // namespace sdrdaemon

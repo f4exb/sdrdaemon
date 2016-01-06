@@ -1,5 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////
 // SDRdaemon - send I/Q samples read from a SDR device over the network via UDP. //
+//             GNUradio interface.                                               //
+//                                                                               //
+// This is an adaptation of the GNUradio UDP source                              //
 //                                                                               //
 // Copyright (C) 2015 Edouard Griffiths, F4EXB                                   //
 //                                                                               //
@@ -16,15 +19,15 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.          //
 ///////////////////////////////////////////////////////////////////////////////////
 
-#ifndef INCLUDE_UDPSINK_H_
-#define INCLUDE_UDPSINK_H_
+#ifndef GR_SDRDAEMON_LIB_SDRDAEMONBUFFER_H_
+#define GR_SDRDAEMON_LIB_SDRDAEMONBUFFER_H_
 
-#include "SDRDaemon.h"
-#include "UDPSocket.h"
+#include <stdint.h>
+#include <cstddef>
 #include "CRC64.h"
 
-/** Downsampler and UDP sink for samples read from the device */
-class UDPSink
+
+class SDRdaemonBuffer
 {
 public:
 #pragma pack(push, 1)
@@ -43,59 +46,16 @@ public:
 	};
 #pragma pack(pop)
 
-	/**
-	 * Construct UDP sink
-	 *
-	 * address          :: Address where the samples are sent
-	 * port             :: UDP port where the samples are sent
-	 * udpSize          :: Size of UDP block in number of samples
-	 */
-	UDPSink(const std::string& address, unsigned int port, unsigned int udpSize);
-
-	/** Destroy UDP sink */
-	~UDPSink();
-
-    /**
-     * Write IQ samples to UDP port.
-     */
-	void write(const IQSampleVector& samples_in);
-
-    /** Return the last error, or return an empty string if there is no error. */
-    std::string error()
-    {
-        std::string ret(m_error);
-        m_error.clear();
-        return ret;
-    }
-
-    void setCenterFrequency(uint64_t centerFrequency) { m_centerFrequency = centerFrequency; }
-    void setSampleRate(uint32_t sampleRate) { m_sampleRate = sampleRate; }
-    void setSampleBytes(uint8_t sampleBytes) { m_sampleBytes = sampleBytes; }
-    void setSampleBits(uint8_t sampleBits) { m_sampleBits = sampleBits; }
-
-    /** Return true if the stream is OK, return false if there is an error. */
-    operator bool() const
-    {
-        return m_error.empty();
-    }
+	SDRdaemonBuffer(std::size_t blockSize);
+	~SDRdaemonBuffer();
+	bool writeAndRead(uint8_t *array, std::size_t length, uint8_t *data, std::size_t& dataLength);
+	const MetaData& getCurrentMeta() const { return m_currentMeta; }
 
 private:
-    std::string  m_address; //!< UDP foreign address
-	unsigned int m_port;    //!< UDP foreign port
-	unsigned int m_udpSize; //!< Size of UDP block in number of samples
-    std::string  m_error;
-
-    uint64_t     m_centerFrequency;   //!< center frequency in Hz
-    uint32_t     m_sampleRate;        //!< sample rate in Hz
-    uint8_t      m_sampleBytes;       //!< number of bytes per sample + MSB: remainder sent first in meta block
-    uint8_t      m_sampleBits;        //!< number of effective bits per sample
-
-    UDPSocket    m_socket;
-    CRC64        m_crc64;
-    uint8_t*     m_bufMeta;
-    uint8_t*     m_buf;
+	std::size_t m_blockSize;
+	MetaData m_currentMeta;
+	CRC64 m_crc64;
+	uint8_t *m_buf;
 };
 
-
-
-#endif /* INCLUDE_UDPSINK_H_ */
+#endif /* GR_SDRDAEMON_LIB_SDRDAEMONBUFFER_H_ */

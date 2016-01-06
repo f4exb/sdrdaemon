@@ -207,14 +207,6 @@ bool parse_int(const char *s, int& v, bool allow_unit=false)
 }
 
 
-/** Return Unix time stamp in seconds. */
-double get_time()
-{
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    return tv.tv_sec + 1.0e-6 * tv.tv_usec;
-}
-
 static bool get_device(std::vector<std::string> &devnames, std::string& devtype, Source **srcsdr, int devidx)
 {
     if (strcasecmp(devtype.c_str(), "rtlsdr") == 0)
@@ -288,7 +280,6 @@ int main(int argc, char **argv)
     int     devidx  = 0;
     std::string  filename;
     std::string  alsadev("default");
-    double  bufsecs = -1;
     std::string config_str;
     std::string devtype_str;
     std::vector<std::string> devnames;
@@ -434,6 +425,9 @@ int main(int argc, char **argv)
         exit(1);
     }
 
+    udp_output->setCenterFrequency(srcsdr->get_configured_frequency());
+    udp_output->setSampleRate(srcsdr->get_sample_rate() / (1<<dn.getLog2Decimation()));
+
     double freq = srcsdr->get_configured_frequency();
     fprintf(stderr, "tuned for:         %.6f MHz\n", freq * 1.0e-6);
 
@@ -477,8 +471,6 @@ int main(int argc, char **argv)
     IQSampleVector outsamples;
     bool inbuf_length_warning = false;
 
-    double block_time = get_time();
-
     // Main loop.
     for (unsigned int block = 0; !stop_flag.load(); block++)
     {
@@ -498,12 +490,13 @@ int main(int argc, char **argv)
             break;
         }
 
-        block_time = get_time();
-
         // Possible downsampling and write to UDP
 
         if (dn.getLog2Decimation() == 0)
         {
+        	udp_output->setSampleBits(srcsdr->get_sample_size());
+        	udp_output->setSampleBytes((srcsdr->get_sample_size()-1)/8 + 1);
+
         	if (outputbuf_samples > 0)
         	{
 				// Buffered write.
@@ -519,6 +512,9 @@ int main(int argc, char **argv)
         {
         	unsigned int sampleSize = srcsdr->get_sample_size();
 			dn.process(sampleSize, iqsamples, outsamples);
+
+			udp_output->setSampleBits(sampleSize);
+        	udp_output->setSampleBytes((sampleSize -1)/8 + 1);
 
 			// Throw away first block. It is noisy because IF filters
 			// are still starting up.

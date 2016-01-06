@@ -53,6 +53,7 @@ public:
 
 private:
 	std::size_t m_blockSize;
+	bool m_sync;
 	MetaData m_currentMeta;
 	CRC64 m_crc64;
 	uint8_t *m_buf;

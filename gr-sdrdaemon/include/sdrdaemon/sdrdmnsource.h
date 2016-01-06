@@ -71,6 +71,9 @@ public:
 
 	/*! \brief return the center frequency in kHz */
 	virtual int get_center_freq_khz() = 0;
+
+	/*! \brief return the sample rate in Hz */
+	virtual int get_sample_rate_hz() = 0;
 };
 
 } // namespace sdrdaemon

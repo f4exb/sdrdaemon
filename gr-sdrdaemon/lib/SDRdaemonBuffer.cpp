@@ -24,7 +24,8 @@
 #include "SDRdaemonBuffer.h"
 
 SDRdaemonBuffer::SDRdaemonBuffer(std::size_t blockSize) :
-	m_blockSize(blockSize)
+	m_blockSize(blockSize),
+	m_sync(false)
 {
 	m_buf = new uint8_t[blockSize];
 }
@@ -43,13 +44,22 @@ bool SDRdaemonBuffer::writeAndRead(uint8_t *array, std::size_t length, uint8_t *
 	{
 		m_currentMeta = *metaData;
 		dataLength = 0;
+		m_sync = true;
 		return false;
 	}
 	else
 	{
-		std::memcpy((void *) data, (const void *) array, length);
-		dataLength = length;
-		return true;
+		if (m_sync)
+		{
+			std::memcpy((void *) data, (const void *) array, length);
+			dataLength = length;
+			return true;
+		}
+		else
+		{
+			dataLength = 0;
+			return false;
+		}
 	}
 }
 

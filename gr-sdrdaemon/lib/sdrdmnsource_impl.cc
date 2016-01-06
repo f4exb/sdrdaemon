@@ -150,6 +150,11 @@ int sdrdmn_source_impl::get_center_freq_khz()
 	return d_sdrdmnbuf.getCurrentMeta().m_centerFrequency;
 }
 
+int sdrdmn_source_impl::get_sample_rate_hz()
+{
+	return d_sdrdmnbuf.getCurrentMeta().m_sampleRate;
+}
+
 void sdrdmn_source_impl::start_receive()
 {
 	d_socket->async_receive_from(

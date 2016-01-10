@@ -105,7 +105,11 @@ static void handle_sigterm(int sig)
     msg += ", stopping ...\n";
 
     const char *s = msg.c_str();
-    write(STDERR_FILENO, s, strlen(s));
+    ssize_t r = write(STDERR_FILENO, s, strlen(s));
+
+    if (r != (ssize_t) strlen(s)) {
+    	msg += " write incomplete";
+    }
 }
 
 

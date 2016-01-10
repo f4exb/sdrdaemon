@@ -147,7 +147,7 @@ int sdrdmn_source_impl::get_port(void)
 
 int sdrdmn_source_impl::get_center_freq_khz()
 {
-	return d_sdrdmnbuf.getCurrentMeta().m_centerFrequency;
+	return d_sdrdmnbuf.getCurrentMeta().m_centerFrequency / 1000;
 }
 
 int sdrdmn_source_impl::get_sample_rate_hz()
@@ -191,7 +191,7 @@ void sdrdmn_source_impl::handle_read(const boost::system::error_code& error, std
 			// data in the buffer if we've run out of room.
 			if ((int) (d_residual + bytes_transferred) >= (BUF_SIZE_PAYLOADS * d_payload_size))
 			{
-				GR_LOG_WARN(d_logger, "Too much data; dropping packet.");
+				//GR_LOG_WARN(d_logger, "Too much data; dropping packet.");
 			}
 			else
 			{

@@ -300,7 +300,7 @@ void CSocket::SetBindToDevice( const string& sInterface ) throw(CSocketException
 {
     struct ifreq ifr;
     memset(&ifr, 0, sizeof(ifr));
-    snprintf(ifr.ifr_name, sizeof(ifr.ifr_name), sInterface.c_str());
+    snprintf(ifr.ifr_name, sizeof(ifr.ifr_name), "%s", sInterface.c_str());
     //Todo:SO_BINDTODEVICE not declared error comes in CygWin, need to compile in Linux.
     /*int nRet = ::setsockopt(m_sockDesc, SOL_SOCKET, SO_BINDTODEVICE, (void*)&ifr, sizeof(ifr));
 

@@ -7,31 +7,31 @@ find_package(Boost 1.47)
 
 # Find Airspy library.
 pkg_check_modules(PKG_AIRSPY libairspy)
-find_path(AIRSPY_INCLUDE_DIR airspy.h
-          HINT ${PKG_AIRSPY_INCLUDE_DIRS})
-find_library(AIRSPY_LIBRARY libairspy.a
-          HINT ${PKG_AIRSPY_LIBRARY_DIRS})
+find_path(LIBAIRSPY_INCLUDE_DIR airspy.h
+          HINT ${PKG_LIBAIRSPY_INCLUDE_DIRS})
+find_library(LIBAIRSPY_LIBRARIES libairspy.a
+          HINT ${PKG_LIBAIRSPY_LIBRARIES_DIRS})
 
 # Find BladeRF library.
 pkg_check_modules(PKG_BLADERF libbladerf)
-find_path(BLADERF_INCLUDE_DIR libbladeRF.h
-          HINT ${PKG_BLADERF_INCLUDE_DIRS})
-find_library(BLADERF_LIBRARY libbladeRF.so
-          HINT ${PKG_BLADERF_LIBRARY_DIRS})
+find_path(LIBBLADERF_INCLUDE_DIR libbladeRF.h
+          HINT ${PKG_LIBBLADERF_INCLUDE_DIR})
+find_library(LIBBLADERF_LIBRARIES libbladeRF.so
+          HINT ${PKG_LIBBLADERF_LIBRARIES_DIRS})
 
 # Find HackRF library.
 pkg_check_modules(PKG_HACKRF libhackrf)
-find_path(HACKRF_INCLUDE_DIR hackrf.h
-          HINT ${PKG_HACKRF_INCLUDE_DIRS})
-find_library(HACKRF_LIBRARY libhackrf.a
-          HINT ${PKG_HACKRF_LIBRARY_DIRS})
+find_path(LIBHACKRF_INCLUDE_DIR hackrf.h
+          HINT ${PKG_LIBHACKRF_INCLUDE_DIRS})
+find_library(LIBHACKRF_LIBRARIES libhackrf.a
+          HINT ${PKG_LIBHACKRF_LIBRARIES_DIRS})
 
 # Find RTL-SDR library.
 pkg_check_modules(PKG_RTLSDR librtlsdr)
-find_path(RTLSDR_INCLUDE_DIR rtl-sdr.h
-          HINT ${PKG_RTLSDR_INCLUDE_DIRS})
-find_library(RTLSDR_LIBRARY librtlsdr.a
-          HINT ${PKG_RTLSDR_LIBRARY_DIRS})
+find_path(LIBRTLSDR_INCLUDE_DIR rtl-sdr.h
+          HINT ${PKG_LIBRTLSDR_INCLUDE_DIRS})
+find_library(LIBRTLSDR_LIBRARIES librtlsdr.a
+          HINT ${PKG_LIBRTLSDR_LIBRARIES_DIRS})
 
 # Find libusb
 pkg_check_modules(PKG_LIBUSB libusb-1.0)
@@ -41,17 +41,17 @@ find_path(LIBUSB_INCLUDE_DIR libusb.h
 find_library(LIBUSB_LIBRARY usb-1.0
           HINT ${PKG_LIBUSB_LIBRARY_DIRS})
 
-set(AIRSPY_INCLUDE_DIRS ${AIRSPY_INCLUDE_DIR} ${LIBUSB_INCLUDE_DIR})
-set(AIRSPY_LIBRARIES    ${AIRSPY_LIBRARY} ${LIBUSB_LIBRARY})
+set(LIBAIRSPY_INCLUDE_DIRS ${LIBAIRSPY_INCLUDE_DIR} ${LIBUSB_INCLUDE_DIR})
+set(LIBAIRSPY_LIBRARIES    ${LIBAIRSPY_LIBRARIES} ${LIBUSB_LIBRARY})
 
-set(BLADERF_INCLUDE_DIRS ${BLADERF_INCLUDE_DIR} ${LIBUSB_INCLUDE_DIR})
-set(BLADERF_LIBRARIES    ${BLADERF_LIBRARY} ${LIBUSB_LIBRARY})
+set(LIBBLADERF_INCLUDE_DIRS ${LIBBLADERF_INCLUDE_DIR} ${LIBUSB_INCLUDE_DIR})
+set(LIBBLADERF_LIBRARIES    ${LIBBLADERF_LIBRARIES} ${LIBUSB_LIBRARY})
 
-set(HACKRF_INCLUDE_DIRS ${HACKRF_INCLUDE_DIR} ${LIBUSB_INCLUDE_DIR})
-set(HACKRF_LIBRARIES    ${HACKRF_LIBRARY} ${LIBUSB_LIBRARY})
+set(LIBHACKRF_INCLUDE_DIRS ${LIBHACKRF_INCLUDE_DIR} ${LIBUSB_INCLUDE_DIR})
+set(LIBHACKRF_LIBRARIES    ${LIBHACKRF_LIBRARIES} ${LIBUSB_LIBRARY})
 
-set(RTLSDR_INCLUDE_DIRS ${RTLSDR_INCLUDE_DIR} ${LIBUSB_INCLUDE_DIR})
-set(RTLSDR_LIBRARIES    ${RTLSDR_LIBRARY} ${LIBUSB_LIBRARY})
+set(LIBRTLSDR_INCLUDE_DIRS ${LIBRTLSDR_INCLUDE_DIR} ${LIBUSB_INCLUDE_DIR})
+set(LIBRTLSDR_LIBRARIES    ${LIBRTLSDR_LIBRARIES} ${LIBUSB_LIBRARY})
 
 # Compiler flags.
 set(CMAKE_CXX_FLAGS "-Wall -std=c++11 -O2 -ffast-math -ftree-vectorize ${EXTRA_FLAGS}")
@@ -167,35 +167,35 @@ target_link_libraries(sdrdaemon
 )
 
 target_include_directories(sdmnairspy PUBLIC
-    ${AIRSPY_INCLUDE_DIRS}
+    ${LIBAIRSPY_INCLUDE_DIRS}
 )
 
 target_link_libraries(sdmnairspy
-    ${AIRSPY_LIBRARIES}
+    ${LIBAIRSPY_LIBRARIES}
 )
 
 target_include_directories(sdmnbladerf PUBLIC
-    ${BLADERF_INCLUDE_DIRS}
+    ${LIBBLADERF_INCLUDE_DIRS}
 )
 
 target_link_libraries(sdmnbladerf
-    ${BLADERF_LIBRARIES}
+    ${LIBBLADERF_LIBRARIES}
 )
 
 target_include_directories(sdmnhackrf PUBLIC
-    ${HACKRF_INCLUDE_DIRS}
+    ${LIBHACKRF_INCLUDE_DIRS}
 )
 
 target_link_libraries(sdmnhackrf
-    ${HACKRF_LIBRARIES}
+    ${LIBHACKRF_LIBRARIES}
 )
 
 target_include_directories(sdmnrtlsdr PUBLIC
-    ${RTLSDR_INCLUDE_DIRS}
+    ${LIBRTLSDR_INCLUDE_DIRS}
 )
 
 target_link_libraries(sdmnrtlsdr
-    ${RTLSDR_LIBRARIES}
+    ${LIBRTLSDR_LIBRARIES}
 )
 
 install(TARGETS sdrdaemon DESTINATION bin)

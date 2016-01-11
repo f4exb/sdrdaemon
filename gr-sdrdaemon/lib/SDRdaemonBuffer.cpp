@@ -44,7 +44,20 @@ bool SDRdaemonBuffer::writeAndRead(uint8_t *array, std::size_t length, uint8_t *
 	{
 		m_currentMeta = *metaData;
 		dataLength = 0;
-		m_sync = true;
+
+		// sanity checks
+		if (metaData->m_blockSize == m_blockSize) // sent blocksize matches given blocksize
+		{
+			if (metaData->m_sampleBytes * metaData->m_samplesPerBlock <  metaData->m_blockSize) {
+				m_sync = true;
+			} else {
+				m_sync = false;
+			}
+		}
+		else {
+			m_sync = false;
+		}
+
 		return false;
 	}
 	else

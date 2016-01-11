@@ -53,12 +53,13 @@ void UDPSink::write(const IQSampleVector& samples_in)
     metaData->m_sampleRate = m_sampleRate;
     metaData->m_sampleBytes = m_sampleBytes;
     metaData->m_sampleBits = m_sampleBits;
+    metaData->m_blockSize = m_udpSize;
     metaData->m_samplesPerBlock = m_udpSize / (2 * m_sampleBytes);
     metaData->m_remainderSamples = m_udpSize % (2 * m_sampleBytes);
     metaData->m_nbCompleteBlocks = samples_in.size() / metaData->m_samplesPerBlock;
 	metaData->m_crc = m_crc64.calculate_crc(m_bufMeta, sizeof(MetaData) - 8);
 
-	std::cerr << m_udpSize
+	std::cerr << metaData->m_blockSize
 			<< ":" << sizeof(MetaData)
 			<< ":" << metaData->m_tv_sec
 			<< ":" << metaData->m_tv_usec

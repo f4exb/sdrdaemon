@@ -22,21 +22,32 @@
 #include <string>
 #include <atomic>
 #include <memory>
+#include <iostream>
 
 #include "parsekv.h"
 #include "DataBuffer.h"
 #include "SDRDaemon.h"
 
+class Downsampler;
+
 class Source
 {
 public:
-    Source() : m_confFreq(0), m_decim(0), m_fcPos(2), m_buf(0) {}
+    Source() : m_confFreq(0), m_decim(0), m_fcPos(2), m_buf(0), m_downsampler(0) {}
     virtual ~Source() {}
+
+    /** Associate with a Downsampler. The Downsampler will be configured
+     *  dynamically from the source
+     */
+    void associateDownsampler(Downsampler *downsampler)
+    {
+        m_downsampler = downsampler;
+    }
 
     /**
      * Configure device and prepare for streaming.
      */
-    virtual bool configure(parsekv::pairs_type& m) = 0;
+    bool configure(std::string& configureStr);
 
     /** Return sample size in bits */
     virtual std::uint32_t get_sample_size() = 0;
@@ -88,6 +99,10 @@ protected:
     int                  m_fcPos;
     DataBuffer<IQSample> *m_buf;
     std::atomic_bool     *m_stop_flag;
+    Downsampler          *m_downsampler;
+
+    /** Configure device and prepare for streaming from parameters map */
+    virtual bool configure(parsekv::pairs_type& m) = 0;
 };
 
 #endif /* INCLUDE_SOURCE_H_ */

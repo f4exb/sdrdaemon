@@ -43,7 +43,7 @@ find_path(LIBUSB_INCLUDE_DIR libusb.h
           PATH_SUFFIXES libusb-1.0)
 find_library(LIBUSB_LIBRARY usb-1.0
           HINT ${PKG_LIBUSB_LIBRARY_DIRS})
-          
+
 set(LIBAIRSPY_INCLUDE_DIRS ${LIBAIRSPY_INCLUDE_DIR} ${LIBUSB_INCLUDE_DIR})
 set(LIBAIRSPY_LIBRARIES    ${LIBAIRSPY_LIBRARIES} ${LIBUSB_LIBRARY})
 
@@ -54,7 +54,7 @@ set(LIBHACKRF_INCLUDE_DIRS ${LIBHACKRF_INCLUDE_DIR} ${LIBUSB_INCLUDE_DIR})
 set(LIBHACKRF_LIBRARIES    ${LIBHACKRF_LIBRARIES} ${LIBUSB_LIBRARY})
 
 set(LIBRTLSDR_INCLUDE_DIRS ${LIBRTLSDR_INCLUDE_DIR} ${LIBUSB_INCLUDE_DIR})
-set(LIBRTLSDR_LIBRARIES    ${LIBRTLSDR_LIBRARIES} ${LIBUSB_LIBRARY})
+set(LIBRTLSDR_LIBRARIES    ${LIBRTLSDR_LIBRARIES} ${LIBUSB_LIBRARY} ${ZEROMQ_LIBRARIES})
 
 # Compiler flags.
 set(CMAKE_CXX_FLAGS "-Wall -std=c++11 -O2 -ffast-math -ftree-vectorize ${EXTRA_FLAGS}")
@@ -64,6 +64,7 @@ set(sdmnbase_SOURCES
     sdmnbase/Decimators.cpp
     sdmnbase/Downsampler.cpp
     sdmnbase/IntHalfbandFilter.cpp
+    sdmnbase/Source.cpp
     sdmnbase/UDPSink.cpp
     sdmnbase/UDPSocket.cpp
 )
@@ -156,7 +157,7 @@ add_executable(sdrdaemon
 
 include_directories(
     ${CMAKE_SOURCE_DIR}/include
-    ${EXTRA_INCLUDES} 
+    ${EXTRA_INCLUDES}
 )
 
 target_link_libraries(sdrdaemon
@@ -166,7 +167,7 @@ target_link_libraries(sdrdaemon
     sdmnhackrf
     sdmnrtlsdr
     ${CMAKE_THREAD_LIBS_INIT}
-    ${EXTRA_LIBS} 
+    ${EXTRA_LIBS}
 )
 
 target_include_directories(sdmnairspy PUBLIC
@@ -201,7 +202,7 @@ target_link_libraries(sdmnrtlsdr
     ${LIBRTLSDR_LIBRARIES}
 )
 
-target_link_libraries(sdmnbase ${ZEROMQ_LIBRARIES})
+#target_link_libraries(sdmnbase ${ZEROMQ_LIBRARIES})
 
 install(TARGETS sdrdaemon DESTINATION bin)
 install(TARGETS sdmnbase sdmnairspy sdmnbladerf sdmnhackrf sdmnrtlsdr DESTINATION lib)

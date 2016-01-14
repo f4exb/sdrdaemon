@@ -31,7 +31,6 @@
 #include <sys/time.h>
 
 #include "util.h"
-#include "parsekv.h"
 #include "DataBuffer.h"
 #include "Downsampler.h"
 #include "UDPSink.h"
@@ -63,7 +62,7 @@ void adjust_gain(SampleVector& samples, double gain)
  * This code runs in a separate thread.
  */
 void write_output_data(UDPSink *output,
-		DataBuffer<IQSample> *buf,
+        DataBuffer<IQSample> *buf,
         std::size_t buf_minfill)
 {
     while (!stop_flag.load())
@@ -123,15 +122,15 @@ void usage()
             "                   - airspy: Airspy\n"
             "                   - bladerf: BladeRF\n"
             "  -c config      Startup configuration. Comma separated key=value configuration pairs\n"
-    		"                 or just key for switches. See below for valid values\n"
+            "                 or just key for switches. See below for valid values\n"
             "  -d devidx      Device index, 'list' to show device list (default 0)\n"
             "  -b blocks      Set buffer size in number of UDP blocks (default: 480 512 samples blocks)\n"
             "  -I address     IP address. Samples are sent to this address (default: 127.0.0.1)\n"
             "  -D port        Data port. Samples are sent on this UDP port (default 9090)\n"
             "  -C port        Configuration port (default 9091, future). The configuration string as described below\n"
-    		"                 is sent on this port via UDP to control the device\n"
+            "                 is sent on this port via UDP to control the device\n"
             "\n"
-    		"Configuration options for the decimator:\n"
+            "Configuration options for the decimator:\n"
             "  decim=<int>    log2 of decimation factor (default 0: no decimation)\n"
             "  fcpos=<int>    Center frequency position (default 2: center):\n"
             "                   - 0: Infradyne\n"
@@ -140,7 +139,7 @@ void usage()
             "\n"
             "Configuration options for RTL-SDR devices\n"
             "  freq=<int>     Frequency of radio station in Hz (default 100000000)\n"
-    		"                 valid values: 10M to 2.2G (working range depends on device)\n"
+            "                 valid values: 10M to 2.2G (working range depends on device)\n"
             "  srate=<int>    IF sample rate in Hz (default 1000000)\n"
             "                 (valid ranges: [225001, 300000], [900001, 3200000]))\n"
             "  gain=<float>   Set LNA gain in dB, or 'auto',\n"
@@ -151,7 +150,7 @@ void usage()
             "\n"
             "Configuration options for HackRF devices\n"
             "  freq=<int>     Frequency of radio station in Hz (default 100000000)\n"
-    		"                 valid values: 1M to 6G\n"
+            "                 valid values: 1M to 6G\n"
             "  srate=<int>    IF sample rate in Hz (default 5000000)\n"
             "                 (valid ranges: [2500000,20000000]))\n"
             "  lgain=<int>    LNA gain in dB. 'list' to just get a list of valid values: (default 16)\n"
@@ -162,9 +161,9 @@ void usage()
             "\n"
             "Configuration options for Airspy devices\n"
             "  freq=<int>     Frequency of radio station in Hz (default 100000000)\n"
-    		"                 valid values: 24M to 1.8G\n"
+            "                 valid values: 24M to 1.8G\n"
             "  srate=<int>    IF sample rate in Hz. Depends on Airspy firmware and libairspy support\n"
-    		"                 Airspy firmware and library must support dynamic sample rate query. (default 10000000)\n"
+            "                 Airspy firmware and library must support dynamic sample rate query. (default 10000000)\n"
             "  lgain=<int>    LNA gain in dB. 'list' to just get a list of valid values: (default 8)\n"
             "  mgain=<int>    Mixer gain in dB. 'list' to just get a list of valid values: (default 8)\n"
             "  vgain=<int>    VGA gain in dB. 'list' to just get a list of valid values: (default 8)\n"
@@ -174,8 +173,8 @@ void usage()
             "\n"
             "Configuration options for BladeRF devices\n"
             "  freq=<int>     Frequency of radio station in Hz (default 300000000)\n"
-    		"                 valid values (with XB200): 100k to 3.8G\n"
-    		"                 valid values (without XB200): 300M to 3.8G\n"
+            "                 valid values (with XB200): 100k to 3.8G\n"
+            "                 valid values (without XB200): 300M to 3.8G\n"
             "  srate=<int>    IF sample rate in Hz. Valid values: 48k to 40M (default 1000000)\n"
             "  bw=<int>       Bandwidth in Hz. 'list' to just get a list of valid values: (default 1500000)\n"
             "  lgain=<int>    LNA gain in dB. 'list' to just get a list of valid values: (default 3)\n"
@@ -308,8 +307,8 @@ int main(int argc, char **argv)
 
     int c, longindex, value;
     while ((c = getopt_long(argc, argv,
-    		"t:c:d:b:I:D:C:",
-			longopts, &longindex)) >= 0)
+            "t:c:d:b:I:D:C:",
+            longopts, &longindex)) >= 0)
     {
         switch (c)
         {
@@ -401,6 +400,7 @@ int main(int argc, char **argv)
 
     // Configure device and start streaming.
 
+    /*
     namespace qi = boost::spirit::qi;
     parsekv::key_value_sequence<std::string::iterator> p;
     parsekv::pairs_type m;
@@ -410,24 +410,26 @@ int main(int argc, char **argv)
     	fprintf(stderr, "Configuration parsing failed\n");
     	delete srcsdr;
         return false;
-    }
+    }*/
 
-    if (!srcsdr->configure(m))
+    // Prepare downsampler.
+    Downsampler dn;
+    srcsdr->associateDownsampler(&dn);
+
+    if (!srcsdr->configure(config_str))
     {
         fprintf(stderr, "ERROR: source configuration: %s\n", srcsdr->error().c_str());
         delete srcsdr;
         exit(1);
     }
 
-    // Prepare downsampler.
-    Downsampler dn;
-
+    /*
     if (!dn.configure(m))
     {
         fprintf(stderr, "ERROR: downsampler configuration: %s\n", dn.error().c_str());
         delete srcsdr;
         exit(1);
-    }
+    }*/
 
     udp_output->setCenterFrequency(srcsdr->get_configured_frequency());
     udp_output->setSampleRate(srcsdr->get_sample_rate() / (1<<dn.getLog2Decimation()));
@@ -503,39 +505,39 @@ int main(int argc, char **argv)
 
         	if (outputbuf_samples > 0)
         	{
-				// Buffered write.
-				output_buffer.push(move(iqsamples));
+                // Buffered write.
+                output_buffer.push(move(iqsamples));
         	}
-			else
-			{
-				// Direct write.
-				udp_output->write(iqsamples);
-			}
+            else
+            {
+                // Direct write.
+                udp_output->write(iqsamples);
+            }
         }
         else
         {
         	unsigned int sampleSize = srcsdr->get_sample_size();
-			dn.process(sampleSize, iqsamples, outsamples);
+            dn.process(sampleSize, iqsamples, outsamples);
 
-			udp_output->setSampleBits(sampleSize);
-        	udp_output->setSampleBytes((sampleSize -1)/8 + 1);
+            udp_output->setSampleBits(sampleSize);
+            udp_output->setSampleBytes((sampleSize -1)/8 + 1);
 
-			// Throw away first block. It is noisy because IF filters
-			// are still starting up.
-			if (block > 0)
-			{
-				// Write samples to output.
-				if (outputbuf_samples > 0)
-				{
-					// Buffered write.
-					output_buffer.push(move(outsamples));
-				}
-				else
-				{
-					// Direct write.
-					udp_output->write(outsamples);
-				}
-			}
+            // Throw away first block. It is noisy because IF filters
+            // are still starting up.
+            if (block > 0)
+            {
+                // Write samples to output.
+                if (outputbuf_samples > 0)
+                {
+                    // Buffered write.
+                    output_buffer.push(move(outsamples));
+                }
+                else
+                {
+                    // Direct write.
+                    udp_output->write(outsamples);
+                }
+            }
         }
     }
 
@@ -544,7 +546,7 @@ int main(int argc, char **argv)
     // Join background threads.
     //source_thread.join();
     up_srcsdr->stop();
-    
+
     if (outputbuf_samples > 0)
     {
         output_buffer.push_end();

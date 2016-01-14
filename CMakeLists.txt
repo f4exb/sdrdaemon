@@ -1,9 +1,12 @@
 cmake_minimum_required (VERSION 3.0.2)
-project (sdradaemon)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/Modules)
+
+project (sdrdaemon)
 
 find_package(Threads)
 find_package(PkgConfig)
 find_package(Boost 1.47)
+find_package(ZeroMQ)
 
 # Find Airspy library.
 pkg_check_modules(PKG_AIRSPY libairspy)
@@ -40,7 +43,7 @@ find_path(LIBUSB_INCLUDE_DIR libusb.h
           PATH_SUFFIXES libusb-1.0)
 find_library(LIBUSB_LIBRARY usb-1.0
           HINT ${PKG_LIBUSB_LIBRARY_DIRS})
-
+          
 set(LIBAIRSPY_INCLUDE_DIRS ${LIBAIRSPY_INCLUDE_DIR} ${LIBUSB_INCLUDE_DIR})
 set(LIBAIRSPY_LIBRARIES    ${LIBAIRSPY_LIBRARIES} ${LIBUSB_LIBRARY})
 
@@ -197,6 +200,8 @@ target_include_directories(sdmnrtlsdr PUBLIC
 target_link_libraries(sdmnrtlsdr
     ${LIBRTLSDR_LIBRARIES}
 )
+
+target_link_libraries(sdmnbase ${ZEROMQ_LIBRARIES})
 
 install(TARGETS sdrdaemon DESTINATION bin)
 install(TARGETS sdmnbase sdmnairspy sdmnbladerf sdmnhackrf sdmnrtlsdr DESTINATION lib)

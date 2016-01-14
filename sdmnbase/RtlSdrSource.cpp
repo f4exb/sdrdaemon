@@ -382,6 +382,7 @@ void RtlSdrSource::run()
     while (!m_this->m_stop_flag->load() && get_samples(&iqsamples))
     {
         m_this->m_buf->push(move(iqsamples));
+        // TODO: fetch config data from ZMQ socket it there is any
     }
 }
 

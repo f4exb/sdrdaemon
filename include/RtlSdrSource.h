@@ -23,6 +23,7 @@
 #include <string>
 #include <vector>
 #include <thread>
+#include <zmq.hpp>
 
 #include "Source.h"
 

@@ -87,6 +87,7 @@ bool RtlSdrSource::configure(parsekv::pairs_type& m)
     int block_length =  default_block_length;
     bool agcmode = false;
     int fcpos = 2; // default is center
+    std::uint32_t changeFlags = 0;
 
 	if (m.find("srate") != m.end())
 	{
@@ -100,6 +101,8 @@ bool RtlSdrSource::configure(parsekv::pairs_type& m)
 			m_error = "Invalid sample rate";
 			return false;
 		}
+
+		changeFlags |= 0x1;
 	}
 
 	if (m.find("freq") != m.end())
@@ -112,12 +115,16 @@ bool RtlSdrSource::configure(parsekv::pairs_type& m)
 			m_error = "Invalid frequency";
 			return false;
 		}
+
+		changeFlags |= 0x2;
 	}
 
 	if (m.find("ppm") != m.end())
 	{
 		std::cerr << "RtlSdrSource::configure: ppm: " << m["ppm"] << std::endl;
 		ppm = atoi(m["ppm"].c_str());
+
+		changeFlags |= 0x4;
 	}
 
 	if (m.find("gain") != m.end())
@@ -163,18 +170,24 @@ bool RtlSdrSource::configure(parsekv::pairs_type& m)
 				}
 			}
 		}
-	} // gain
 
-	if (m.find("blklen") != m.end())
-	{
-		std::cerr << "RtlSdrSource::configure: blklen: " << m["blklen"] << std::endl;
-		block_length = atoi(m["blklen"].c_str());
-	}
+		changeFlags |= 0x8;
+	} // gain
 
 	if (m.find("agc") != m.end())
 	{
 		std::cerr << "RtlSdrSource::configure: agc" << std::endl;
 		agcmode = true;
+
+		changeFlags |= 0x10;
+	}
+
+	if (m.find("blklen") != m.end())
+	{
+		std::cerr << "RtlSdrSource::configure: blklen: " << m["blklen"] << std::endl;
+		block_length = atoi(m["blklen"].c_str());
+
+		changeFlags |= 0x20;
 	}
 
 	if (m.find("fcpos") != m.end())
@@ -222,11 +235,12 @@ bool RtlSdrSource::configure(parsekv::pairs_type& m)
 		tuner_freq = frequency;
 	}
 
-	return configure(sample_rate, tuner_freq, ppm, tuner_gain, block_length, agcmode);
+	return configure(changeFlags, sample_rate, tuner_freq, ppm, tuner_gain, block_length, agcmode);
 }
 
 // Configure RTL-SDR tuner and prepare for streaming.
-bool RtlSdrSource::configure(std::uint32_t sample_rate,
+bool RtlSdrSource::configure(std::uint32_t changeFlags,
+		std::uint32_t sample_rate,
 		std::uint32_t frequency,
 		std::int32_t  ppm,
         int tuner_gain,
@@ -238,56 +252,74 @@ bool RtlSdrSource::configure(std::uint32_t sample_rate,
     if (!m_dev)
         return false;
 
-    r = rtlsdr_set_sample_rate(m_dev, sample_rate);
-    if (r < 0) {
-        m_error = "rtlsdr_set_sample_rate failed";
-        return false;
+    if (changeFlags & 0x1)
+    {
+		r = rtlsdr_set_sample_rate(m_dev, sample_rate);
+		if (r < 0) {
+			m_error = "rtlsdr_set_sample_rate failed";
+			return false;
+		}
     }
 
-    r = rtlsdr_set_center_freq(m_dev, frequency);
-    if (r < 0) {
-        m_error = "rtlsdr_set_center_freq failed";
-        return false;
+    if (changeFlags & 0x2)
+    {
+		r = rtlsdr_set_center_freq(m_dev, frequency);
+		if (r < 0) {
+			m_error = "rtlsdr_set_center_freq failed";
+			return false;
+		}
     }
 
-    r = rtlsdr_set_freq_correction(m_dev, ppm);
-	if (r < 0) {
-		m_error = "rtlsdr_set_freq_correction failed";
-		return false;
-	}
-
-    if (tuner_gain == INT_MIN) {
-        r = rtlsdr_set_tuner_gain_mode(m_dev, 0);
-        if (r < 0) {
-            m_error = "rtlsdr_set_tuner_gain_mode could not set automatic gain";
-            return false;
-        }
-    } else {
-        r = rtlsdr_set_tuner_gain_mode(m_dev, 1);
-        if (r < 0) {
-            m_error = "rtlsdr_set_tuner_gain_mode could not set manual gain";
-            return false;
-        }
-
-        r = rtlsdr_set_tuner_gain(m_dev, tuner_gain);
-        if (r < 0) {
-            m_error = "rtlsdr_set_tuner_gain failed";
-            return false;
-        }
+    if (changeFlags & 0x4)
+    {
+		r = rtlsdr_set_freq_correction(m_dev, ppm);
+		if (r < 0) {
+			m_error = "rtlsdr_set_freq_correction failed";
+			return false;
+		}
     }
 
-    // set RTL AGC mode
-    r = rtlsdr_set_agc_mode(m_dev, int(agcmode));
-    if (r < 0) {
-        m_error = "rtlsdr_set_agc_mode failed";
-        return false;
+    if (changeFlags & 0x8)
+    {
+		if (tuner_gain == INT_MIN) {
+			r = rtlsdr_set_tuner_gain_mode(m_dev, 0);
+			if (r < 0) {
+				m_error = "rtlsdr_set_tuner_gain_mode could not set automatic gain";
+				return false;
+			}
+		} else {
+			r = rtlsdr_set_tuner_gain_mode(m_dev, 1);
+			if (r < 0) {
+				m_error = "rtlsdr_set_tuner_gain_mode could not set manual gain";
+				return false;
+			}
+
+			r = rtlsdr_set_tuner_gain(m_dev, tuner_gain);
+			if (r < 0) {
+				m_error = "rtlsdr_set_tuner_gain failed";
+				return false;
+			}
+		}
     }
 
-    // set block length
-    m_block_length = (block_length < 4096) ? 4096 :
-                     (block_length > 1024 * 1024) ? 1024 * 1024 :
-                     block_length;
-    m_block_length -= m_block_length % 4096;
+    if (changeFlags & 0x10)
+    {
+		// set RTL AGC mode
+		r = rtlsdr_set_agc_mode(m_dev, int(agcmode));
+		if (r < 0) {
+			m_error = "rtlsdr_set_agc_mode failed";
+			return false;
+		}
+    }
+
+    if (changeFlags & 0x20)
+    {
+	   // set block length
+		m_block_length = (block_length < 4096) ? 4096 :
+						 (block_length > 1024 * 1024) ? 1024 * 1024 :
+						 block_length;
+		m_block_length -= m_block_length % 4096;
+    }
 
     // reset buffer to start streaming
     if (rtlsdr_reset_buffer(m_dev) < 0) {
@@ -382,7 +414,14 @@ void RtlSdrSource::run()
     while (!m_this->m_stop_flag->load() && get_samples(&iqsamples))
     {
         m_this->m_buf->push(move(iqsamples));
-        // TODO: fetch config data from ZMQ socket it there is any
+
+        if (m_this->m_zmqSocket.recv (&m_this->m_zmqRequest, ZMQ_NOBLOCK))
+        {
+            std::size_t msgSize = m_this->m_zmqRequest.size();
+            std::string msg((char *) m_this->m_zmqRequest.data(), msgSize);
+            std::cerr << "RtlSdrSource::run: received: " << msg << std::endl;
+            m_this->Source::configure(msg);
+        }
     }
 }
 

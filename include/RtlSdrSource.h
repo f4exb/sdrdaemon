@@ -69,6 +69,7 @@ private:
     /**
      * Configure RTL-SDR tuner and prepare for streaming.
      *
+     * changeFlags  :: horrible hack
      * sample_rate  :: desired sample rate in Hz.
      * frequency    :: desired center frequency in Hz.
      * ppm          :: LO PPM correction.
@@ -77,7 +78,8 @@ private:
      *
      * Return true for success, false if an error occurred.
      */
-    bool configure(std::uint32_t sample_rate,
+    bool configure(std::uint32_t changeFlags,
+    		       std::uint32_t sample_rate,
                    std::uint32_t frequency,
 				   std::int32_t  ppm,
                    int tuner_gain,

@@ -40,7 +40,7 @@ Branches:
 
 <h2>Base requirements</h2>
 
-  - `sudo apt-get install cmake pkg-config libusb-1.0-0-dev libasound2-dev libboost-all-dev libzmq3-dev`
+  - `sudo apt-get install cmake pkg-config libusb-1.0-0-dev libasound2-dev libboost-all-dev libzmq3-dev python-zmq`
 
 <h2>Airspy support</h2>
 

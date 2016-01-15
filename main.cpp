@@ -127,8 +127,8 @@ void usage()
             "  -b blocks      Set buffer size in number of UDP blocks (default: 480 512 samples blocks)\n"
             "  -I address     IP address. Samples are sent to this address (default: 127.0.0.1)\n"
             "  -D port        Data port. Samples are sent on this UDP port (default 9090)\n"
-            "  -C port        Configuration port (default 9091, future). The configuration string as described below\n"
-            "                 is sent on this port via UDP to control the device\n"
+            "  -C port        Configuration port (default 9091). The configuration string as described below\n"
+            "                 is sent on this port via 0MQ (Zero-MQ) in TCP to control the device\n"
             "\n"
             "Configuration options for the decimator:\n"
             "  decim=<int>    log2 of decimation factor (default 0: no decimation)\n"
@@ -400,17 +400,7 @@ int main(int argc, char **argv)
 
     // Configure device and start streaming.
 
-    /*
-    namespace qi = boost::spirit::qi;
-    parsekv::key_value_sequence<std::string::iterator> p;
-    parsekv::pairs_type m;
-
-    if (!qi::parse(config_str.begin(), config_str.end(), p, m))
-    {
-    	fprintf(stderr, "Configuration parsing failed\n");
-    	delete srcsdr;
-        return false;
-    }*/
+    srcsdr->setConfigurationPort(cfgport);
 
     // Prepare downsampler.
     Downsampler dn;
@@ -430,9 +420,6 @@ int main(int argc, char **argv)
         delete srcsdr;
         exit(1);
     }*/
-
-    udp_output->setCenterFrequency(srcsdr->get_configured_frequency());
-    udp_output->setSampleRate(srcsdr->get_sample_rate() / (1<<dn.getLog2Decimation()));
 
     double freq = srcsdr->get_configured_frequency();
     fprintf(stderr, "tuned for:         %.6f MHz\n", freq * 1.0e-6);
@@ -496,12 +483,15 @@ int main(int argc, char **argv)
             break;
         }
 
+        udp_output->setCenterFrequency(srcsdr->get_frequency());
+
         // Possible downsampling and write to UDP
 
         if (dn.getLog2Decimation() == 0)
         {
         	udp_output->setSampleBits(srcsdr->get_sample_size());
         	udp_output->setSampleBytes((srcsdr->get_sample_size()-1)/8 + 1);
+        	udp_output->setSampleRate(srcsdr->get_sample_rate());
 
         	if (outputbuf_samples > 0)
         	{
@@ -521,6 +511,7 @@ int main(int argc, char **argv)
 
             udp_output->setSampleBits(sampleSize);
             udp_output->setSampleBytes((sampleSize -1)/8 + 1);
+            udp_output->setSampleRate(srcsdr->get_sample_rate() / (1<<dn.getLog2Decimation()));
 
             // Throw away first block. It is noisy because IF filters
             // are still starting up.

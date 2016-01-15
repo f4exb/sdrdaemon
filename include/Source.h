@@ -23,6 +23,8 @@
 #include <atomic>
 #include <memory>
 #include <iostream>
+#include <sstream>
+#include <zmq.hpp>
 
 #include "parsekv.h"
 #include "DataBuffer.h"
@@ -33,7 +35,15 @@ class Downsampler;
 class Source
 {
 public:
-    Source() : m_confFreq(0), m_decim(0), m_fcPos(2), m_buf(0), m_downsampler(0) {}
+    Source() : m_confFreq(0),
+	    m_decim(0),
+		m_fcPos(2),
+		m_buf(0),
+		m_downsampler(0),
+		m_zmqContext(1),
+		m_zmqSocket(m_zmqContext, ZMQ_PAIR)
+    {}
+
     virtual ~Source() {}
 
     /** Associate with a Downsampler. The Downsampler will be configured
@@ -42,6 +52,20 @@ public:
     void associateDownsampler(Downsampler *downsampler)
     {
         m_downsampler = downsampler;
+    }
+
+    /** set the TCP port used by 0MQ to receive configuration messages */
+    void setConfigurationPort(std::uint32_t ctlPort)
+    {
+    	if ((ctlPort < 1024) || (ctlPort > 65535))
+    	{
+    		ctlPort = 9091;
+    	}
+
+    	std::ostringstream os;
+    	os << "tcp://*:" << ctlPort;
+
+    	m_zmqSocket.bind (os.str().c_str());
     }
 
     /**
@@ -58,7 +82,9 @@ public:
     /** Return device current center frequency in Hz. */
     virtual std::uint32_t get_frequency() = 0;
 
-    /** Return current configured center frequency in Hz. */
+    /** Return current configured center frequency in Hz.
+     *  Actual device frequency depends on center frequency relative position
+     *  configured in the downsampler */
     std::uint32_t get_configured_frequency() const
     {
         return m_confFreq;
@@ -92,14 +118,17 @@ public:
     }
 
 protected:
-    std::string          m_devname;
-    std::string          m_error;
-    uint32_t             m_confFreq;
-    unsigned int         m_decim;
-    int                  m_fcPos;
+    std::string           m_devname;
+    std::string           m_error;
+    uint32_t              m_confFreq;
+    unsigned int          m_decim;
+    int                   m_fcPos;
     DataBuffer<IQSample> *m_buf;
     std::atomic_bool     *m_stop_flag;
     Downsampler          *m_downsampler;
+    zmq::context_t        m_zmqContext;
+    zmq::socket_t         m_zmqSocket;
+    zmq::message_t        m_zmqRequest;
 
     /** Configure device and prepare for streaming from parameters map */
     virtual bool configure(parsekv::pairs_type& m) = 0;

@@ -489,8 +489,8 @@ int main(int argc, char **argv)
 
         if (dn.getLog2Decimation() == 0)
         {
-        	udp_output->setSampleBits(srcsdr->get_sample_size());
-        	udp_output->setSampleBytes((srcsdr->get_sample_size()-1)/8 + 1);
+        	udp_output->setSampleBits(srcsdr->get_sample_bits());
+        	udp_output->setSampleBytes((srcsdr->get_sample_bits()-1)/8 + 1);
         	udp_output->setSampleRate(srcsdr->get_sample_rate());
 
         	if (outputbuf_samples > 0)
@@ -506,7 +506,7 @@ int main(int argc, char **argv)
         }
         else
         {
-        	unsigned int sampleSize = srcsdr->get_sample_size();
+        	unsigned int sampleSize = srcsdr->get_sample_bits();
             dn.process(sampleSize, iqsamples, outsamples);
 
             udp_output->setSampleBits(sampleSize);

@@ -74,6 +74,9 @@ public:
 
 	/*! \brief return the sample rate in Hz */
 	virtual int get_sample_rate_hz() = 0;
+
+    /*! \brief return sample size in bits */
+    virtual int get_sample_bits() = 0;
 };
 
 } // namespace sdrdaemon

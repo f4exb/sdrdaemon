@@ -155,6 +155,11 @@ int sdrdmn_source_impl::get_sample_rate_hz()
 	return d_sdrdmnbuf.getCurrentMeta().m_sampleRate;
 }
 
+int sdrdmn_source_impl::get_sample_bits()
+{
+	return d_sdrdmnbuf.getCurrentMeta().m_sampleBits;
+}
+
 void sdrdmn_source_impl::start_receive()
 {
 	d_socket->async_receive_from(

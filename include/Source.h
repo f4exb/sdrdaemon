@@ -74,7 +74,7 @@ public:
     bool configure(std::string& configureStr);
 
     /** Return sample size in bits */
-    virtual std::uint32_t get_sample_size() = 0;
+    virtual std::uint32_t get_sample_bits() = 0;
 
     /** Return current sample frequency in Hz. */
     virtual std::uint32_t get_sample_rate() = 0;

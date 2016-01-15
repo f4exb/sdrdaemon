@@ -102,7 +102,7 @@ HackRFSource::~HackRFSource()
     if (m_dev) {
         hackrf_close(m_dev);
     }
-    
+
     hackrf_error rc = (hackrf_error) hackrf_exit();
     std::cerr << "HackRFSource::~HackRFSource: HackRF library exit: " << rc << ": " << hackrf_error_name(rc) << std::endl;
 
@@ -186,7 +186,8 @@ void HackRFSource::print_specific_parms()
     fprintf(stderr, "Bias ant           %s\n", m_biasAnt ? "enabled" : "disabled");
 }
 
-bool HackRFSource::configure(uint32_t sample_rate,
+bool HackRFSource::configure(uint32_t changeFlags,
+        uint32_t sample_rate,
         uint32_t frequency,
         bool ext_amp,
         bool bias_ant,
@@ -208,75 +209,96 @@ bool HackRFSource::configure(uint32_t sample_rate,
         return false;
     }
 
-    rc = (hackrf_error) hackrf_set_freq(m_dev, static_cast<uint64_t>(m_frequency));
-
-    if (rc != HACKRF_SUCCESS)
+    if (changeFlags & 0x1)
     {
-        std::ostringstream err_ostr;
-        err_ostr << "Could not set center frequency to " << m_frequency << " Hz";
-        m_error = err_ostr.str();
-        return false;
+        rc = (hackrf_error) hackrf_set_freq(m_dev, static_cast<uint64_t>(m_frequency));
+
+        if (rc != HACKRF_SUCCESS)
+        {
+            std::ostringstream err_ostr;
+            err_ostr << "Could not set center frequency to " << m_frequency << " Hz";
+            m_error = err_ostr.str();
+            return false;
+        }
     }
 
-    rc = (hackrf_error) hackrf_set_sample_rate_manual(m_dev, m_sampleRate, 1);
-
-    if (rc != HACKRF_SUCCESS)
+    if (changeFlags & 0x2)
     {
-        std::ostringstream err_ostr;
-        err_ostr << "Could not set center sample rate to " << m_sampleRate << " Hz";
-        m_error = err_ostr.str();
-        return false;
+        rc = (hackrf_error) hackrf_set_sample_rate_manual(m_dev, m_sampleRate, 1);
+
+        if (rc != HACKRF_SUCCESS)
+        {
+            std::ostringstream err_ostr;
+            err_ostr << "Could not set center sample rate to " << m_sampleRate << " Hz";
+            m_error = err_ostr.str();
+            return false;
+        }
     }
 
-    rc = (hackrf_error) hackrf_set_lna_gain(m_dev, m_lnaGain);
-
-    if (rc != HACKRF_SUCCESS)
+    if (changeFlags & 0x4)
     {
-        std::ostringstream err_ostr;
-        err_ostr << "Could not set LNA gain to " << m_lnaGain << " dB";
-        m_error = err_ostr.str();
-        return false;
+        rc = (hackrf_error) hackrf_set_lna_gain(m_dev, m_lnaGain);
+
+        if (rc != HACKRF_SUCCESS)
+        {
+            std::ostringstream err_ostr;
+            err_ostr << "Could not set LNA gain to " << m_lnaGain << " dB";
+            m_error = err_ostr.str();
+            return false;
+        }
     }
 
-    rc = (hackrf_error) hackrf_set_vga_gain(m_dev, m_vgaGain);
-
-    if (rc != HACKRF_SUCCESS)
+    if (changeFlags & 0x8)
     {
-        std::ostringstream err_ostr;
-        err_ostr << "Could not set VGA gain to " << m_vgaGain << " dB";
-        m_error = err_ostr.str();
-        return false;
+        rc = (hackrf_error) hackrf_set_vga_gain(m_dev, m_vgaGain);
+
+        if (rc != HACKRF_SUCCESS)
+        {
+            std::ostringstream err_ostr;
+            err_ostr << "Could not set VGA gain to " << m_vgaGain << " dB";
+            m_error = err_ostr.str();
+            return false;
+        }
     }
 
-    rc = (hackrf_error) hackrf_set_antenna_enable(m_dev, (m_biasAnt ? 1 : 0));
-
-    if (rc != HACKRF_SUCCESS)
+    if (changeFlags & 0x10)
     {
-        std::ostringstream err_ostr;
-        err_ostr << "Could not set bias antenna to " << m_biasAnt;
-        m_error = err_ostr.str();
-        return false;
+        rc = (hackrf_error) hackrf_set_antenna_enable(m_dev, (m_biasAnt ? 1 : 0));
+
+        if (rc != HACKRF_SUCCESS)
+        {
+            std::ostringstream err_ostr;
+            err_ostr << "Could not set bias antenna to " << m_biasAnt;
+            m_error = err_ostr.str();
+            return false;
+        }
     }
 
-    rc = (hackrf_error) hackrf_set_amp_enable(m_dev, (m_extAmp ? 1 : 0));
-
-    if (rc != HACKRF_SUCCESS)
+    if (changeFlags & 0x20)
     {
-        std::ostringstream err_ostr;
-        err_ostr << "Could not set extra amplifier to " << m_extAmp;
-        m_error = err_ostr.str();
-        return false;
+        rc = (hackrf_error) hackrf_set_amp_enable(m_dev, (m_extAmp ? 1 : 0));
+
+        if (rc != HACKRF_SUCCESS)
+        {
+            std::ostringstream err_ostr;
+            err_ostr << "Could not set extra amplifier to " << m_extAmp;
+            m_error = err_ostr.str();
+            return false;
+        }
     }
 
-    uint32_t hackRFBandwidth = hackrf_compute_baseband_filter_bw_round_down_lt(m_bandwidth);
-    rc = (hackrf_error) hackrf_set_baseband_filter_bandwidth(m_dev, hackRFBandwidth);
-
-    if (rc != HACKRF_SUCCESS)
+    if (changeFlags & 0x40)
     {
-        std::ostringstream err_ostr;
-        err_ostr << "Could not set bandwidth to " << hackRFBandwidth << " Hz (" << m_bandwidth << " Hz requested)";
-        m_error = err_ostr.str();
-        return false;
+        uint32_t hackRFBandwidth = hackrf_compute_baseband_filter_bw_round_down_lt(m_bandwidth);
+        rc = (hackrf_error) hackrf_set_baseband_filter_bandwidth(m_dev, hackRFBandwidth);
+
+        if (rc != HACKRF_SUCCESS)
+        {
+            std::ostringstream err_ostr;
+            err_ostr << "Could not set bandwidth to " << hackRFBandwidth << " Hz (" << m_bandwidth << " Hz requested)";
+            m_error = err_ostr.str();
+            return false;
+        }
     }
 
     return true;
@@ -292,6 +314,7 @@ bool HackRFSource::configure(parsekv::pairs_type& m)
     bool extAmp = false;
     bool antBias = false;
     int fcpos = 2; // default centered
+    std::uint32_t changeFlags = 0;
 
 	if (m.find("srate") != m.end())
 	{
@@ -303,6 +326,13 @@ bool HackRFSource::configure(parsekv::pairs_type& m)
 			m_error = "Invalid sample rate";
 			return false;
 		}
+
+        changeFlags |= 0x2;
+
+        if (fcpos != 2)
+        {
+            changeFlags |= 0x1; // need to adjust actual center frequency if not centered
+        }
 	}
 
 	if (m.find("freq") != m.end())
@@ -315,6 +345,8 @@ bool HackRFSource::configure(parsekv::pairs_type& m)
 			m_error = "Invalid frequency";
 			return false;
 		}
+
+        changeFlags |= 0x1;
 	}
 
 	if (m.find("lgain") != m.end())
@@ -334,6 +366,8 @@ bool HackRFSource::configure(parsekv::pairs_type& m)
 			m_error = "LNA gain not supported. Available gains (dB): " + m_lgainsStr;
 			return false;
 		}
+
+        changeFlags |= 0x4;
 	}
 
 	if (m.find("vgain") != m.end())
@@ -352,6 +386,8 @@ bool HackRFSource::configure(parsekv::pairs_type& m)
 			m_error = "VGA gain not supported. Available gains (dB): " + m_vgainsStr;
 			return false;
 		}
+
+        changeFlags |= 0x8;
 	}
 
 	if (m.find("bwfilter") != m.end())
@@ -391,18 +427,22 @@ bool HackRFSource::configure(parsekv::pairs_type& m)
 				}
 			}
 		}
+
+        changeFlags |= 0x40;
 	}
 
 	if (m.find("extamp") != m.end())
 	{
 		std::cerr << "HackRFSource::configure: extamp" << std::endl;
 		extAmp = true;
+        changeFlags |= 0x20;
 	}
 
 	if (m.find("antbias") != m.end())
 	{
 		std::cerr << "HackRFSource::configure: antbias" << std::endl;
 		antBias = true;
+        changeFlags |= 0x10;
 	}
 
 	if (m.find("fcpos") != m.end())
@@ -419,6 +459,11 @@ bool HackRFSource::configure(parsekv::pairs_type& m)
 		{
 			m_fcPos = fcpos;
 		}
+
+        if (fcpos != 2)
+        {
+            changeFlags |= 0x1; // need to adjust actual center frequency if not centered
+        }
 	}
 
     m_confFreq = frequency;
@@ -432,7 +477,7 @@ bool HackRFSource::configure(parsekv::pairs_type& m)
 		tuner_freq = frequency;
 	}
 
-    return configure(sampleRate, tuner_freq, extAmp, antBias, lnaGain, vgaGain, bandwidth);
+    return configure(changeFlags, sampleRate, tuner_freq, extAmp, antBias, lnaGain, vgaGain, bandwidth);
 }
 
 bool HackRFSource::start(DataBuffer<IQSample> *buf, std::atomic_bool *stop_flag)
@@ -468,9 +513,9 @@ void HackRFSource::run(hackrf_device* dev, std::atomic_bool *stop_flag)
         {
             sleep(1);
         }
-        
+
         rc = (hackrf_error) hackrf_stop_rx(dev);
-        
+
         if (rc != HACKRF_SUCCESS)
         {
             std::cerr << "HackRFSource::run: Cannot stop HackRF Rx: " << rc << ": " << hackrf_error_name(rc) << std::endl;

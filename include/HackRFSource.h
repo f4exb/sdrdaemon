@@ -38,8 +38,6 @@ public:
     /** Close HackRF device. */
     virtual ~HackRFSource();
 
-    virtual bool configure(parsekv::pairs_type& m);
-
     /** Return sample size in bits */
     virtual std::uint32_t get_sample_bits() { return 8; }
 
@@ -65,9 +63,13 @@ public:
     static void get_device_names(std::vector<std::string>& devices);
 
 private:
+    /** Configure HackRF tuner from a list of key=value pairs */
+    virtual bool configure(parsekv::pairs_type& m);
+
     /**
      * Configure HackRF tuner and prepare for streaming.
      *
+     * changeFlags  :: horrible hack to notify which fields have changed
      * sample_rate  :: desired sample rate in Hz.
      * frequency    :: desired center frequency in Hz.
      * ext_amp      :: extra amplifier engaged
@@ -77,7 +79,8 @@ private:
      *
      * Return true for success, false if an error occurred.
      */
-    bool configure(uint32_t sample_rate,
+    bool configure(std::uint32_t changeFlags,
+                   uint32_t sample_rate,
                    uint32_t frequency,
                    bool ext_amp,
                    bool bias_ant,

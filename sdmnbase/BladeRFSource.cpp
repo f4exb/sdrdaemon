@@ -22,7 +22,6 @@
 #include <iomanip>
 #include <sstream>
 #include <thread>
-#include <rtl-sdr.h>
 
 #include "util.h"
 #include "parsekv.h"
@@ -179,7 +178,7 @@ BladeRFSource::~BladeRFSource()
     if (m_dev) {
         bladerf_close(m_dev);
     }
-        
+
     m_this = 0;
 }
 
@@ -411,7 +410,7 @@ bool BladeRFSource::start(DataBuffer<IQSample>* buf, std::atomic_bool *stop_flag
 {
     m_buf = buf;
     m_stop_flag = stop_flag;
-    
+
     if (m_thread == 0)
     {
         m_thread = new std::thread(run);
@@ -426,13 +425,13 @@ bool BladeRFSource::start(DataBuffer<IQSample>* buf, std::atomic_bool *stop_flag
 
 bool BladeRFSource::stop()
 {
-    if (m_thread) 
+    if (m_thread)
     {
         m_thread->join();
         delete m_thread;
         m_thread = 0;
     }
-    
+
     return true;
 }
 

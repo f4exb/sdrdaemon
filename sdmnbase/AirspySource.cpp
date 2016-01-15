@@ -156,7 +156,7 @@ AirspySource::~AirspySource()
     if (m_dev) {
         airspy_close(m_dev);
     }
-    
+
     airspy_error rc = (airspy_error) airspy_exit();
     std::cerr << "AirspySource::~AirspySource: Airspy library exit: " << rc << ": " << airspy_error_name(rc) << std::endl;
 
@@ -237,7 +237,8 @@ void AirspySource::print_specific_parms()
     fprintf(stderr, "Mixer AGC          %s\n", m_mixAGC ? "enabled" : "disabled");
 }
 
-bool AirspySource::configure(int sampleRateIndex,
+bool AirspySource::configure(std::uint32_t changeFlags,
+        int sampleRateIndex,
         uint32_t frequency,
         bool bias_ant,
         int lna_gain,
@@ -261,88 +262,112 @@ bool AirspySource::configure(int sampleRateIndex,
         return false;
     }
 
-    rc = (airspy_error) airspy_set_freq(m_dev, static_cast<uint32_t>(m_frequency));
-
-    if (rc != AIRSPY_SUCCESS)
+    if (changeFlags & 0x1)
     {
-        std::ostringstream err_ostr;
-        err_ostr << "Could not set center frequency to " << m_frequency << " Hz";
-        m_error = err_ostr.str();
-        return false;
+        rc = (airspy_error) airspy_set_freq(m_dev, static_cast<uint32_t>(m_frequency));
+
+        if (rc != AIRSPY_SUCCESS)
+        {
+            std::ostringstream err_ostr;
+            err_ostr << "Could not set center frequency to " << m_frequency << " Hz";
+            m_error = err_ostr.str();
+            return false;
+        }
     }
 
-    rc = (airspy_error) airspy_set_samplerate(m_dev, static_cast<airspy_samplerate_t>(sampleRateIndex));
-
-    if (rc != AIRSPY_SUCCESS)
+    if (changeFlags & 0x2)
     {
-        std::ostringstream err_ostr;
-        err_ostr << "Could not set center sample rate to " << m_srates[sampleRateIndex] << " Hz";
-        m_error = err_ostr.str();
-        return false;
-    }
-    else
-    {
-        m_sampleRate = m_srates[sampleRateIndex];
-    }
+        rc = (airspy_error) airspy_set_samplerate(m_dev, static_cast<airspy_samplerate_t>(sampleRateIndex));
 
-    rc = (airspy_error) airspy_set_lna_gain(m_dev, m_lnaGain);
-
-    if (rc != AIRSPY_SUCCESS)
-    {
-        std::ostringstream err_ostr;
-        err_ostr << "Could not set LNA gain to " << m_lnaGain << " dB";
-        m_error = err_ostr.str();
-        return false;
+        if (rc != AIRSPY_SUCCESS)
+        {
+            std::ostringstream err_ostr;
+            err_ostr << "Could not set center sample rate to " << m_srates[sampleRateIndex] << " Hz";
+            m_error = err_ostr.str();
+            return false;
+        }
+        else
+        {
+            m_sampleRate = m_srates[sampleRateIndex];
+        }
     }
 
-    rc = (airspy_error) airspy_set_mixer_gain(m_dev, m_mixGain);
-
-    if (rc != AIRSPY_SUCCESS)
+    if (changeFlags & 0x4)
     {
-        std::ostringstream err_ostr;
-        err_ostr << "Could not set mixer gain to " << m_mixGain << " dB";
-        m_error = err_ostr.str();
-        return false;
+        rc = (airspy_error) airspy_set_lna_gain(m_dev, m_lnaGain);
+
+        if (rc != AIRSPY_SUCCESS)
+        {
+            std::ostringstream err_ostr;
+            err_ostr << "Could not set LNA gain to " << m_lnaGain << " dB";
+            m_error = err_ostr.str();
+            return false;
+        }
     }
 
-    rc = (airspy_error) airspy_set_vga_gain(m_dev, m_vgaGain);
-
-    if (rc != AIRSPY_SUCCESS)
+    if (changeFlags & 0x8)
     {
-        std::ostringstream err_ostr;
-        err_ostr << "Could not set VGA gain to " << m_vgaGain << " dB";
-        m_error = err_ostr.str();
-        return false;
+        rc = (airspy_error) airspy_set_mixer_gain(m_dev, m_mixGain);
+
+        if (rc != AIRSPY_SUCCESS)
+        {
+            std::ostringstream err_ostr;
+            err_ostr << "Could not set mixer gain to " << m_mixGain << " dB";
+            m_error = err_ostr.str();
+            return false;
+        }
     }
 
-    rc = (airspy_error) airspy_set_rf_bias(m_dev, (m_biasAnt ? 1 : 0));
-
-    if (rc != AIRSPY_SUCCESS)
+    if (changeFlags & 0x10)
     {
-        std::ostringstream err_ostr;
-        err_ostr << "Could not set bias antenna to " << m_biasAnt;
-        m_error = err_ostr.str();
-        return false;
+        rc = (airspy_error) airspy_set_vga_gain(m_dev, m_vgaGain);
+
+        if (rc != AIRSPY_SUCCESS)
+        {
+            std::ostringstream err_ostr;
+            err_ostr << "Could not set VGA gain to " << m_vgaGain << " dB";
+            m_error = err_ostr.str();
+            return false;
+        }
     }
 
-    rc = (airspy_error) airspy_set_lna_agc(m_dev, (m_lnaAGC ? 1 : 0));
-
-    if (rc != AIRSPY_SUCCESS)
+    if (changeFlags & 0x20)
     {
-        std::ostringstream err_ostr;
-        err_ostr << "Could not set LNA AGC to " << m_lnaAGC;
-        m_error = err_ostr.str();
-        return false;
+        rc = (airspy_error) airspy_set_rf_bias(m_dev, (m_biasAnt ? 1 : 0));
+
+        if (rc != AIRSPY_SUCCESS)
+        {
+            std::ostringstream err_ostr;
+            err_ostr << "Could not set bias antenna to " << m_biasAnt;
+            m_error = err_ostr.str();
+            return false;
+        }
     }
 
-    rc = (airspy_error) airspy_set_mixer_agc(m_dev, (m_mixAGC ? 1 : 0));
-
-    if (rc != AIRSPY_SUCCESS)
+    if (changeFlags & 0x40)
     {
-        std::ostringstream err_ostr;
-        err_ostr << "Could not set mixer AGC to " << m_mixAGC;
-        m_error = err_ostr.str();
-        return false;
+        rc = (airspy_error) airspy_set_lna_agc(m_dev, (m_lnaAGC ? 1 : 0));
+
+        if (rc != AIRSPY_SUCCESS)
+        {
+            std::ostringstream err_ostr;
+            err_ostr << "Could not set LNA AGC to " << m_lnaAGC;
+            m_error = err_ostr.str();
+            return false;
+        }
+    }
+
+    if (changeFlags & 0x80)
+    {
+        rc = (airspy_error) airspy_set_mixer_agc(m_dev, (m_mixAGC ? 1 : 0));
+
+        if (rc != AIRSPY_SUCCESS)
+        {
+            std::ostringstream err_ostr;
+            err_ostr << "Could not set mixer AGC to " << m_mixAGC;
+            m_error = err_ostr.str();
+            return false;
+        }
     }
 
     return true;
@@ -359,6 +384,21 @@ bool AirspySource::configure(parsekv::pairs_type& m)
     bool lnaAGC = false;
     bool mixAGC = false;
     int fcpos = 2; // default centered
+    std::uint32_t changeFlags = 0;
+
+    if (m.find("freq") != m.end())
+	{
+		std::cerr << "AirspySource::configure: freq: " << m["freq"] << std::endl;
+		frequency = atoi(m["freq"].c_str());
+
+		if ((frequency < 24000000) || (frequency > 1800000000))
+		{
+			m_error = "Invalid frequency";
+			return false;
+		}
+
+        changeFlags |= 0x1;
+	}
 
 	if (m.find("srate") != m.end())
 	{
@@ -388,18 +428,13 @@ bool AirspySource::configure(parsekv::pairs_type& m)
 			m_sampleRate = 0;
 			return false;
 		}
-	}
 
-	if (m.find("freq") != m.end())
-	{
-		std::cerr << "AirspySource::configure: freq: " << m["freq"] << std::endl;
-		frequency = atoi(m["freq"].c_str());
+        changeFlags |= 0x2;
 
-		if ((frequency < 24000000) || (frequency > 1800000000))
-		{
-			m_error = "Invalid frequency";
-			return false;
-		}
+        if (fcpos != 2)
+        {
+            changeFlags |= 0x1; // need to adjust actual center frequency if not centered
+        }
 	}
 
 	if (m.find("lgain") != m.end())
@@ -419,6 +454,8 @@ bool AirspySource::configure(parsekv::pairs_type& m)
 			m_error = "LNA gain not supported. Available gains (dB): " + m_lgainsStr;
 			return false;
 		}
+
+        changeFlags |= 0x4;
 	}
 
 	if (m.find("mgain") != m.end())
@@ -438,6 +475,8 @@ bool AirspySource::configure(parsekv::pairs_type& m)
 			m_error = "Mixer gain not supported. Available gains (dB): " + m_mgainsStr;
 			return false;
 		}
+
+        changeFlags |= 0x8;
 	}
 
 	if (m.find("vgain") != m.end())
@@ -456,24 +495,29 @@ bool AirspySource::configure(parsekv::pairs_type& m)
 			m_error = "VGA gain not supported. Available gains (dB): " + m_vgainsStr;
 			return false;
 		}
+
+        changeFlags |= 0x10;
 	}
 
 	if (m.find("antbias") != m.end())
 	{
 		std::cerr << "AirspySource::configure: antbias" << std::endl;
 		antBias = true;
+        changeFlags |= 0x20;
 	}
 
 	if (m.find("lagc") != m.end())
 	{
 		std::cerr << "AirspySource::configure: lagc" << std::endl;
 		lnaAGC = true;
+        changeFlags |= 0x40;
 	}
 
 	if (m.find("magc") != m.end())
 	{
 		std::cerr << "AirspySource::configure: magc" << std::endl;
 		mixAGC = true;
+        changeFlags |= 0x80;
 	}
 
 	if (m.find("fcpos") != m.end())
@@ -490,6 +534,11 @@ bool AirspySource::configure(parsekv::pairs_type& m)
 		{
 			m_fcPos = fcpos;
 		}
+
+        if (fcpos != 2)
+        {
+            changeFlags |= 0x1; // need to adjust actual center frequency if not centered
+        }
 	}
 
 	m_confFreq = frequency;
@@ -503,7 +552,7 @@ bool AirspySource::configure(parsekv::pairs_type& m)
 		tuner_freq = frequency;
 	}
 
-    return configure(sampleRateIndex, tuner_freq, antBias, lnaGain, mixGain, vgaGain, lnaAGC, mixAGC);
+    return configure(changeFlags, sampleRateIndex, tuner_freq, antBias, lnaGain, mixGain, vgaGain, lnaAGC, mixAGC);
 }
 
 bool AirspySource::start(DataBuffer<IQSample> *buf, std::atomic_bool *stop_flag)
@@ -539,9 +588,9 @@ void AirspySource::run(airspy_device* dev, std::atomic_bool *stop_flag)
         {
             sleep(1);
         }
-        
+
         rc = (airspy_error) airspy_stop_rx(dev);
-        
+
         if (rc != AIRSPY_SUCCESS)
         {
             std::cerr << "AirspySource::run: Cannot stop Airspy Rx: " << rc << ": " << airspy_error_name(rc) << std::endl;

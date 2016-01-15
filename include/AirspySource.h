@@ -38,8 +38,6 @@ public:
     /** Close Airspy device. */
     virtual ~AirspySource();
 
-    virtual bool configure(parsekv::pairs_type& m);
-
     /** Return sample size in bits */
     virtual std::uint32_t get_sample_bits() { return 12; }
 
@@ -65,9 +63,14 @@ public:
     static void get_device_names(std::vector<std::string>& devices);
 
 private:
+
+    /** Configure Airspy tuner from a list of key=values */
+    virtual bool configure(parsekv::pairs_type& m);
+
     /**
      * Configure Airspy tuner and prepare for streaming.
      *
+     * changeFlags     :: horrible hack to notify which fields have changed
      * sampleRateIndex :: desired sample rate index in the sample rates enumeration list.
      * frequency       :: desired center frequency in Hz.
      * bias_ant        :: antenna bias
@@ -79,7 +82,8 @@ private:
      *
      * Return true for success, false if an error occurred.
      */
-    bool configure(int sampleRateIndex,
+    bool configure(std::uint32_t changeFlags,
+                   int sampleRateIndex,
                    uint32_t frequency,
                    bool bias_ant,
                    int lna_gain,

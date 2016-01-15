@@ -39,8 +39,6 @@ public:
     /** Close RTL-SDR device. */
     virtual ~RtlSdrSource();
 
-    virtual bool configure(parsekv::pairs_type& m);
-
     /** Return sample size in bits */
     virtual std::uint32_t get_sample_bits() { return 8; }
 
@@ -66,10 +64,14 @@ public:
     static void get_device_names(std::vector<std::string>& devices);
 
 private:
+
+    /** Configure RTL-SDR tuner from a list of key=values */
+    virtual bool configure(parsekv::pairs_type& m);
+
     /**
      * Configure RTL-SDR tuner and prepare for streaming.
      *
-     * changeFlags  :: horrible hack
+     * changeFlags  :: horrible hack to notify which fields have changed
      * sample_rate  :: desired sample rate in Hz.
      * frequency    :: desired center frequency in Hz.
      * ppm          :: LO PPM correction.

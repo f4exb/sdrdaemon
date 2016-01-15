@@ -64,7 +64,7 @@ RtlSdrSource::RtlSdrSource(int dev_index) :
 
         m_gainsStr = gains_ostr.str();
     }
-    
+
     m_this = this;
 }
 
@@ -74,7 +74,7 @@ RtlSdrSource::~RtlSdrSource()
 {
     if (m_dev)
         rtlsdr_close(m_dev);
-        
+
     m_this = 0;
 }
 
@@ -103,6 +103,11 @@ bool RtlSdrSource::configure(parsekv::pairs_type& m)
 		}
 
 		changeFlags |= 0x1;
+
+        if (m_fcPos != 2)
+        {
+            changeFlags |= 0x2; // need to adjust actual center frequency if not centered
+        }        
 	}
 
 	if (m.find("freq") != m.end())
@@ -204,6 +209,11 @@ bool RtlSdrSource::configure(parsekv::pairs_type& m)
 		{
 			m_fcPos = fcpos;
 		}
+
+        if (m_fcPos != 2)
+        {
+            changeFlags |= 0x2; // need to adjust actual center frequency if not centered
+        }
 	}
 
 	if (m.find("decim") != m.end())
@@ -382,7 +392,7 @@ bool RtlSdrSource::start(DataBuffer<IQSample>* buf, std::atomic_bool *stop_flag)
 {
     m_buf = buf;
     m_stop_flag = stop_flag;
-    
+
     if (m_thread == 0)
     {
         m_thread = new std::thread(run);
@@ -397,13 +407,13 @@ bool RtlSdrSource::start(DataBuffer<IQSample>* buf, std::atomic_bool *stop_flag)
 
 bool RtlSdrSource::stop()
 {
-    if (m_thread) 
+    if (m_thread)
     {
         m_thread->join();
         delete m_thread;
         m_thread = 0;
     }
-    
+
     return true;
 }
 

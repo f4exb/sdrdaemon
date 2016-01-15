@@ -191,6 +191,7 @@ bool BladeRFSource::configure(parsekv::pairs_type& m)
     int vga1Gain = 20;
     int vga2Gain = 9;
     int fcpos = 2; // default centered
+    std::uint32_t changeFlags = 0;
 
 	if (m.find("srate") != m.end())
 	{
@@ -202,6 +203,13 @@ bool BladeRFSource::configure(parsekv::pairs_type& m)
 			m_error = "Invalid sample rate";
 			return false;
 		}
+
+        changeFlags |= 0x1;
+
+        if (m_fcPos != 2)
+        {
+            changeFlags |= 0x2; // need to adjust actual center frequency if not centered
+        }        
 	}
 
 	if (m.find("freq") != m.end())
@@ -214,6 +222,8 @@ bool BladeRFSource::configure(parsekv::pairs_type& m)
 			m_error = "Invalid frequency";
 			return false;
 		}
+
+        changeFlags |= 0x2;
 	}
 
 	if (m.find("bw") != m.end())
@@ -233,47 +243,11 @@ bool BladeRFSource::configure(parsekv::pairs_type& m)
 			m_error = "Invalid bandwidth";
 			return false;
 		}
+
+        changeFlags |= 0x4;
 	}
 
-	if (m.find("v1gain") != m.end())
-	{
-		std::cerr << "BladeRFSource::configure: v1gain: " << m["v1gain"] << std::endl;
-
-		if (strcasecmp(m["v1gain"].c_str(), "list") == 0)
-		{
-			m_error = "Available VGA1 gains (dB): " + m_vga1GainsStr;
-			return false;
-		}
-
-		vga1Gain = atoi(m["v1gain"].c_str());
-
-		if (find(m_vga1Gains.begin(), m_vga1Gains.end(), vga1Gain) == m_vga1Gains.end())
-		{
-			m_error = "VGA1 gain not supported. Available gains (dB): " + m_vga1GainsStr;
-			return false;
-		}
-	}
-
-	if (m.find("v2gain") != m.end())
-	{
-		std::cerr << "BladeRFSource::configure: v2gain: " << m["v2gain"] << std::endl;
-
-		if (strcasecmp(m["v2gain"].c_str(), "list") == 0)
-		{
-			m_error = "Available VGA2 gains (dB): " + m_vga2GainsStr;
-			return false;
-		}
-
-		vga1Gain = atoi(m["v2gain"].c_str());
-
-		if (find(m_vga2Gains.begin(), m_vga2Gains.end(), vga2Gain) == m_vga2Gains.end())
-		{
-			m_error = "VGA2 gain not supported. Available gains (dB): " + m_vga2GainsStr;
-			return false;
-		}
-	}
-
-	if (m.find("lgain") != m.end())
+    if (m.find("lgain") != m.end())
 	{
 		std::cerr << "BladeRFSource::configure: lgain: " << m["lgain"] << std::endl;
 
@@ -300,6 +274,50 @@ bool BladeRFSource::configure(parsekv::pairs_type& m)
 			m_error = "Invalid LNA gain";
 			return false;
 		}
+
+        changeFlags |= 0x8;
+	}
+
+	if (m.find("v1gain") != m.end())
+	{
+		std::cerr << "BladeRFSource::configure: v1gain: " << m["v1gain"] << std::endl;
+
+		if (strcasecmp(m["v1gain"].c_str(), "list") == 0)
+		{
+			m_error = "Available VGA1 gains (dB): " + m_vga1GainsStr;
+			return false;
+		}
+
+		vga1Gain = atoi(m["v1gain"].c_str());
+
+		if (find(m_vga1Gains.begin(), m_vga1Gains.end(), vga1Gain) == m_vga1Gains.end())
+		{
+			m_error = "VGA1 gain not supported. Available gains (dB): " + m_vga1GainsStr;
+			return false;
+		}
+
+        changeFlags |= 0x10;
+	}
+
+	if (m.find("v2gain") != m.end())
+	{
+		std::cerr << "BladeRFSource::configure: v2gain: " << m["v2gain"] << std::endl;
+
+		if (strcasecmp(m["v2gain"].c_str(), "list") == 0)
+		{
+			m_error = "Available VGA2 gains (dB): " + m_vga2GainsStr;
+			return false;
+		}
+
+		vga1Gain = atoi(m["v2gain"].c_str());
+
+		if (find(m_vga2Gains.begin(), m_vga2Gains.end(), vga2Gain) == m_vga2Gains.end())
+		{
+			m_error = "VGA2 gain not supported. Available gains (dB): " + m_vga2GainsStr;
+			return false;
+		}
+
+        changeFlags |= 0x20;
 	}
 
 	if (m.find("fcpos") != m.end())
@@ -316,6 +334,11 @@ bool BladeRFSource::configure(parsekv::pairs_type& m)
 		{
 			m_fcPos = fcpos;
 		}
+
+        if (m_fcPos != 2)
+        {
+            changeFlags |= 0x2; // need to adjust actual center frequency if not centered
+        }
 	}
 
 	// Intentionally tune at a higher frequency to avoid DC offset.
@@ -330,11 +353,12 @@ bool BladeRFSource::configure(parsekv::pairs_type& m)
 		tuner_freq = frequency;
 	}
 
-	return configure(sample_rate, tuner_freq, bandwidth, lnaGainIndex, vga1Gain, vga2Gain);
+	return configure(changeFlags, sample_rate, tuner_freq, bandwidth, lnaGainIndex, vga1Gain, vga2Gain);
 }
 
 // Configure RTL-SDR tuner and prepare for streaming.
-bool BladeRFSource::configure(uint32_t sample_rate,
+bool BladeRFSource::configure(uint32_t changeFlags,
+        uint32_t sample_rate,
         uint32_t frequency,
         uint32_t bandwidth,
         int lna_gainIndex,
@@ -346,40 +370,58 @@ bool BladeRFSource::configure(uint32_t sample_rate,
     m_vga2Gain = vga2_gain;
     m_lnaGain = m_lnaGains[lna_gainIndex-1];
 
-    if (bladerf_set_sample_rate(m_dev, BLADERF_MODULE_RX, sample_rate, &m_actualSampleRate) < 0)
+    if (changeFlags & 0x1)
     {
-        m_error = "Cannot set sample rate";
-        return false;
+        if (bladerf_set_sample_rate(m_dev, BLADERF_MODULE_RX, sample_rate, &m_actualSampleRate) < 0)
+        {
+            m_error = "Cannot set sample rate";
+            return false;
+        }
     }
 
-    if (bladerf_set_frequency( m_dev, BLADERF_MODULE_RX, frequency ) != 0)
+    if (changeFlags & 0x2)
     {
-        m_error = "Cannot set Rx frequency";
-        return false;
+        if (bladerf_set_frequency( m_dev, BLADERF_MODULE_RX, frequency ) != 0)
+        {
+            m_error = "Cannot set Rx frequency";
+            return false;
+        }
     }
 
-    if (bladerf_set_bandwidth(m_dev, BLADERF_MODULE_RX, bandwidth, &m_actualBandwidth) < 0)
+    if (changeFlags & 0x4)
     {
-        m_error = "Cannot set Rx bandwidth";
-        return false;
+        if (bladerf_set_bandwidth(m_dev, BLADERF_MODULE_RX, bandwidth, &m_actualBandwidth) < 0)
+        {
+            m_error = "Cannot set Rx bandwidth";
+            return false;
+        }
     }
 
-    if (bladerf_set_lna_gain(m_dev, static_cast<bladerf_lna_gain>(lna_gainIndex)) != 0)
+    if (changeFlags & 0x8)
     {
-        m_error = "Cannot set LNA gain";
-        return false;
+        if (bladerf_set_lna_gain(m_dev, static_cast<bladerf_lna_gain>(lna_gainIndex)) != 0)
+        {
+            m_error = "Cannot set LNA gain";
+            return false;
+        }
     }
 
-    if (bladerf_set_rxvga1(m_dev, vga1_gain) != 0)
+    if (changeFlags & 0x10)
     {
-        m_error = "Cannot set VGA1 gain";
-        return false;
+        if (bladerf_set_rxvga1(m_dev, vga1_gain) != 0)
+        {
+            m_error = "Cannot set VGA1 gain";
+            return false;
+        }
     }
 
-    if (bladerf_set_rxvga2(m_dev, vga2_gain) != 0)
+    if (changeFlags & 0x20)
     {
-        m_error = "Cannot set VGA2 gain";
-        return false;
+        if (bladerf_set_rxvga2(m_dev, vga2_gain) != 0)
+        {
+            m_error = "Cannot set VGA2 gain";
+            return false;
+        }
     }
 
     return true;

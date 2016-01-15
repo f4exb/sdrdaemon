@@ -37,8 +37,6 @@ public:
     /** Close BladeRF device. */
     virtual ~BladeRFSource();
 
-    virtual bool configure(parsekv::pairs_type& m);
-
     /** Return sample size in bits */
     virtual std::uint32_t get_sample_bits() { return 12; }
 
@@ -64,9 +62,14 @@ public:
     static void get_device_names(std::vector<std::string>& devices);
 
 private:
+
+    /** Configure RTL-SDR tuner from a list of key=value pairs */
+    virtual bool configure(parsekv::pairs_type& m);
+
     /**
      * Configure RTL-SDR tuner and prepare for streaming.
      *
+     * changeFlags  :: horrible hack to notify which fields have changed
      * sample_rate  :: desired sample rate in Hz.
      * frequency    :: desired center frequency in Hz.
      * bandwidth    :: desired filter bandwidth in Hz.
@@ -76,7 +79,8 @@ private:
      *
      * Return true for success, false if an error occurred.
      */
-    bool configure(uint32_t sample_rate,
+    bool configure(std::uint32_t changeFlags,
+                   uint32_t sample_rate,
                    uint32_t frequency,
                    uint32_t bandwidth,
                    int lna_gainIndex,

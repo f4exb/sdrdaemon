@@ -48,32 +48,32 @@ For now Airspy support must be installed even if no Airspy device is connected.
 
 If you install from source (https://github.com/airspy/host/tree/master/libairspy) in your own installation path you have to specify the include path and library path. For example if you installed it in `/opt/install/libairspy` you have to add `-DLIBAIRSPY_LIBRARIES=/opt/install/libairspy/lib/libairspy.so -DLIBAIRSPY_INCLUDE_DIR=/opt/install/libairspy/include` to the cmake options.
 
-To install the library from a Debian/Ubuntu installation just do: 
+To install the library from a Debian/Ubuntu installation just do:
 
   - `sudo apt-get install libairspy-dev`
-  
+
 <h2>BladeRF support</h2>
 
 For now BladeRF support must be installed even if no Airspy device is connected.
 
 If you install from source (https://github.com/Nuand/bladeRF) in your own installation path you have to specify the include path and library path. For example if you installed it in `/opt/install/libbladerf` you have to add `-DLIBBLADERF_LIBRARIES=/opt/install/libbladeRF/lib/libbladeRF.so -DLIBBLADERF_INCLUDE_DIR=/opt/install/libbladeRF/include` to the cmake options.
 
-To install the library from a Debian/Ubuntu installation just do: 
+To install the library from a Debian/Ubuntu installation just do:
 
   - `sudo apt-get install libbladerf-dev`
-  
+
 Note: for the BladeRF to work effectively on FM broadcast frequencies you have to fit it with the XB200 extension board.
-  
+
 <h2>HackRF support</h2>
 
 For now HackRF support must be installed even if no HackRF device is connected.
 
 If you install from source (https://github.com/mossmann/hackrf/tree/master/host/libhackrf) in your own installation path you have to specify the include path and library path. For example if you installed it in `/opt/install/libhackrf` you have to add `-DLIBHACKRF_LIBRARIES=/opt/install/libhackrf/lib/libhackrf.so -DLIBHACKRF_INCLUDE_DIR=/opt/install/libhackrf/include` to the cmake options.
 
-To install the library from a Debian/Ubuntu installation just do: 
+To install the library from a Debian/Ubuntu installation just do:
 
   - `sudo apt-get install libhackrf-dev`
-  
+
 <h2>RTL-SDR support</h2>
 
 The Osmocom RTL-SDR library must be installed before you can build SDRdaemon.
@@ -81,10 +81,10 @@ See http://sdr.osmocom.org/trac/wiki/rtl-sdr for more information.
 SDRdaemon has been tested successfully with RTL-SDR 0.5.3. Normally your distribution should provide the appropriate librtlsdr package.
 If you go with your own installation of librtlsdr you have to specify the include path and library path. For example if you installed it in `-DLIBRTLSDR_LIBRARIES=/opt/install/librtlsdr/lib/librtlsdr.so -DLIBRTLSDR_INCLUDE_DIR=/opt/install/librtlsdr/include` to the cmake options
 
-To install the library from a Debian/Ubuntu installation just do: 
+To install the library from a Debian/Ubuntu installation just do:
 
   - `sudo apt-get install librtlsdr-dev`
-  
+
 <h1>Installing</h1>
 
 To install SDRdaemon, download and unpack the source code and go to the
@@ -104,7 +104,7 @@ Compile and install
 
  - `make -j8` (for machines with 8 CPUs)
  - `make install`
- 
+
 
 <h1>Running</h1>
 
@@ -133,7 +133,7 @@ Specify gain:
 
 <h2>Device type specific configuration options</h2>
 
-Note that these options can be used both as the initial configuration as the argument of the `-c` option and as the dynamic configuration sent on the UDP configuration port specified by the `-C` option. 
+Note that these options can be used both as the initial configuration as the argument of the `-c` option and as the dynamic configuration sent on the UDP configuration port specified by the `-C` option.
 
 <h3>RTL-SDR</h3>
 
@@ -157,11 +157,11 @@ Note that these options can be used both as the initial configuration as the arg
   - `bwfilter=<x>` RF (IF) filter bandwith in MHz. Actual value is taken as the closest to the following values: `1.75, 2.5, 3.5, 5, 5.5, 6, 7,  8, 9, 10, 12, 14, 15, 20, 24, 28, list`. `list` lists valid values and exits. (default `2.5`)
   - `extamp` Turn on the extra amplifier (default off)
   - `antbias` Turn on the antenna bias for remote LNA (default off)
-  
+
 <h3>Airspy</h3>
 
   - `freq=<int>` Desired tune frequency in Hz. Valid range from 1M to 1.8G. (default 100M: `100000000`)
-  - `srate=<int>` Device sample rate. `list` lists valid values and exits. (default `10000000`). Valid values depend on the Airspy firmware. Airspy firmware and library must support dynamic sample rate query. 
+  - `srate=<int>` Device sample rate. `list` lists valid values and exits. (default `10000000`). Valid values depend on the Airspy firmware. Airspy firmware and library must support dynamic sample rate query.
   - `decim=<int>` log2 of the decimation factor. Samples collected from the device are downsampled by two to the power of this value.
   - `lgain=<x>` LNA gain in dB. Valid values are: `0, 1, 2, 3, 4, 5, 6, 7, 8 ,9 ,10, 11 12, 13, 14, list`. `list` lists valid values and exits. (default `8`)
   - `mgain=<x>` Mixer gain in dB. Valid values are: `0, 1, 2, 3, 4, 5, 6, 7, 8 ,9 ,10, 11 12, 13, 14, 15, list`. `list` lists valid values and exits. (default `8`)
@@ -169,10 +169,10 @@ Note that these options can be used both as the initial configuration as the arg
   - `antbias` Turn on the antenna bias for remote LNA (default off)
   - `lagc` Turn on the LNA AGC (default off)
   - `magc` Turn on the mixer AGC (default off)
-  
+
 <h3>BladeRF</h3>
 
-  - `freq=<int>` Desired tune frequency in Hz. Valid range low boundary depends whether the XB200 extension board is fitted (default `300000000`). 
+  - `freq=<int>` Desired tune frequency in Hz. Valid range low boundary depends whether the XB200 extension board is fitted (default `300000000`).
     - XB200 fitted: 100kHz to 3,8 GHz
     - XB200 not fitted: 300 MHZ to 3.8 GHz.
   - `srate=<int>` Device sample rate in Hz. Valid range is 48kHZ to 40MHz. (default `1000000`).
@@ -182,13 +182,29 @@ Note that these options can be used both as the initial configuration as the arg
   - `v1gain=<x>` VGA1 gain in dB. Valid values are: `5, 6, 7, 8 ,9 ,10, 11 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, list`. `list` lists valid values and exits. (default `20`)  
   - `v2gain=<x>` VGA2 gain in dB. Valid values are: `0, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30, list`. `list` lists valid values and exits. (default `9`)  
 
+<h2>Dynamic remote control</h2>
+
+SDRdaemon listens on a TCP port (the configuration port) for incoming Zero-MQ messages consisting of a configuration string as described just above. You can use the Python script `zmqclient.py` in the root directory to send such messages. It defaults to the localhost (`127.0.0.1`) and port `9091`. The configuration string is given as the argument of the message `-m` parameter. Example:
+
+`python zmqclient.py -I 192.168.1.3 -P 9999 -m frequency=433970000`
+
+The complete list of options is:
+
+  - `-I` IP address (or name defined by the DNS) of the machine hosting SDRdaemon (default `127.0.0.1`).
+  - `-P` TCP port where SDRdaemon listens for configuration commands using Zero-MQ (default: `9091`).
+  - `-m` message string. This is where you specify the configuration as a comma separated list of key=values (default: `freq=100000000`).
+  - `-t` timeout in seconds. Timeout after which communication with SDRdaemon is abandoned (default: `2`).
+  - `-h` online help
+
+The Zero-MQ connection is specified as a paired connection (`ZMQ_PAIR`). The connection can be managed by any program at the convenience of the user as long as the connection type is respected.
+
 <h1>Data formats</h1>
 
 <h2>I/Q samples and related data</h2>
 
 <h2>Configuration options</h2>
 
-A string of comma separated key=value pairs in the same format as described in the device related options can be sent on the UDP configuration port to dynamically control the device. 
+A string of comma separated key=value pairs in the same format as described in the device related options can be sent on the UDP configuration port to dynamically control the device.
 
 <h1>GNUradio supoort</h1>
 

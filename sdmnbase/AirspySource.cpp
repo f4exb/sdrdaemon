@@ -376,7 +376,7 @@ bool AirspySource::configure(std::uint32_t changeFlags,
 bool AirspySource::configure(parsekv::pairs_type& m)
 {
     int sampleRateIndex = 0;
-    uint32_t frequency = 100000000;
+    uint32_t frequency = m_confFreq;
     int lnaGain = 8;
     int mixGain = 8;
     int vgaGain = 0;
@@ -535,10 +535,7 @@ bool AirspySource::configure(parsekv::pairs_type& m)
 			m_fcPos = fcpos;
 		}
 
-        if (fcpos != 2)
-        {
-            changeFlags |= 0x1; // need to adjust actual center frequency if not centered
-        }
+        changeFlags |= 0x1; // need to adjust actual center frequency if not centered
 	}
 
 	m_confFreq = frequency;

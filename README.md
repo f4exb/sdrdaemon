@@ -5,7 +5,7 @@ SDRdaemon
 
 <h1>Introduction</h1>
 
-**SDRdaemon** is a basic software-defined radio receiver that just sends the I/Q samples over the network via UDP. It was developed on the base of SDRdaemon (also found in this Github repo: https://github.com/f4exb/SDRdaemon) and shares a lot of the code for the interface with the SDR hardware devices.
+**SDRdaemon** is a basic software-defined radio receiver that just sends the I/Q samples over the network via UDP. It was developed on the base of NGSoftFM (also found in this Github repo: https://github.com/f4exb/ngsoftfm) and shares a lot of the code for the interface with the SDR hardware devices.
 
 Hardware supported:
 
@@ -14,7 +14,9 @@ Hardware supported:
   - **Airspy** is supported with _libairspy_ library.
   - **BladeRF** is supported with _libbladerf_ library.
 
-SDRdaemon can be used conveniently along with SDRAngel (found in this Github repo: https://github.com/f4exb/sdrangel) as the client application. So in this remote type of configuration you will need both an angel and a daemon :-)
+SDRdaemon can be used conveniently along with SDRangel (found in this Github repo: https://github.com/f4exb/sdrangel) as the client application. So in this remote type of configuration you will need both an angel and a daemon :-)
+
+GNUradio is also supported with a specific source block provided in the `gr-sdrdaemon` subdirectory.
 
 SDRdaemon requires:
 
@@ -110,18 +112,25 @@ Compile and install
 
 <h2>Examples</h2>
 
-Basic usage:
+Typical commands:
 
- - `./SDRdaemon -t rrtlsdr -c freq=94600000` Use RTL-SDR device #0 and start tuned to 94.6 MHz
-
-Specify gain:
-
- - `./SDRdaemon -t rtlsdr -c freq=94600000,gain=22.9` Use RTL-SDR device #0 and start tuned to 94.6 MHz with a gain of 22.9 dB
+  - RTL-SDR: `./sdrdaemon -t rtlsdr -I 192.168.1.3 -D 9090 -C 9091 -c freq=433970000,srate=1000000,ppm=58,gain=40.2,decim=5,fcpos=2`
+    - Use RTL-SDR device #0
+    - Destination address for the data is: `192.168.1.3` 
+    - Using UDP port `9090` for the data (it is the default anyway)
+    - Using TCP port `9091` to listen to configuration commands (it is the default anyway)
+    - Startup configuration:
+      - Center frequency: _433.97 MHz_
+      - Device sample rate: _1 MHz_
+      - Local oscillator correction: _58 ppm_
+      - RF gain: _40.2 dB_
+      - Decimation: 2^_5_ = 32; thus stream sample rate is 31.25 kHz
+      - Position of center frequency: _2_ is centered (decimation around the center) 
 
 <h2>All options</h2>
 
  - `-t devtype` is mandatory and must be `rtlsdr` for RTL-SDR devices or `hackrf` for HackRF.
- - `-c config` Comma separated list of configuration options as key=value pairs or just key for switches. Depends on device type (see next paragraph).
+ - `-c config` Comma separated list of configuration options as key=value pairs or just key for switches. Depends on device type (see next paragraphs).
  - `-d devidx` Device index, 'list' to show device list (default 0)
  - `-r pcmrate` Audio sample rate in Hz (default 48000 Hz)
  - `-M ` Disable stereo decoding
@@ -130,6 +139,14 @@ Specify gain:
  - `-P [device]` Play audio via ALSA device (default `default`). Use `aplay -L` to get the list of devices for your system
  - `-T filename` Write pulse-per-second timestamps. Use filename '-' to write to stdout
  - `-b seconds` Set audio buffer size in seconds
+
+<h2>Common configuration options for the decimation</h2>
+
+  - `decim=<int>` log2 of the decimation factor. Samples collected from the device are downsampled by two to the power of this value. On 8 bit samples native systems (RTL-SDR and HackRF) For a value greater than 0 (thus an effective downsampling) the size of the samples is increased to 2x16 bits.
+  - `fcpos=<int>` Relative position of the center frequency in the resulting decimation:
+    - `0` is infradyne i.e. decimation is done around -fc/4 where fc is the device center frequency
+    - `1` is supradyne i.e. decimation is done around fc/4
+    - `2` is centered i.e. decimarion is done around fc
 
 <h2>Device type specific configuration options</h2>
 
@@ -143,7 +160,6 @@ Note that these options can be used both as the initial configuration as the arg
     - `list` Lists available gains and exit
     - `<float>` gain in dB. Possible gains in dB are: `0.0, 0.9, 1.4, 2.7, 3.7, 7.7, 8.7, 12.5, 14.4, 15.7, 16.6, 19.7, 20.7, 22.9, 25.4, 28.0, 29.7, 32.8, 33.8, 36.4, 37.2, 38.6, 40.2, 42.1, 43.4, 43.9, 44.5, 48.0, 49.6`
   - `srate=<int>` Device sample rate. valid values in the [225001, 300000], [900001, 3200000] ranges. (default `1000000`)
-  - `decim=<int>` log2 of the decimation factor. Samples collected from the device are downsampled by two to the power of this value. For a value greater than 0 (thus an effective downsampling) the size of the samples is increased to 2x16 bits.
   - `blklen=<int>` Device block length in bytes (default RTL-SDR default i.e. 64k)
   - `agc` Activates device AGC (default off)
 
@@ -151,7 +167,6 @@ Note that these options can be used both as the initial configuration as the arg
 
   - `freq=<int>` Desired tune frequency in Hz. Valid range from 1M to 6G. (default 100M: `100000000`)
   - `srate=<int>` Device sample rate (default `5000000`). Valid values from 1M to 20M. In fact rates lower than 10M are not specified in the datasheets of the ADC chip however a rate of `1000000` (1M) still works well with SDRdaemon.
-  - `decim=<int>` log2 of the decimation factor. Samples collected from the device are downsampled by two to the power of this value. For a value greater than 0 (thus an effective downsampling) the size of the samples is increased to 2x16 bits.  
   - `lgain=<x>` LNA gain in dB. Valid values are: `0, 8, 16, 24, 32, 40, list`. `list` lists valid values and exits. (default `16`)
   - `vgain=<x>` VGA gain in dB. Valid values are: `0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52, 54, 56, 58, 60, 62, list`. `list` lists valid values and exits. (default `22`)
   - `bwfilter=<x>` RF (IF) filter bandwith in MHz. Actual value is taken as the closest to the following values: `1.75, 2.5, 3.5, 5, 5.5, 6, 7,  8, 9, 10, 12, 14, 15, 20, 24, 28, list`. `list` lists valid values and exits. (default `2.5`)
@@ -162,7 +177,6 @@ Note that these options can be used both as the initial configuration as the arg
 
   - `freq=<int>` Desired tune frequency in Hz. Valid range from 1M to 1.8G. (default 100M: `100000000`)
   - `srate=<int>` Device sample rate. `list` lists valid values and exits. (default `10000000`). Valid values depend on the Airspy firmware. Airspy firmware and library must support dynamic sample rate query.
-  - `decim=<int>` log2 of the decimation factor. Samples collected from the device are downsampled by two to the power of this value.
   - `lgain=<x>` LNA gain in dB. Valid values are: `0, 1, 2, 3, 4, 5, 6, 7, 8 ,9 ,10, 11 12, 13, 14, list`. `list` lists valid values and exits. (default `8`)
   - `mgain=<x>` Mixer gain in dB. Valid values are: `0, 1, 2, 3, 4, 5, 6, 7, 8 ,9 ,10, 11 12, 13, 14, 15, list`. `list` lists valid values and exits. (default `8`)
   - `vgain=<x>` VGA gain in dB. Valid values are: `0, 1, 2, 3, 4, 5, 6, 7, 8 ,9 ,10, 11 12, 13, 14, 15, list`. `list` lists valid values and exits. (default `0`)  
@@ -176,7 +190,6 @@ Note that these options can be used both as the initial configuration as the arg
     - XB200 fitted: 100kHz to 3,8 GHz
     - XB200 not fitted: 300 MHZ to 3.8 GHz.
   - `srate=<int>` Device sample rate in Hz. Valid range is 48kHZ to 40MHz. (default `1000000`).
-  - `decim=<int>` log2 of the decimation factor. Samples collected from the device are downsampled by two to the power of this value.
   - `bw=<int>` IF filter bandwidth in Hz. `list` lists valid values and exits. (default `1500000`).
   - `lgain=<x>` LNA gain in dB. Valid values are: `0, 3, 6, list`. `list` lists valid values and exits. (default `3`)
   - `v1gain=<x>` VGA1 gain in dB. Valid values are: `5, 6, 7, 8 ,9 ,10, 11 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, list`. `list` lists valid values and exits. (default `20`)  

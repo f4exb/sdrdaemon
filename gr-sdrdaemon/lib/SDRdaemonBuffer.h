@@ -40,10 +40,10 @@ public:
 		uint8_t  m_sampleBytes;       //!< 21 number of bytes per sample + MSB: remainder sent first in meta block
 		uint8_t  m_sampleBits;        //!< 22 number of effective bits per sample
 		uint16_t m_blockSize;         //!< 24 payload size
-		uint16_t m_samplesPerBlock;   //!< 26 number of I/Q samples per block
-		uint16_t m_remainderSamples;  //!< 28 number of remainder I/Q samples
-		uint16_t m_nbCompleteBlocks;  //!< 30 number of blocks full of samples
-		uint64_t m_crc;               //!< 38 64 bit CRC of the above
+		uint32_t m_nbSamples;         //!< 28 total number of samples sent
+		uint16_t m_remainderSamples;  //!< 30 number of remainder I/Q samples
+		uint16_t m_nbCompleteBlocks;  //!< 32 number of blocks full of samples
+		uint64_t m_crc;               //!< 40 64 bit CRC of the above
 	};
 #pragma pack(pop)
 

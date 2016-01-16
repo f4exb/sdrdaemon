@@ -421,7 +421,7 @@ int main(int argc, char **argv)
         exit(1);
     }*/
 
-    double freq = srcsdr->get_configured_frequency();
+    double freq = srcsdr->get_received_frequency();
     fprintf(stderr, "tuned for:         %.6f MHz\n", freq * 1.0e-6);
 
     double tuner_freq = srcsdr->get_frequency();
@@ -483,7 +483,7 @@ int main(int argc, char **argv)
             break;
         }
 
-        udp_output->setCenterFrequency(srcsdr->get_frequency());
+        udp_output->setCenterFrequency(srcsdr->get_received_frequency());
 
         // Possible downsampling and write to UDP
 

@@ -81,7 +81,7 @@ RtlSdrSource::~RtlSdrSource()
 bool RtlSdrSource::configure(parsekv::pairs_type& m)
 {
     uint32_t sample_rate = 1000000;
-    uint32_t frequency = 100000000;
+    uint32_t frequency = m_confFreq;
     int32_t  ppm = 0;
     int tuner_gain = INT_MIN;
     int block_length =  default_block_length;
@@ -91,7 +91,7 @@ bool RtlSdrSource::configure(parsekv::pairs_type& m)
 
 	if (m.find("srate") != m.end())
 	{
-		std::cerr << "RtlSdrSource::configure: srate: " << m["srate"] << std::endl;
+		std::cerr << "RtlSdrSource::configure(m): srate: " << m["srate"] << std::endl;
 		sample_rate = atoi(m["srate"].c_str());
 
 		if ((sample_rate < 225001)
@@ -112,7 +112,7 @@ bool RtlSdrSource::configure(parsekv::pairs_type& m)
 
 	if (m.find("freq") != m.end())
 	{
-		std::cerr << "RtlSdrSource::configure: freq: " << m["freq"] << std::endl;
+		std::cerr << "RtlSdrSource::configure(m): freq: " << m["freq"] << std::endl;
 		frequency = atoi(m["freq"].c_str());
 
 		if ((frequency < 10000000) || (frequency > 2200000000))
@@ -126,7 +126,7 @@ bool RtlSdrSource::configure(parsekv::pairs_type& m)
 
 	if (m.find("ppm") != m.end())
 	{
-		std::cerr << "RtlSdrSource::configure: ppm: " << m["ppm"] << std::endl;
+		std::cerr << "RtlSdrSource::configure(m): ppm: " << m["ppm"] << std::endl;
 		ppm = atoi(m["ppm"].c_str());
 
 		changeFlags |= 0x4;
@@ -135,7 +135,7 @@ bool RtlSdrSource::configure(parsekv::pairs_type& m)
 	if (m.find("gain") != m.end())
 	{
 		std::string gain_str = m["gain"];
-		std::cerr << "RtlSdrSource::configure: gain: " << gain_str << std::endl;
+		std::cerr << "RtlSdrSource::configure(m): gain: " << gain_str << std::endl;
 
 		if (strcasecmp(gain_str.c_str(), "auto") == 0)
 		{
@@ -181,7 +181,7 @@ bool RtlSdrSource::configure(parsekv::pairs_type& m)
 
 	if (m.find("agc") != m.end())
 	{
-		std::cerr << "RtlSdrSource::configure: agc" << std::endl;
+		std::cerr << "RtlSdrSource::configure(m): agc" << std::endl;
 		agcmode = true;
 
 		changeFlags |= 0x10;
@@ -189,7 +189,7 @@ bool RtlSdrSource::configure(parsekv::pairs_type& m)
 
 	if (m.find("blklen") != m.end())
 	{
-		std::cerr << "RtlSdrSource::configure: blklen: " << m["blklen"] << std::endl;
+		std::cerr << "RtlSdrSource::configure(m): blklen: " << m["blklen"] << std::endl;
 		block_length = atoi(m["blklen"].c_str());
 
 		changeFlags |= 0x20;
@@ -197,7 +197,7 @@ bool RtlSdrSource::configure(parsekv::pairs_type& m)
 
 	if (m.find("fcpos") != m.end())
 	{
-		std::cerr << "RtlSdrSource::configure: fcpos: " << m["fcpos"] << std::endl;
+		std::cerr << "RtlSdrSource::configure(m): fcpos: " << m["fcpos"] << std::endl;
 		fcpos = atoi(m["fcpos"].c_str());
 
 		if ((fcpos < 0) || (fcpos > 2))
@@ -210,15 +210,12 @@ bool RtlSdrSource::configure(parsekv::pairs_type& m)
 			m_fcPos = fcpos;
 		}
 
-        if (m_fcPos != 2)
-        {
-            changeFlags |= 0x2; // need to adjust actual center frequency if not centered
-        }
+        changeFlags |= 0x2; // need to adjust actual center frequency if not centered
 	}
 
 	if (m.find("decim") != m.end())
 	{
-		std::cerr << "RtlSdrSource::configure: decim: " << m["decim"] << std::endl;
+		std::cerr << "RtlSdrSource::configure(m): decim: " << m["decim"] << std::endl;
 		int log2Decim = atoi(m["decim"].c_str());
 
 		if ((log2Decim < 0) || (log2Decim > 6))
@@ -273,6 +270,7 @@ bool RtlSdrSource::configure(std::uint32_t changeFlags,
 
     if (changeFlags & 0x2)
     {
+    	std::cerr << "RtlSdrSource::configure: freq: " << frequency << std::endl;
 		r = rtlsdr_set_center_freq(m_dev, frequency);
 		if (r < 0) {
 			m_error = "rtlsdr_set_center_freq failed";

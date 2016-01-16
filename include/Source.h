@@ -82,10 +82,10 @@ public:
     /** Return device current center frequency in Hz. */
     virtual std::uint32_t get_frequency() = 0;
 
-    /** Return current configured center frequency in Hz.
+    /** Return current received center frequency in Hz.
      *  Actual device frequency depends on center frequency relative position
      *  configured in the downsampler */
-    std::uint32_t get_configured_frequency() const
+    std::uint32_t get_received_frequency() const
     {
         return m_confFreq;
     }

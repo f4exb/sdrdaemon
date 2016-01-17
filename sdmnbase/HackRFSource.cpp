@@ -535,6 +535,14 @@ void HackRFSource::run(hackrf_device* dev, std::atomic_bool *stop_flag)
         while (!stop_flag->load() && (hackrf_is_streaming(dev) == HACKRF_TRUE))
         {
             sleep(1);
+
+            if (m_this->m_zmqSocket.recv (&m_this->m_zmqRequest, ZMQ_NOBLOCK))
+            {
+                std::size_t msgSize = m_this->m_zmqRequest.size();
+                std::string msg((char *) m_this->m_zmqRequest.data(), msgSize);
+                std::cerr << "HackRFSource::run: received: " << msg << std::endl;
+                m_this->Source::configure(msg);
+            }
         }
 
         rc = (hackrf_error) hackrf_stop_rx(dev);
@@ -566,14 +574,6 @@ int HackRFSource::rx_callback(hackrf_transfer* transfer)
     if (m_this)
     {
         m_this->callback((char *) transfer->buffer, bytes_to_write);
-
-        if (m_this->m_zmqSocket.recv (&m_this->m_zmqRequest, ZMQ_NOBLOCK))
-        {
-            std::size_t msgSize = m_this->m_zmqRequest.size();
-            std::string msg((char *) m_this->m_zmqRequest.data(), msgSize);
-            std::cerr << "HackRFSource::run: received: " << msg << std::endl;
-            m_this->Source::configure(msg);
-        }
     }
 
     return 0;

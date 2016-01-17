@@ -606,6 +606,14 @@ void AirspySource::run(airspy_device* dev, std::atomic_bool *stop_flag)
         while (!stop_flag->load() && (airspy_is_streaming(dev) == AIRSPY_TRUE))
         {
             sleep(1);
+
+            if (m_this->m_zmqSocket.recv (&m_this->m_zmqRequest, ZMQ_NOBLOCK))
+            {
+                std::size_t msgSize = m_this->m_zmqRequest.size();
+                std::string msg((char *) m_this->m_zmqRequest.data(), msgSize);
+                std::cerr << "AirspySource::run: received: " << msg << std::endl;
+                m_this->Source::configure(msg);
+            }
         }
 
         rc = (airspy_error) airspy_stop_rx(dev);

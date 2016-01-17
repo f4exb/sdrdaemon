@@ -248,14 +248,6 @@ bool AirspySource::configure(std::uint32_t changeFlags,
         bool mix_agc
 )
 {
-    m_frequency = frequency;
-    m_biasAnt = bias_ant;
-    m_lnaGain = lna_gain;
-    m_mixGain = mix_gain;
-    m_vgaGain = vga_gain;
-    m_lnaAGC = lna_agc;
-    m_mixAGC = mix_agc;
-
     airspy_error rc;
 
     if (!m_dev) {
@@ -264,6 +256,8 @@ bool AirspySource::configure(std::uint32_t changeFlags,
 
     if (changeFlags & 0x1)
     {
+        m_frequency = frequency;
+
         rc = (airspy_error) airspy_set_freq(m_dev, static_cast<uint32_t>(m_frequency));
 
         if (rc != AIRSPY_SUCCESS)
@@ -294,6 +288,8 @@ bool AirspySource::configure(std::uint32_t changeFlags,
 
     if (changeFlags & 0x4)
     {
+        m_lnaGain = lna_gain;
+
         rc = (airspy_error) airspy_set_lna_gain(m_dev, m_lnaGain);
 
         if (rc != AIRSPY_SUCCESS)
@@ -307,6 +303,8 @@ bool AirspySource::configure(std::uint32_t changeFlags,
 
     if (changeFlags & 0x8)
     {
+        m_mixGain = mix_gain;
+
         rc = (airspy_error) airspy_set_mixer_gain(m_dev, m_mixGain);
 
         if (rc != AIRSPY_SUCCESS)
@@ -320,6 +318,8 @@ bool AirspySource::configure(std::uint32_t changeFlags,
 
     if (changeFlags & 0x10)
     {
+        m_vgaGain = vga_gain;
+
         rc = (airspy_error) airspy_set_vga_gain(m_dev, m_vgaGain);
 
         if (rc != AIRSPY_SUCCESS)
@@ -333,6 +333,8 @@ bool AirspySource::configure(std::uint32_t changeFlags,
 
     if (changeFlags & 0x20)
     {
+        m_biasAnt = bias_ant;
+
         rc = (airspy_error) airspy_set_rf_bias(m_dev, (m_biasAnt ? 1 : 0));
 
         if (rc != AIRSPY_SUCCESS)
@@ -346,6 +348,8 @@ bool AirspySource::configure(std::uint32_t changeFlags,
 
     if (changeFlags & 0x40)
     {
+        m_lnaAGC = lna_agc;
+
         rc = (airspy_error) airspy_set_lna_agc(m_dev, (m_lnaAGC ? 1 : 0));
 
         if (rc != AIRSPY_SUCCESS)
@@ -359,6 +363,8 @@ bool AirspySource::configure(std::uint32_t changeFlags,
 
     if (changeFlags & 0x80)
     {
+        m_mixAGC = mix_agc;
+
         rc = (airspy_error) airspy_set_mixer_agc(m_dev, (m_mixAGC ? 1 : 0));
 
         if (rc != AIRSPY_SUCCESS)
@@ -536,6 +542,22 @@ bool AirspySource::configure(parsekv::pairs_type& m)
 		}
 
         changeFlags |= 0x1; // need to adjust actual center frequency if not centered
+	}
+
+	if (m.find("decim") != m.end())
+	{
+		std::cerr << "HackRFSource::configure: decim: " << m["decim"] << std::endl;
+		int log2Decim = atoi(m["decim"].c_str());
+
+		if ((log2Decim < 0) || (log2Decim > 6))
+		{
+			m_error = "Invalid log2 decimation factor";
+			return false;
+		}
+		else
+		{
+			m_decim = log2Decim;
+		}
 	}
 
 	m_confFreq = frequency;

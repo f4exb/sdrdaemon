@@ -196,13 +196,6 @@ bool HackRFSource::configure(uint32_t changeFlags,
         uint32_t bandwidth
 )
 {
-    m_sampleRate = sample_rate;
-    m_frequency = frequency;
-    m_extAmp = ext_amp;
-    m_biasAnt = bias_ant;
-    m_lnaGain = lna_gain;
-    m_vgaGain = vga_gain;
-    m_bandwidth = bandwidth;
     hackrf_error rc;
 
     if (!m_dev) {
@@ -211,6 +204,8 @@ bool HackRFSource::configure(uint32_t changeFlags,
 
     if (changeFlags & 0x1)
     {
+    	m_frequency = frequency;
+
         rc = (hackrf_error) hackrf_set_freq(m_dev, static_cast<uint64_t>(m_frequency));
 
         if (rc != HACKRF_SUCCESS)
@@ -224,6 +219,8 @@ bool HackRFSource::configure(uint32_t changeFlags,
 
     if (changeFlags & 0x2)
     {
+        m_sampleRate = sample_rate;
+
         rc = (hackrf_error) hackrf_set_sample_rate_manual(m_dev, m_sampleRate, 1);
 
         if (rc != HACKRF_SUCCESS)
@@ -233,10 +230,16 @@ bool HackRFSource::configure(uint32_t changeFlags,
             m_error = err_ostr.str();
             return false;
         }
+        else
+        {
+            m_sampleRate = sample_rate;
+        }
     }
 
     if (changeFlags & 0x4)
     {
+        m_lnaGain = lna_gain;
+
         rc = (hackrf_error) hackrf_set_lna_gain(m_dev, m_lnaGain);
 
         if (rc != HACKRF_SUCCESS)
@@ -250,6 +253,8 @@ bool HackRFSource::configure(uint32_t changeFlags,
 
     if (changeFlags & 0x8)
     {
+        m_vgaGain = vga_gain;
+
         rc = (hackrf_error) hackrf_set_vga_gain(m_dev, m_vgaGain);
 
         if (rc != HACKRF_SUCCESS)
@@ -263,6 +268,8 @@ bool HackRFSource::configure(uint32_t changeFlags,
 
     if (changeFlags & 0x10)
     {
+        m_biasAnt = bias_ant;
+
         rc = (hackrf_error) hackrf_set_antenna_enable(m_dev, (m_biasAnt ? 1 : 0));
 
         if (rc != HACKRF_SUCCESS)
@@ -276,6 +283,8 @@ bool HackRFSource::configure(uint32_t changeFlags,
 
     if (changeFlags & 0x20)
     {
+        m_extAmp = ext_amp;
+
         rc = (hackrf_error) hackrf_set_amp_enable(m_dev, (m_extAmp ? 1 : 0));
 
         if (rc != HACKRF_SUCCESS)
@@ -289,6 +298,7 @@ bool HackRFSource::configure(uint32_t changeFlags,
 
     if (changeFlags & 0x40)
     {
+        m_bandwidth = bandwidth;
         uint32_t hackRFBandwidth = hackrf_compute_baseband_filter_bw_round_down_lt(m_bandwidth);
         rc = (hackrf_error) hackrf_set_baseband_filter_bandwidth(m_dev, hackRFBandwidth);
 
@@ -328,6 +338,11 @@ bool HackRFSource::configure(parsekv::pairs_type& m)
 		}
 
         changeFlags |= 0x2;
+
+        if (m_fcPos != 2)
+        {
+            changeFlags |= 0x1; // need to adjust actual center frequency if not centered
+        }
 	}
 
 	if (m.find("freq") != m.end())
@@ -551,6 +566,14 @@ int HackRFSource::rx_callback(hackrf_transfer* transfer)
     if (m_this)
     {
         m_this->callback((char *) transfer->buffer, bytes_to_write);
+
+        if (m_this->m_zmqSocket.recv (&m_this->m_zmqRequest, ZMQ_NOBLOCK))
+        {
+            std::size_t msgSize = m_this->m_zmqRequest.size();
+            std::string msg((char *) m_this->m_zmqRequest.data(), msgSize);
+            std::cerr << "HackRFSource::run: received: " << msg << std::endl;
+            m_this->Source::configure(msg);
+        }
     }
 
     return 0;

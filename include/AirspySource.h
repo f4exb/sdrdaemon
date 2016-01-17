@@ -100,6 +100,7 @@ private:
     struct airspy_device* m_dev;
     uint32_t m_sampleRate;
     uint32_t m_frequency;
+    float m_ppm;
     int m_lnaGain;
     int m_mixGain;
     int m_vgaGain;

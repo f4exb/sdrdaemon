@@ -96,6 +96,7 @@ private:
     struct hackrf_device* m_dev;
     uint32_t m_sampleRate;
     uint64_t m_frequency;
+    float m_ppm;
     int m_lnaGain;
     int m_vgaGain;
     uint32_t m_bandwidth;

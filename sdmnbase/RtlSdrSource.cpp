@@ -83,6 +83,7 @@ bool RtlSdrSource::configure(parsekv::pairs_type& m)
     uint32_t sample_rate = 1000000;
     uint32_t frequency = m_confFreq;
     int32_t  ppm = 0;
+    bool ppmp = false;
     int tuner_gain = INT_MIN;
     int block_length =  default_block_length;
     bool agcmode = false;
@@ -124,10 +125,19 @@ bool RtlSdrSource::configure(parsekv::pairs_type& m)
 		changeFlags |= 0x2;
 	}
 
-	if (m.find("ppm") != m.end())
+	if (m.find("ppmp") != m.end())
 	{
-		std::cerr << "RtlSdrSource::configure(m): ppm: " << m["ppm"] << std::endl;
-		ppm = atoi(m["ppm"].c_str());
+		std::cerr << "RtlSdrSource::configure(m): ppmp: " << m["ppmp"] << std::endl;
+		ppm = atoi(m["ppmp"].c_str());
+
+		changeFlags |= 0x4;
+		ppmp = true;
+	}
+
+	if ((m.find("ppmn") != m.end()) && !ppmp)
+	{
+		std::cerr << "RtlSdrSource::configure(m): ppmn: " << m["ppmn"] << std::endl;
+		ppm = -atoi(m["ppmn"].c_str());
 
 		changeFlags |= 0x4;
 	}

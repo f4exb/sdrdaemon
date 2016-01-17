@@ -37,6 +37,7 @@ HackRFSource::HackRFSource(int dev_index) :
     m_dev(0),
     m_sampleRate(5000000),
     m_frequency(100000000),
+	m_ppm(0),
     m_lnaGain(16),
     m_vgaGain(22),
     m_bandwidth(2500000),
@@ -318,6 +319,7 @@ bool HackRFSource::configure(parsekv::pairs_type& m)
 {
     uint32_t sampleRate = 5000000;
     uint32_t frequency = m_confFreq;
+    float ppm = m_ppm;
     int lnaGain = 16;
     int vgaGain = 22;
     uint32_t bandwidth = 2500000;
@@ -455,6 +457,31 @@ bool HackRFSource::configure(parsekv::pairs_type& m)
         changeFlags |= 0x10;
 	}
 
+    if (m.find("ppmp") != m.end())
+	{
+		std::cerr << "AirspySource::configure: ppmp: " << m["ppmp"] << std::endl;
+		errno = 0;
+		char * e;
+		ppm = std::strtod(m["ppmp"].c_str(), &e);
+
+		if (*e == '\0' && errno == 0) // Conversion to float OK
+		{
+			m_ppm = ppm;
+		}
+	}
+    else if (m.find("ppmn") != m.end())
+	{
+		std::cerr << "AirspySource::configure: ppmn: " << m["ppmn"] << std::endl;
+		errno = 0;
+		char * e;
+		ppm = std::strtod(m["ppmn"].c_str(), &e);
+
+		if (*e == '\0' && errno == 0) // Conversion to float OK
+		{
+			m_ppm = -ppm;
+		}
+	}
+
 	if (m.find("fcpos") != m.end())
 	{
 		std::cerr << "HackRFSource::configure: fcpos: " << m["fcpos"] << std::endl;
@@ -499,6 +526,8 @@ bool HackRFSource::configure(parsekv::pairs_type& m)
 	} else { // Centered
 		tuner_freq = frequency;
 	}
+
+	tuner_freq += tuner_freq * m_ppm * 1e-6;
 
     return configure(changeFlags, sampleRate, tuner_freq, extAmp, antBias, lnaGain, vgaGain, bandwidth);
 }

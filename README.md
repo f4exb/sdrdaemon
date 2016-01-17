@@ -126,7 +126,7 @@ Typical commands:
       - RF gain: _40.2 dB_
       - Decimation: 2^_5_ = 32; thus stream sample rate is 31.25 kHz
       - Position of center frequency: _2_ is centered (decimation around the center) 
-  - Airspy: `./sdrdaemon -t airspy -I 192.168.1.3 -D 9090 -c freq=433970000,srate=10000000,lgain=13,mgain=9,vgain=6,decim=5,fcpos=0`
+  - Airspy: `./sdrdaemon -t airspy -I 192.168.1.3 -D 9090 -c freq=433970000,srate=10000000,ppmn=1.7,lgain=13,mgain=9,vgain=6,decim=5,fcpos=0`
     - Use Airspy device #0
     - Destination address for the data is: `192.168.1.3` 
     - Using UDP port `9090` for the data (it is the default anyway)
@@ -134,6 +134,7 @@ Typical commands:
     - Startup configuration:
       - Center frequency: _433.97 MHz_
       - Device sample rate: _10 MHz_
+      - LO correction: _-1.7 ppm_
       - LNA gain: _13 dB_
       - Mixer gain: _9 dB_
       - VGA gain: _6 dB_
@@ -199,13 +200,17 @@ Note that these options can be used both as the initial configuration as the arg
     - `list` Lists available gains and exit
     - `<float>` gain in dB. Possible gains in dB are: `0.0, 0.9, 1.4, 2.7, 3.7, 7.7, 8.7, 12.5, 14.4, 15.7, 16.6, 19.7, 20.7, 22.9, 25.4, 28.0, 29.7, 32.8, 33.8, 36.4, 37.2, 38.6, 40.2, 42.1, 43.4, 43.9, 44.5, 48.0, 49.6`
   - `srate=<int>` Device sample rate. valid values in the [225001, 300000], [900001, 3200000] ranges. (default `1000000`)
+  - `ppmp=<int>` Argument is positive. Positive LO correction in ppm. LO is corrected by this value in ppm
+  - `ppmn=<int>` Argument is positive. Negative LO correction in ppm. LO is corrected by minus this value in ppm. If `ppmp` is also specified `ppmp` takes precedence.
   - `blklen=<int>` Device block length in bytes (default RTL-SDR default i.e. 64k)
   - `agc` Activates device AGC (default off)
 
 <h3>HackRF</h3>
 
-  - `freq=<int>` Desired tune frequency in Hz. Valid range from 1M to 6G. (default 100M: `100000000`)
-  - `srate=<int>` Device sample rate (default `5000000`). Valid values from 1M to 20M. In fact rates lower than 10M are not specified in the datasheets of the ADC chip however a rate of `1000000` (1M) still works well with SDRdaemon.
+  - `freq=<float>` Desired tune frequency in Hz. Valid range from 1M to 6G. (default 100M: `100000000`)
+  - `srate=<float>` Device sample rate (default `5000000`). Valid values from 1M to 20M. In fact rates lower than 10M are not specified in the datasheets of the ADC chip however a rate of `1000000` (1M) still works well with SDRdaemon.
+  - `ppmp=<float>` Argument is positive. Positive LO correction in ppm. LO is corrected by this value in ppm
+  - `ppmn=<float>` Argument is positive. Negative LO correction in ppm. LO is corrected by minus this value in ppm. If `ppmp` is also specified `ppmp` takes precedence.  
   - `lgain=<x>` LNA gain in dB. Valid values are: `0, 8, 16, 24, 32, 40, list`. `list` lists valid values and exits. (default `16`)
   - `vgain=<x>` VGA gain in dB. Valid values are: `0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52, 54, 56, 58, 60, 62, list`. `list` lists valid values and exits. (default `22`)
   - `bwfilter=<x>` RF (IF) filter bandwith in MHz. Actual value is taken as the closest to the following values: `1.75, 2.5, 3.5, 5, 5.5, 6, 7,  8, 9, 10, 12, 14, 15, 20, 24, 28, list`. `list` lists valid values and exits. (default `2.5`)
@@ -216,6 +221,8 @@ Note that these options can be used both as the initial configuration as the arg
 
   - `freq=<int>` Desired tune frequency in Hz. Valid range from 1M to 1.8G. (default 100M: `100000000`)
   - `srate=<int>` Device sample rate. `list` lists valid values and exits. (default `10000000`). Valid values depend on the Airspy firmware. Airspy firmware and library must support dynamic sample rate query.
+  - `ppmp=<float>` Argument is positive. Positive LO correction in ppm. LO is corrected by this value in ppm
+  - `ppmn=<float>` Argument is positive. Negative LO correction in ppm. LO is corrected by minus this value in ppm. If `ppmp` is also specified `ppmp` takes precedence.
   - `lgain=<x>` LNA gain in dB. Valid values are: `0, 1, 2, 3, 4, 5, 6, 7, 8 ,9 ,10, 11 12, 13, 14, list`. `list` lists valid values and exits. (default `8`)
   - `mgain=<x>` Mixer gain in dB. Valid values are: `0, 1, 2, 3, 4, 5, 6, 7, 8 ,9 ,10, 11 12, 13, 14, 15, list`. `list` lists valid values and exits. (default `8`)
   - `vgain=<x>` VGA gain in dB. Valid values are: `0, 1, 2, 3, 4, 5, 6, 7, 8 ,9 ,10, 11 12, 13, 14, 15, list`. `list` lists valid values and exits. (default `0`)  

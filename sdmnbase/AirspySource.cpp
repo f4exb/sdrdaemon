@@ -22,6 +22,7 @@
 #include <iomanip>
 #include <thread>
 #include <cstdlib>
+#include <cerrno>
 
 #include "util.h"
 #include "parsekv.h"
@@ -37,6 +38,7 @@ AirspySource::AirspySource(int dev_index) :
     m_dev(0),
     m_sampleRate(10000000),
     m_frequency(100000000),
+	m_ppm(0),
     m_lnaGain(8),
     m_mixGain(8),
     m_vgaGain(0),
@@ -229,6 +231,7 @@ std::uint32_t AirspySource::get_frequency()
 
 void AirspySource::print_specific_parms()
 {
+	fprintf(stderr, "LO correction:     %.1f\n", m_ppm);
     fprintf(stderr, "LNA gain:          %d\n", m_lnaGain);
     fprintf(stderr, "Mixer gain:        %d\n", m_mixGain);
     fprintf(stderr, "VGA gain:          %d\n", m_vgaGain);
@@ -383,6 +386,7 @@ bool AirspySource::configure(parsekv::pairs_type& m)
 {
     int sampleRateIndex = 0;
     uint32_t frequency = m_confFreq;
+    float ppm = m_ppm;
     int lnaGain = 8;
     int mixGain = 8;
     int vgaGain = 0;
@@ -526,6 +530,31 @@ bool AirspySource::configure(parsekv::pairs_type& m)
         changeFlags |= 0x80;
 	}
 
+    if (m.find("ppmp") != m.end())
+	{
+		std::cerr << "AirspySource::configure: ppmp: " << m["ppmp"] << std::endl;
+		errno = 0;
+		char * e;
+		ppm = std::strtod(m["ppmp"].c_str(), &e);
+
+		if (*e == '\0' && errno == 0) // Conversion to float OK
+		{
+			m_ppm = ppm;
+		}
+	}
+    else if (m.find("ppmn") != m.end())
+	{
+		std::cerr << "AirspySource::configure: ppmn: " << m["ppmn"] << std::endl;
+		errno = 0;
+		char * e;
+		ppm = std::strtod(m["ppmn"].c_str(), &e);
+
+		if (*e == '\0' && errno == 0) // Conversion to float OK
+		{
+			m_ppm = -ppm;
+		}
+	}
+
 	if (m.find("fcpos") != m.end())
 	{
 		std::cerr << "AirspySource::configure: fcpos: " << m["fcpos"] << std::endl;
@@ -570,6 +599,8 @@ bool AirspySource::configure(parsekv::pairs_type& m)
 	} else { // Centered
 		tuner_freq = frequency;
 	}
+
+	tuner_freq += tuner_freq * m_ppm * 1e-6;
 
     return configure(changeFlags, sampleRateIndex, tuner_freq, antBias, lnaGain, mixGain, vgaGain, lnaAGC, mixAGC);
 }

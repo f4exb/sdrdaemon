@@ -60,18 +60,17 @@ void UDPSink::write(const IQSampleVector& samples_in)
     metaData->m_nbCompleteBlocks = samples_in.size() / samplesPerBlock;
 	metaData->m_crc = m_crc64.calculate_crc(m_bufMeta, sizeof(MetaData) - 8);
 
-	/*
-	std::cerr << metaData->m_tv_sec
-			<< ":" << metaData->m_tv_usec
-			<< ":" << metaData->m_centerFrequency
-			<< ":" << metaData->m_sampleRate
-			<< ":" << (int) metaData->m_sampleBytes
-			<< ":" << (int) metaData->m_sampleBits
-			<< ":" << metaData->m_blockSize
-			<< ":" << samples_in.size()
-			<< ":(" << samplesPerBlock << ")"
-			<< ":" << metaData->m_nbCompleteBlocks
-			<< ":" << metaData->m_remainderSamples << std::endl;*/
+//	std::cerr << metaData->m_tv_sec
+//			<< ":" << metaData->m_tv_usec
+//			<< ":" << metaData->m_centerFrequency
+//			<< ":" << metaData->m_sampleRate
+//			<< ":" << (int) metaData->m_sampleBytes
+//			<< ":" << (int) metaData->m_sampleBits
+//			<< ":" << metaData->m_blockSize
+//			<< ":" << samples_in.size()
+//			<< ":(" << samplesPerBlock << ")"
+//			<< ":" << metaData->m_nbCompleteBlocks
+//			<< ":" << metaData->m_remainderSamples << std::endl;
 
 	m_socket.SendDataGram((const void *) m_bufMeta, (int) m_udpSize, m_address, m_port);
 

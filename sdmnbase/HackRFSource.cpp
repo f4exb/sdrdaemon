@@ -307,7 +307,7 @@ bool HackRFSource::configure(uint32_t changeFlags,
 bool HackRFSource::configure(parsekv::pairs_type& m)
 {
     uint32_t sampleRate = 5000000;
-    uint32_t frequency = 100000000;
+    uint32_t frequency = m_confFreq;
     int lnaGain = 16;
     int vgaGain = 22;
     uint32_t bandwidth = 2500000;
@@ -328,11 +328,6 @@ bool HackRFSource::configure(parsekv::pairs_type& m)
 		}
 
         changeFlags |= 0x2;
-
-        if (fcpos != 2)
-        {
-            changeFlags |= 0x1; // need to adjust actual center frequency if not centered
-        }
 	}
 
 	if (m.find("freq") != m.end())
@@ -460,10 +455,23 @@ bool HackRFSource::configure(parsekv::pairs_type& m)
 			m_fcPos = fcpos;
 		}
 
-        if (fcpos != 2)
-        {
-            changeFlags |= 0x1; // need to adjust actual center frequency if not centered
-        }
+        changeFlags |= 0x1; // need to adjust actual center frequency if not centered
+	}
+
+	if (m.find("decim") != m.end())
+	{
+		std::cerr << "HackRFSource::configure: decim: " << m["decim"] << std::endl;
+		int log2Decim = atoi(m["decim"].c_str());
+
+		if ((log2Decim < 0) || (log2Decim > 6))
+		{
+			m_error = "Invalid log2 decimation factor";
+			return false;
+		}
+		else
+		{
+			m_decim = log2Decim;
+		}
 	}
 
     m_confFreq = frequency;
@@ -560,10 +568,10 @@ void HackRFSource::callback(const char* buf, int len)
 		{
 			// pack 8 bit samples onto 16 bit samples vector
 			// invert I and Q because of the little Indians
-			int16_t re_0 = buf[4*i] - 128;
-			int16_t im_0 = buf[4*i+1] - 128;
-			int16_t re_1 = buf[4*i+2] - 128;
-			int16_t im_1 = buf[4*i+3] - 128;
+			int16_t re_0 = buf[4*i];
+			int16_t im_0 = buf[4*i+1];
+			int16_t re_1 = buf[4*i+2];
+			int16_t im_1 = buf[4*i+3];
 			iqsamples[i] = IQSample((im_0<<8) | (re_0 & 0xFF), (im_1<<8) | (re_1 & 0xFF));
 		}
     }
@@ -573,8 +581,8 @@ void HackRFSource::callback(const char* buf, int len)
 
 		for (int i = 0; i < len/4; i++)
 		{
-			iqsamples[2*i]   = IQSample(buf[4*i]   - 128, buf[4*i+1] - 128);
-			iqsamples[2*i+1] = IQSample(buf[4*i+2] - 128, buf[4*i+3] - 128);
+			iqsamples[2*i]   = IQSample(buf[4*i],   buf[4*i+1]);
+			iqsamples[2*i+1] = IQSample(buf[4*i+2], buf[4*i+3]);
 		}
     }
 

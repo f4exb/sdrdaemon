@@ -126,6 +126,32 @@ Typical commands:
       - RF gain: _40.2 dB_
       - Decimation: 2^_5_ = 32; thus stream sample rate is 31.25 kHz
       - Position of center frequency: _2_ is centered (decimation around the center) 
+  - Airspy: `./sdrdaemon -t airspy -I 192.168.1.3 -D 9090 -c freq=433970000,srate=100000000,ppm=1.7,lgain=13,mgain=9,vgain=6,decim=5,fcpos=0`
+    - Use Airspy device #0
+    - Destination address for the data is: `192.168.1.3` 
+    - Using UDP port `9090` for the data (it is the default anyway)
+    - Using TCP port `9091` to listen to configuration commands (it is the default anyway)
+    - Startup configuration:
+      - Center frequency: _433.97 MHz_
+      - Device sample rate: _10 MHz_
+      - Local oscillator correction: _1.7 ppm_
+      - LNA gain: _13 dB_
+      - Mixer gain: _9 dB_
+      - VGA gain: _6 dB_
+      - Decimation: 2^_5_ = 32; thus stream sample rate is 312.5 kHz
+      - Position of center frequency: _0_ is infradyne (decimation around -fc/4)
+  - HackRF: `./sdrdaemon -t hackrf -I 192.168.1.3 -D 9090 -c freq=433970000,srate=3200000,lgain=32,vgain=24,bwfilter=1.75,decim=3,fcpos=1`
+    - Use HackRF device #0
+    - Destination address for the data is: `192.168.1.3` 
+    - Using UDP port `9090` for the data (it is the default anyway)
+    - Using TCP port `9091` to listen to configuration commands (it is the default anyway)
+    - Startup configuration:
+      - Center frequency: _433.97 MHz_
+      - Device sample rate: _3.2 MHz_
+      - LNA gain: _32 dB_
+      - VGA gain: _24 dB_
+      - Decimation: 2^_3_ = 8; thus stream sample rate is 400 kHz
+      - Position of center frequency: _1_ is supradyne (decimation around fc/4)  
 
 <h2>All options</h2>
 

@@ -180,6 +180,7 @@ std::uint32_t HackRFSource::get_frequency()
 
 void HackRFSource::print_specific_parms()
 {
+	fprintf(stderr, "LO correction:     %.1f\n", m_ppm);
     fprintf(stderr, "LNA gain:          %d\n", m_lnaGain);
     fprintf(stderr, "VGA gain:          %d\n", m_vgaGain);
     fprintf(stderr, "Bandwidth          %d Hz\n", m_bandwidth);

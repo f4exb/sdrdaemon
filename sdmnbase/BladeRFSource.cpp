@@ -184,12 +184,12 @@ BladeRFSource::~BladeRFSource()
 
 bool BladeRFSource::configure(parsekv::pairs_type& m)
 {
-    uint32_t sample_rate = 1000000;
-    uint32_t frequency = 300000000;
-    uint32_t bandwidth = 1500000;
-    int lnaGainIndex = 2; // 3 dB
-    int vga1Gain = 20;
-    int vga2Gain = 9;
+    uint32_t sample_rate = m_sampleRate;
+    uint32_t frequency = m_confFreq;
+    uint32_t bandwidth = m_bandwidth;
+    int lnaGainIndex = m_lnaGain; // 3 dB
+    int vga1Gain = m_vga1Gain;
+    int vga2Gain = m_vga2Gain;
     int fcpos = 2; // default centered
     std::uint32_t changeFlags = 0;
 
@@ -309,7 +309,7 @@ bool BladeRFSource::configure(parsekv::pairs_type& m)
 			return false;
 		}
 
-		vga1Gain = atoi(m["v2gain"].c_str());
+		vga2Gain = atoi(m["v2gain"].c_str());
 
 		if (find(m_vga2Gains.begin(), m_vga2Gains.end(), vga2Gain) == m_vga2Gains.end())
 		{
@@ -335,10 +335,23 @@ bool BladeRFSource::configure(parsekv::pairs_type& m)
 			m_fcPos = fcpos;
 		}
 
-        if (m_fcPos != 2)
-        {
-            changeFlags |= 0x2; // need to adjust actual center frequency if not centered
-        }
+        changeFlags |= 0x2; // need to adjust actual center frequency if not centered
+	}
+
+	if (m.find("decim") != m.end())
+	{
+		std::cerr << "BladeRFSource::configure: decim: " << m["decim"] << std::endl;
+		int log2Decim = atoi(m["decim"].c_str());
+
+		if ((log2Decim < 0) || (log2Decim > 6))
+		{
+			m_error = "Invalid log2 decimation factor";
+			return false;
+		}
+		else
+		{
+			m_decim = log2Decim;
+		}
 	}
 
 	// Intentionally tune at a higher frequency to avoid DC offset.
@@ -442,7 +455,7 @@ uint32_t BladeRFSource::get_frequency()
 
 void BladeRFSource::print_specific_parms()
 {
-    fprintf(stderr, "Bandwidth:         %d\n", m_actualBandwidth);
+    fprintf(stderr, "Bandwidth:         %d Hz\n", m_actualBandwidth);
     fprintf(stderr, "LNA gain:          %d\n", m_lnaGain);
     fprintf(stderr, "VGA1 gain:         %d\n", m_vga1Gain);
     fprintf(stderr, "VGA2 gain:         %d\n", m_vga2Gain);

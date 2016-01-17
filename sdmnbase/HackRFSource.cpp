@@ -181,7 +181,7 @@ void HackRFSource::print_specific_parms()
 {
     fprintf(stderr, "LNA gain:          %d\n", m_lnaGain);
     fprintf(stderr, "VGA gain:          %d\n", m_vgaGain);
-    fprintf(stderr, "Bandwidth          %d\n", m_bandwidth);
+    fprintf(stderr, "Bandwidth          %d Hz\n", m_bandwidth);
     fprintf(stderr, "External Amp       %s\n", m_extAmp ? "enabled" : "disabled");
     fprintf(stderr, "Bias ant           %s\n", m_biasAnt ? "enabled" : "disabled");
 }

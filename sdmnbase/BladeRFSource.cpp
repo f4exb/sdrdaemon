@@ -497,6 +497,14 @@ void BladeRFSource::run()
     while (!m_this->m_stop_flag->load() && get_samples(&iqsamples))
     {
         m_this->m_buf->push(move(iqsamples));
+
+        if (m_this->m_zmqSocket.recv (&m_this->m_zmqRequest, ZMQ_NOBLOCK))
+        {
+            std::size_t msgSize = m_this->m_zmqRequest.size();
+            std::string msg((char *) m_this->m_zmqRequest.data(), msgSize);
+            std::cerr << "BladeRFSource::run: received: " << msg << std::endl;
+            m_this->Source::configure(msg);
+        }
     }
 }
 

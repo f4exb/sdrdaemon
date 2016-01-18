@@ -31,6 +31,7 @@ UDPSink::UDPSink(const std::string& address, unsigned int port, unsigned int udp
 		m_sampleBits(8),
 		m_nbSamples(0)
 {
+	m_currentMeta.init();
 	m_bufMeta = new uint8_t[m_udpSize];
 	m_buf = new uint8_t[m_udpSize];
 }
@@ -49,8 +50,6 @@ void UDPSink::write(const IQSampleVector& samples_in)
 
     gettimeofday(&tv, 0);
 
-    metaData->m_tv_sec = tv.tv_sec;
-    metaData->m_tv_usec = tv.tv_usec;
     metaData->m_centerFrequency = m_centerFrequency;
     metaData->m_sampleRate = m_sampleRate;
     metaData->m_sampleBytes = m_sampleBytes;
@@ -59,6 +58,8 @@ void UDPSink::write(const IQSampleVector& samples_in)
     metaData->m_nbSamples = samples_in.size();
     metaData->m_remainderSamples = m_udpSize % (2 * m_sampleBytes);
     metaData->m_nbCompleteBlocks = samples_in.size() / samplesPerBlock;
+    metaData->m_tv_sec = tv.tv_sec;
+    metaData->m_tv_usec = tv.tv_usec;
 	metaData->m_crc = m_crc64.calculate_crc(m_bufMeta, sizeof(MetaData) - 8);
 
 //	std::cerr << metaData->m_tv_sec
@@ -79,6 +80,25 @@ void UDPSink::write(const IQSampleVector& samples_in)
 		std::cerr << "UDPSink::write: "
 				<< m_nbSamples << " samples, "
 				<< m_nbSamples * 2 * m_sampleBytes << " bytes per frame" << std::endl;
+	}
+
+	if (!(*metaData == m_currentMeta))
+	{
+		std::cerr << "UDPSink::write: meta: " << metaData->m_tv_sec
+				<< ":" << metaData->m_tv_usec
+				<< ":" << metaData->m_centerFrequency
+				<< ":" << metaData->m_sampleRate
+				<< ":" << (int) metaData->m_sampleBytes
+				<< ":" << (int) metaData->m_sampleBits
+				<< ":" << metaData->m_blockSize
+				<< ":" << metaData->m_nbSamples
+				<< ":" << metaData->m_remainderSamples
+				<< ":" << metaData->m_nbCompleteBlocks
+				<< " samplesPerBlock: " << samplesPerBlock
+				<< " bytesPerFrame: " << metaData->m_nbSamples * 2 * metaData->m_sampleBytes
+				<< std::endl;
+
+		m_currentMeta = *metaData;
 	}
 
 	m_socket.SendDataGram((const void *) m_bufMeta, (int) m_udpSize, m_address, m_port);

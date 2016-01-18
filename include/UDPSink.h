@@ -19,6 +19,8 @@
 #ifndef INCLUDE_UDPSINK_H_
 #define INCLUDE_UDPSINK_H_
 
+#include <string.h>
+
 #include "SDRDaemon.h"
 #include "UDPSocket.h"
 #include "CRC64.h"
@@ -30,19 +32,36 @@ public:
 #pragma pack(push, 1)
 	struct MetaData
 	{
-		uint32_t m_tv_sec;            //!< 04 seconds of timestamp at start time of frame processing
-		uint32_t m_tv_usec;           //!< 08 microseconds of timestamp at start time of frame processing
-		uint64_t m_centerFrequency;   //!< 16 center frequency in Hz
-		uint32_t m_sampleRate;        //!< 20 sample rate in Hz
-		uint8_t  m_sampleBytes;       //!< 21 number of bytes per sample + MSB: remainder sent first in meta block
-		uint8_t  m_sampleBits;        //!< 22 number of effective bits per sample
-		uint16_t m_blockSize;         //!< 24 payload size
-		uint32_t m_nbSamples;         //!< 28 total number of samples sent in this frame
-		uint16_t m_remainderSamples;  //!< 30 number of remainder I/Q samples
-		uint16_t m_nbCompleteBlocks;  //!< 32 number of blocks full of samples
-		uint64_t m_crc;               //!< 40 64 bit CRC of the above
+		uint64_t m_centerFrequency;   //!< center frequency in Hz
+		uint32_t m_sampleRate;        //!< sample rate in Hz
+		uint8_t  m_sampleBytes;       //!< number of bytes per sample + MSB: remainder sent first in meta block
+		uint8_t  m_sampleBits;        //!< number of effective bits per sample
+		uint16_t m_blockSize;         //!< payload size
+		uint32_t m_nbSamples;         //!< total number of samples sent in this frame
+		uint16_t m_remainderSamples;  //!< number of remainder I/Q samples
+		uint16_t m_nbCompleteBlocks;  //!< number of blocks full of samples
+		uint32_t m_tv_sec;            //!< seconds of timestamp at start time of frame processing
+		uint32_t m_tv_usec;           //!< microseconds of timestamp at start time of frame processing
+		uint64_t m_crc;               //!< 64 bit CRC of the above
+
+		bool operator==(const MetaData& rhs)
+		{
+		    return (memcmp((const void *) this, (const void *) &rhs, sizeof(MetaData) - 16) == 0);
+		}
+
+		void init()
+		{
+			memset((void *) this, 0, sizeof(MetaData));
+		}
+
+		void operator=(const MetaData& rhs)
+		{
+			memcpy((void *) this, (const void *) &rhs, sizeof(MetaData));
+		}
 	};
 #pragma pack(pop)
+
+
 
 	/**
 	 * Construct UDP sink
@@ -93,6 +112,7 @@ private:
     uint32_t     m_nbSamples;         //!< total number of samples sent int the last frame
 
     UDPSocket    m_socket;
+    MetaData     m_currentMeta;
     CRC64        m_crc64;
     uint8_t*     m_bufMeta;
     uint8_t*     m_buf;

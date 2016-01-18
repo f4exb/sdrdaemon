@@ -7,9 +7,13 @@ SDRdaemon
 
 **SDRdaemon** is a basic software-defined radio receiver that just sends the I/Q samples over the network via UDP. It was developed on the base of NGSoftFM (also found in this Github repo: https://github.com/f4exb/ngsoftfm) and shares a lot of the code for the interface with the SDR hardware devices.
 
+It conveys meta data in the data flow so that the receiving application is informed about parameters essential to render correctly the data coming next such as the sample rate, the number of bytes used for the samples, the number of effective sample bits, the center frequency... (See the "Data format" chapter for detals).
+
+While running the program accepts configuration commands on a TCP port using Zero-MQ messages with a content in the same format as the configuration string given on the command line (See the "Running" chapter for details). This provides a dynamic control of the device or features of the application such as the decimation. A Python script is provided to send such messages.
+
 Hardware supported:
 
-  - **RTL-SDR** based (RTL2832-based) hardware is suppoeted and uses the _librtlsdr_ library to interface with the RTL-SDR hardware.
+  - **RTL-SDR** based (RTL2832-based) hardware is supported and uses the _librtlsdr_ library to interface with the RTL-SDR hardware.
   - **HackRF** One and variants are supported with _libhackrf_ library.
   - **Airspy** is supported with _libairspy_ library.
   - **BladeRF** is supported with _libbladerf_ library.
@@ -23,11 +27,15 @@ SDRdaemon requires:
  - Linux
  - C++11
  - Boost for compilation
+ - Zero-MQ
+ - LZ4
  - RTL-SDR library (http://sdr.osmocom.org/trac/wiki/rtl-sdr)
  - HackRF library (https://github.com/mossmann/hackrf/tree/master/host/libhackrf)
  - Airspy library (https://github.com/airspy/host/tree/master/libairspy)
- - supported RTL-SDR DVB-T receiver or HackRF Rx/Tx
- - A computer or embedded device such as the Raspberry Pi 2. Raspberry Pi B can be used but will run high on CPU so you must provide adequate cooling for a sustained use.
+ - BladeRF library (https://github.com/Nuand/bladeRF/tree/master/host)
+ - supported hardware
+ - Python with Zero-MQ support to use the provided control script
+ - A computer or embedded device such as the Raspberry Pi 2 to which you connect the hardware.
 
 For the latest version, see https://github.com/f4exb/SDRdaemon
 
@@ -42,7 +50,7 @@ Branches:
 
 <h2>Base requirements</h2>
 
-  - `sudo apt-get install cmake pkg-config libusb-1.0-0-dev libasound2-dev libboost-all-dev libzmq3-dev python-zmq`
+  - `sudo apt-get install cmake pkg-config libusb-1.0-0-dev libasound2-dev libboost-all-dev liblz4-dev libzmq3-dev python-zmq`
 
 <h2>Airspy support</h2>
 
@@ -116,7 +124,7 @@ Typical commands:
 
   - RTL-SDR: `./sdrdaemon -t rtlsdr -I 192.168.1.3 -D 9090 -C 9091 -c freq=433970000,srate=1000000,ppm=58,gain=40.2,decim=5,fcpos=2`
     - Use RTL-SDR device #0
-    - Destination address for the data is: `192.168.1.3` 
+    - Destination address for the data is: `192.168.1.3`
     - Using UDP port `9090` for the data (it is the default anyway)
     - Using TCP port `9091` to listen to configuration commands (it is the default anyway)
     - Startup configuration:
@@ -125,10 +133,10 @@ Typical commands:
       - Local oscillator correction: _58 ppm_
       - RF gain: _40.2 dB_
       - Decimation: 2^_5_ = 32; thus stream sample rate is 31.25 kHz
-      - Position of center frequency: _2_ is centered (decimation around the center) 
+      - Position of center frequency: _2_ is centered (decimation around the center)
   - Airspy: `./sdrdaemon -t airspy -I 192.168.1.3 -D 9090 -c freq=433970000,srate=10000000,ppmn=1.7,lgain=13,mgain=9,vgain=6,decim=5,fcpos=0`
     - Use Airspy device #0
-    - Destination address for the data is: `192.168.1.3` 
+    - Destination address for the data is: `192.168.1.3`
     - Using UDP port `9090` for the data (it is the default anyway)
     - Using TCP port `9091` to listen to configuration commands (it is the default anyway)
     - Startup configuration:
@@ -139,10 +147,10 @@ Typical commands:
       - Mixer gain: _9 dB_
       - VGA gain: _6 dB_
       - Decimation: 2^_5_ = 32; thus stream sample rate is 312.5 kHz
-      - Position of center frequency: _0_ is infradyne (decimation around -fc/4)
+      - Position of center frequency: _0_ is infra-dyne (decimation around -fc/4)
   - HackRF: `./sdrdaemon -t hackrf -I 192.168.1.3 -D 9090 -c freq=433970000,srate=3200000,lgain=32,vgain=24,bwfilter=1.75,decim=3,fcpos=1`
     - Use HackRF device #0
-    - Destination address for the data is: `192.168.1.3` 
+    - Destination address for the data is: `192.168.1.3`
     - Using UDP port `9090` for the data (it is the default anyway)
     - Using TCP port `9091` to listen to configuration commands (it is the default anyway)
     - Startup configuration:
@@ -151,10 +159,10 @@ Typical commands:
       - LNA gain: _32 dB_
       - VGA gain: _24 dB_
       - Decimation: 2^_3_ = 8; thus stream sample rate is 400 kHz
-      - Position of center frequency: _1_ is supradyne (decimation around fc/4)
+      - Position of center frequency: _1_ is supra-dyne (decimation around fc/4)
   - BladeRF: `./sdrdaemon -t bladerf -I 192.168.1.3 -D 9090 -c freq=433900000,srate=3200000,lgain=6,v1gain=6,v2gain=3,decim=3,bw=2500000,fcpos=1`
     - Use BladeRF device #0
-    - Destination address for the data is: `192.168.1.3` 
+    - Destination address for the data is: `192.168.1.3`
     - Using UDP port `9090` for the data (it is the default anyway)
     - Using TCP port `9091` to listen to configuration commands (it is the default anyway)
     - Startup configuration:
@@ -165,7 +173,7 @@ Typical commands:
       - VGA1 gain: _6 dB_
       - VGA2 gain: _3 dB_
       - Decimation: 2^_3_ = 8; thus stream sample rate is 400 kHz
-      - Position of center frequency: _1_ is supradyne (decimation around fc/4)
+      - Position of center frequency: _1_ is supra-dyne (decimation around fc/4)
 
 <h2>All options</h2>
 
@@ -174,19 +182,19 @@ Typical commands:
  - `-d devidx` Device index, 'list' to show device list (default 0)
  - `-r pcmrate` Audio sample rate in Hz (default 48000 Hz)
  - `-M ` Disable stereo decoding
- - `-R filename` Write audio data as raw S16_LE samples. Uuse filename `-` to write to stdout
+ - `-R filename` Write audio data as raw S16_LE samples. Use filename `-` to write to stdout
  - `-W filename` Write audio data to .WAV file
  - `-P [device]` Play audio via ALSA device (default `default`). Use `aplay -L` to get the list of devices for your system
  - `-T filename` Write pulse-per-second timestamps. Use filename '-' to write to stdout
- - `-b seconds` Set audio buffer size in seconds
+ - `-z bytes` Compress I/Q data using LZ4 algorithm with a minimum number of `bytes` for each frame. It will default to at least 64kB.
 
 <h2>Common configuration options for the decimation</h2>
 
-  - `decim=<int>` log2 of the decimation factor. Samples collected from the device are downsampled by two to the power of this value. On 8 bit samples native systems (RTL-SDR and HackRF) For a value greater than 0 (thus an effective downsampling) the size of the samples is increased to 2x16 bits.
+  - `decim=<int>` log2 of the decimation factor. Samples collected from the device are down-sampled by two to the power of this value. On 8 bit samples native systems (RTL-SDR and HackRF) For a value greater than 0 (thus an effective downsampling) the size of the samples is increased to 2x16 bits.
   - `fcpos=<int>` Relative position of the center frequency in the resulting decimation:
-    - `0` is infradyne i.e. decimation is done around -fc/4 where fc is the device center frequency
-    - `1` is supradyne i.e. decimation is done around fc/4
-    - `2` is centered i.e. decimarion is done around fc
+    - `0` is infra-dyne i.e. decimation is done around -fc/4 where fc is the device center frequency
+    - `1` is supra-dyne i.e. decimation is done around fc/4
+    - `2` is centered i.e. decimation is done around fc
 
 <h2>Device type specific configuration options</h2>
 
@@ -213,7 +221,7 @@ Note that these options can be used both as the initial configuration as the arg
   - `ppmn=<float>` Argument is positive. Negative LO correction in ppm. LO is corrected by minus this value in ppm. If `ppmp` is also specified `ppmp` takes precedence.  
   - `lgain=<x>` LNA gain in dB. Valid values are: `0, 8, 16, 24, 32, 40, list`. `list` lists valid values and exits. (default `16`)
   - `vgain=<x>` VGA gain in dB. Valid values are: `0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52, 54, 56, 58, 60, 62, list`. `list` lists valid values and exits. (default `22`)
-  - `bwfilter=<x>` RF (IF) filter bandwith in MHz. Actual value is taken as the closest to the following values: `1.75, 2.5, 3.5, 5, 5.5, 6, 7,  8, 9, 10, 12, 14, 15, 20, 24, 28, list`. `list` lists valid values and exits. (default `2.5`)
+  - `bwfilter=<x>` RF (IF) filter bandwidth in MHz. Actual value is taken as the closest to the following values: `1.75, 2.5, 3.5, 5, 5.5, 6, 7,  8, 9, 10, 12, 14, 15, 20, 24, 28, list`. `list` lists valid values and exits. (default `2.5`)
   - `extamp` Turn on the extra amplifier (default off)
   - `antbias` Turn on the antenna bias for remote LNA (default off)
 
@@ -259,11 +267,147 @@ The Zero-MQ connection is specified as a paired connection (`ZMQ_PAIR`). The con
 
 <h1>Data formats</h1>
 
-<h2>I/Q samples and related data</h2>
+<h2>Packaging</h2>
 
-<h2>Configuration options</h2>
+The block of data retrieved from the hardware device is sliced into blocks of the UDP payload size. This sequence of blocks is called a "frame" in the following. A special block called the "meta" block is sent before a frame. It is used to convey "meta" data about the frame and its data that follows. A CRC on 64 bits is calculated on this "meta" data and appended to it. It serves as a verification and also to recognize the "meta" block from the data blocks thus achieving synchronization. There is effectively a very low probability to mix it up with a data block.
 
-A string of comma separated key=value pairs in the same format as described in the device related options can be sent on the UDP configuration port to dynamically control the device.
+A compressed stream may pack several data blocks retrieved from the hardware in one frame to improve compression efficiency. So the case may arise that a change of meta data occurs from one "hardware" block to the next in the same frame. In this case the frame is split and a new frame is constructed with a starting "meta" block from the block where the meta data has changed. The first part of the original frame being sent immediately over UDP. This ensures that the data frame and its "meta" block are always consistent.
+
+<h2>Meta data block</h2>
+
+The block of "meta" data consists of the following (values expressed in bytes):
+
+<table>
+    <tr>
+        <th>Offset</th>
+        <th>Length</th>
+        <th>Type</th>
+        <th>Content</th>
+    </tr>
+    <tr>
+        <td>0</td>
+        <td>4</td>
+        <td>unsigned integer</td>
+        <td>Seconds of Unix timestamp at the beginning of the sending processing</td>
+    </tr>
+    <tr>
+        <td>4</td>
+        <td>4</td>
+        <td>unsigned integer</td>
+        <td>Microseconds of Unix timestamp at the beginning of the sending processing</td>
+    </tr>
+    <tr>
+        <td>8</td>
+        <td>8</td>
+        <td>unsigned integer</td>
+        <td>Center frequency of reception in Hz</td>
+    </tr>
+    <tr>
+        <td>16</td>
+        <td>4</td>
+        <td>unsigned integer</td>
+        <td>Stream sample rate (Samples/second)</td>
+    </tr>
+    <tr>
+        <td>20</td>
+        <td>1([7:5])</td>
+        <td>bitfield</td>
+        <td>Reserved</td>
+    </tr>
+    <tr>
+        <td>20</td>
+        <td>1([4])</td>
+        <td>bitfield</td>
+        <td>Stream is compressed with LZ4</td>
+    </tr>
+    <tr>
+        <td>20</td>
+        <td>1([3:0])</td>
+        <td>bitfield</td>
+        <td>number of bytes per sample. Practically 1 or 2</td>
+    </tr>
+    <tr>
+        <td>21</td>
+        <td>1</td>
+        <td>unsigned integer</td>
+        <td>number of effective bits per sample. Practically 8 to 16</td>
+    </tr>
+    <tr>
+        <td>22</td>
+        <td>2</td>
+        <td>unsigned integer</td>
+        <td>UDP expected payload size</td>
+    </tr>
+    <tr>
+        <td>24</td>
+        <td>4</td>
+        <td>unsigned integer</td>
+        <td>Number of I/Q samples in the data stream that follows</td>
+    </tr>
+    <tr>
+        <td>28</td>
+        <td>2</td>
+        <td>unsigned integer</td>
+        <td>Number of remainder samples in the last frame</td>
+    </tr>
+    <tr>
+        <td>30</td>
+        <td>2</td>
+        <td>unsigned integer</td>
+        <td>Number of UDP blocks full of samples</td>
+    </tr>
+    <tr>
+        <td>32</td>
+        <td>8</td>
+        <td>unsigned integer</td>
+        <td>64 bit CRC of the above</td>
+    </tr>
+</table>
+
+<h2>I/Q data blocks</h2>
+
+When the stream is uncompressed UDP blocks of the payload size are stuffed with complete I/Q samples leaving a possible unused gap of less than an I/Q sample at the end of the block. The last block is filled only with the remainder samples. The number of maximally filled blocks and remainder samples in the last block is given in the "meta" data. Of course as the data stream is uncompressed these values can also be calculated from the total number of samples and the payload size.
+
+When the stream is compressed UDP blocks are stuffed completely with bytes of the compressed stream. The last block being filled only with the remainder bytes. The number of full blocks and remainder bytes is given in the "meta" block and these values cannot be calculated otherwise.
+
+<h2>Summary diagrams</h2>
+
+</h3>Uncompressed stream</h3>
+
+<pre>
+hardware block:
+|I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q|
+
+UDP block:
+|xxxxxxxxxxxxxxxxxxxxxx|
+
+Frame:
+|Meta:xxxxxxxxxxxxxxxxx|I/Q:I/Q:I/Q:I/Q:I/Q:xx|I/Q:I/Q:I/Q:I/Q:I/Q:xx|I/Q:I/Q:I/Q:xxxxxxxxxx|
+
+Number of samples in the frame: 13
+Complete blocks...............:  2
+Remainder samples.............:  3
+</pre>
+
+</h3>Compressed stream</h3>
+
+<pre>
+hardware block:
+|I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q|
+
+compressed block:
+|yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy|
+
+UDP block:
+|xxxxxxxxxxxxxxxxxxxxxx|
+
+Frame:
+|Meta:xxxxxxxxxxxxxxxxx|yyyyyyyyyyyyyyyyyyyyyy|yyyyyyyyyyyyyyyyy:xxxx|
+
+Number of samples in the frame: 13
+Complete blocks...............:  1
+Remainder bytes...............: 17
+</pre>
 
 <h1>GNUradio supoort</h1>
 
@@ -271,7 +415,7 @@ A source block is available in the _gr-sdrdaemon_ subdirectory. This subdirector
 
 <h1>License</h1>
 
-**SDRdaemon**, copyright (C) 2015, Edouard Griffiths, F4EXB
+**SDRdaemon**, copyright (C) 2015-2016, Edouard Griffiths, F4EXB
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

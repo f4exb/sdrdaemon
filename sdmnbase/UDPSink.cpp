@@ -28,7 +28,8 @@ UDPSink::UDPSink(const std::string& address, unsigned int port, unsigned int udp
 		m_centerFrequency(100000000),
 		m_sampleRate(48000),
 		m_sampleBytes(1),
-		m_sampleBits(8)
+		m_sampleBits(8),
+		m_nbSamples(0)
 {
 	m_bufMeta = new uint8_t[m_udpSize];
 	m_buf = new uint8_t[m_udpSize];
@@ -71,6 +72,14 @@ void UDPSink::write(const IQSampleVector& samples_in)
 //			<< ":(" << samplesPerBlock << ")"
 //			<< ":" << metaData->m_nbCompleteBlocks
 //			<< ":" << metaData->m_remainderSamples << std::endl;
+
+	if (metaData->m_nbSamples != m_nbSamples)
+	{
+		m_nbSamples = metaData->m_nbSamples;
+		std::cerr << "UDPSink::write: "
+				<< m_nbSamples << " samples, "
+				<< m_nbSamples * 2 * m_sampleBytes << " bytes per frame" << std::endl;
+	}
 
 	m_socket.SendDataGram((const void *) m_bufMeta, (int) m_udpSize, m_address, m_port);
 

@@ -37,7 +37,7 @@ public:
 		uint8_t  m_sampleBytes;       //!< 21 number of bytes per sample + MSB: remainder sent first in meta block
 		uint8_t  m_sampleBits;        //!< 22 number of effective bits per sample
 		uint16_t m_blockSize;         //!< 24 payload size
-		uint32_t m_nbSamples;         //!< 28 total number of samples sent
+		uint32_t m_nbSamples;         //!< 28 total number of samples sent in this frame
 		uint16_t m_remainderSamples;  //!< 30 number of remainder I/Q samples
 		uint16_t m_nbCompleteBlocks;  //!< 32 number of blocks full of samples
 		uint64_t m_crc;               //!< 40 64 bit CRC of the above
@@ -90,6 +90,7 @@ private:
     uint32_t     m_sampleRate;        //!< sample rate in Hz
     uint8_t      m_sampleBytes;       //!< number of bytes per sample + MSB: remainder sent first in meta block
     uint8_t      m_sampleBits;        //!< number of effective bits per sample
+    uint32_t     m_nbSamples;         //!< total number of samples sent int the last frame
 
     UDPSocket    m_socket;
     CRC64        m_crc64;

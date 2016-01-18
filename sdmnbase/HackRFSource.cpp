@@ -190,7 +190,7 @@ void HackRFSource::print_specific_parms()
 
 bool HackRFSource::configure(uint32_t changeFlags,
         uint32_t sample_rate,
-        uint32_t frequency,
+		uint64_t frequency,
         bool ext_amp,
         bool bias_ant,
         int lna_gain,
@@ -208,7 +208,7 @@ bool HackRFSource::configure(uint32_t changeFlags,
     {
     	m_frequency = frequency;
 
-        rc = (hackrf_error) hackrf_set_freq(m_dev, static_cast<uint64_t>(m_frequency));
+        rc = (hackrf_error) hackrf_set_freq(m_dev, m_frequency);
 
         if (rc != HACKRF_SUCCESS)
         {
@@ -319,7 +319,7 @@ bool HackRFSource::configure(uint32_t changeFlags,
 bool HackRFSource::configure(parsekv::pairs_type& m)
 {
     uint32_t sampleRate = 5000000;
-    uint32_t frequency = m_confFreq;
+    uint64_t frequency = m_confFreq;
     float ppm = m_ppm;
     int lnaGain = 16;
     int vgaGain = 22;
@@ -460,7 +460,7 @@ bool HackRFSource::configure(parsekv::pairs_type& m)
 
     if (m.find("ppmp") != m.end())
 	{
-		std::cerr << "AirspySource::configure: ppmp: " << m["ppmp"] << std::endl;
+		std::cerr << "HackRFSource::configure: ppmp: " << m["ppmp"] << std::endl;
 		errno = 0;
 		char * e;
 		ppm = std::strtod(m["ppmp"].c_str(), &e);
@@ -468,11 +468,12 @@ bool HackRFSource::configure(parsekv::pairs_type& m)
 		if (*e == '\0' && errno == 0) // Conversion to float OK
 		{
 			m_ppm = ppm;
+			changeFlags |= 0x1;
 		}
 	}
     else if (m.find("ppmn") != m.end())
 	{
-		std::cerr << "AirspySource::configure: ppmn: " << m["ppmn"] << std::endl;
+		std::cerr << "HackRFSource::configure: ppmn: " << m["ppmn"] << std::endl;
 		errno = 0;
 		char * e;
 		ppm = std::strtod(m["ppmn"].c_str(), &e);
@@ -480,6 +481,7 @@ bool HackRFSource::configure(parsekv::pairs_type& m)
 		if (*e == '\0' && errno == 0) // Conversion to float OK
 		{
 			m_ppm = -ppm;
+			changeFlags |= 0x1;
 		}
 	}
 

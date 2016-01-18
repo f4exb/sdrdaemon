@@ -85,7 +85,7 @@ public:
     /** Return current received center frequency in Hz.
      *  Actual device frequency depends on center frequency relative position
      *  configured in the downsampler */
-    std::uint32_t get_received_frequency() const
+    std::uint64_t get_received_frequency() const
     {
         return m_confFreq;
     }
@@ -120,7 +120,7 @@ public:
 protected:
     std::string           m_devname;
     std::string           m_error;
-    uint32_t              m_confFreq;
+    uint64_t              m_confFreq;
     unsigned int          m_decim;
     int                   m_fcPos;
     DataBuffer<IQSample> *m_buf;

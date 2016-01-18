@@ -81,7 +81,7 @@ private:
      */
     bool configure(std::uint32_t changeFlags,
                    uint32_t sample_rate,
-                   uint32_t frequency,
+                   uint64_t frequency,
                    bool ext_amp,
                    bool bias_ant,
                    int lna_gain,

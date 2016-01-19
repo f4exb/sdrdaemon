@@ -33,7 +33,7 @@
 #include "util.h"
 #include "DataBuffer.h"
 #include "Downsampler.h"
-#include "UDPSink.h"
+#include "UDPSinkUncompressed.h"
 #include "MovingAverage.h"
 
 #include "RtlSdrSource.h"
@@ -377,7 +377,7 @@ int main(int argc, char **argv)
     }
 
     // Prepare output writer.
-    UDPSink *udp_output_instance = new UDPSink(dataaddress, dataport, UDPSIZE);
+    UDPSink *udp_output_instance = new UDPSinkUncompressed(dataaddress, dataport, UDPSIZE);
     std::unique_ptr<UDPSink> udp_output(udp_output_instance);
 
     if (!(*udp_output))

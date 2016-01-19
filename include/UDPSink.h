@@ -75,12 +75,12 @@ public:
 	UDPSink(const std::string& address, unsigned int port, unsigned int udpSize);
 
 	/** Destroy UDP sink */
-	~UDPSink();
+	virtual ~UDPSink();
 
     /**
      * Write IQ samples to UDP port.
      */
-	void write(const IQSampleVector& samples_in);
+	virtual void write(const IQSampleVector& samples_in) = 0;
 
     /** Return the last error, or return an empty string if there is no error. */
     std::string error()
@@ -101,10 +101,7 @@ public:
         return m_error.empty();
     }
 
-    /** Set LZ4 compression mimimum input buffer size. 0 means no LZ4 compression */
-    void setLZ4MinInputSize(std::size_t lz4MinInputSize);
-
-private:
+protected:
     std::string  m_address; //!< UDP foreign address
 	unsigned int m_port;    //!< UDP foreign port
 	unsigned int m_udpSize; //!< Size of UDP block in number of samples
@@ -121,12 +118,6 @@ private:
     CRC64        m_crc64;
     uint8_t*     m_bufMeta;
     uint8_t*     m_buf;
-
-    std::size_t  m_lz4MinInputSize;
-    std::size_t  m_lz4BufSize;
-    uint8_t*     m_lz4Buffer;
 };
-
-
 
 #endif /* INCLUDE_UDPSINK_H_ */

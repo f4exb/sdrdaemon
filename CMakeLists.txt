@@ -67,6 +67,7 @@ set(sdmnbase_SOURCES
     sdmnbase/IntHalfbandFilter.cpp
     sdmnbase/Source.cpp
     sdmnbase/UDPSink.cpp
+    sdmnbase/UDPSinkUncompressed.cpp
     sdmnbase/UDPSocket.cpp
 )
 
@@ -79,6 +80,7 @@ set(sdmnbase_HEADERS
     include/parsekv.h
     include/Source.h
     include/UDPSink.h
+    include/UDPSinkUncompressed.h
     include/UDPSocket.h
     include/util.h
 )

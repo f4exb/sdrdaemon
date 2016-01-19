@@ -261,7 +261,7 @@ bool AirspySource::configure(std::uint32_t changeFlags,
     {
         m_frequency = frequency;
 
-        rc = (airspy_error) airspy_set_freq(m_dev, static_cast<uint32_t>(m_frequency));
+        rc = (airspy_error) airspy_set_freq(m_dev, m_frequency);
 
         if (rc != AIRSPY_SUCCESS)
         {
@@ -540,6 +540,7 @@ bool AirspySource::configure(parsekv::pairs_type& m)
 		if (*e == '\0' && errno == 0) // Conversion to float OK
 		{
 			m_ppm = ppm;
+			changeFlags |= 0x1;
 		}
 	}
     else if (m.find("ppmn") != m.end())
@@ -552,6 +553,7 @@ bool AirspySource::configure(parsekv::pairs_type& m)
 		if (*e == '\0' && errno == 0) // Conversion to float OK
 		{
 			m_ppm = -ppm;
+			changeFlags |= 0x1;
 		}
 	}
 

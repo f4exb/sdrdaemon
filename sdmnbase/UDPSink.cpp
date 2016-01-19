@@ -18,6 +18,7 @@
 
 #include <sys/time.h>
 #include <iostream>
+#include <lz4.h>
 
 #include "UDPSink.h"
 
@@ -29,7 +30,10 @@ UDPSink::UDPSink(const std::string& address, unsigned int port, unsigned int udp
 		m_sampleRate(48000),
 		m_sampleBytes(1),
 		m_sampleBits(8),
-		m_nbSamples(0)
+		m_nbSamples(0),
+		m_lz4MinInputSize(0),
+		m_lz4BufSize(0),
+		m_lz4Buffer(0)
 {
 	m_currentMeta.init();
 	m_bufMeta = new uint8_t[m_udpSize];
@@ -40,6 +44,10 @@ UDPSink::~UDPSink()
 {
 	delete[] m_buf;
 	delete[] m_bufMeta;
+
+	if (m_lz4Buffer) {
+		delete[] m_lz4Buffer;
+	}
 }
 
 void UDPSink::write(const IQSampleVector& samples_in)
@@ -76,10 +84,21 @@ void UDPSink::write(const IQSampleVector& samples_in)
 
 	if (metaData->m_nbSamples != m_nbSamples)
 	{
+		uint32_t bytesPerFrame = metaData->m_nbSamples * 2 * m_sampleBytes;
+
+		if (m_lz4MinInputSize > 0)
+		{
+			uint32_t inputLZ4Size = ((m_lz4MinInputSize / bytesPerFrame) + 1)*bytesPerFrame;
+			m_lz4BufSize = LZ4_compressBound(inputLZ4Size);
+			delete[] m_lz4Buffer;
+			m_lz4Buffer = new uint8_t[m_lz4BufSize];
+		}
+
 		m_nbSamples = metaData->m_nbSamples;
+
 		std::cerr << "UDPSink::write: "
 				<< m_nbSamples << " samples, "
-				<< m_nbSamples * 2 * m_sampleBytes << " bytes per frame" << std::endl;
+				<< bytesPerFrame << " bytes per frame" << std::endl;
 	}
 
 	if (!(*metaData == m_currentMeta))
@@ -113,5 +132,18 @@ void UDPSink::write(const IQSampleVector& samples_in)
 		memcpy((void *) m_buf, (const void *) &samples_in[metaData->m_nbCompleteBlocks*samplesPerBlock], 2*metaData->m_remainderSamples*metaData->m_sampleBytes);
 		m_socket.SendDataGram((const void *) m_buf, (int) m_udpSize, m_address, m_port);
 	}
+}
 
+void UDPSink::setLZ4MinInputSize(std::size_t lz4MinInputSize)
+{
+	if (!lz4MinInputSize)
+	{
+		if (m_lz4Buffer) {
+			delete[] m_lz4Buffer;
+		}
+
+		m_lz4BufSize = 0;
+	}
+
+	m_lz4MinInputSize = lz4MinInputSize;
 }

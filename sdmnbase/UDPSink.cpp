@@ -64,23 +64,12 @@ void UDPSink::write(const IQSampleVector& samples_in)
     metaData->m_sampleBits = m_sampleBits;
     metaData->m_blockSize = m_udpSize;
     metaData->m_nbSamples = samples_in.size();
-    metaData->m_remainderSamples = m_udpSize % (2 * m_sampleBytes);
+    metaData->m_nbBlocks = 1;
+    metaData->m_remainderSamples = samples_in.size() % samplesPerBlock;
     metaData->m_nbCompleteBlocks = samples_in.size() / samplesPerBlock;
     metaData->m_tv_sec = tv.tv_sec;
     metaData->m_tv_usec = tv.tv_usec;
 	metaData->m_crc = m_crc64.calculate_crc(m_bufMeta, sizeof(MetaData) - 8);
-
-//	std::cerr << metaData->m_tv_sec
-//			<< ":" << metaData->m_tv_usec
-//			<< ":" << metaData->m_centerFrequency
-//			<< ":" << metaData->m_sampleRate
-//			<< ":" << (int) metaData->m_sampleBytes
-//			<< ":" << (int) metaData->m_sampleBits
-//			<< ":" << metaData->m_blockSize
-//			<< ":" << samples_in.size()
-//			<< ":(" << samplesPerBlock << ")"
-//			<< ":" << metaData->m_nbCompleteBlocks
-//			<< ":" << metaData->m_remainderSamples << std::endl;
 
 	if (metaData->m_nbSamples != m_nbSamples)
 	{
@@ -107,14 +96,15 @@ void UDPSink::write(const IQSampleVector& samples_in)
 				<< ":" << metaData->m_tv_usec
 				<< ":" << metaData->m_centerFrequency
 				<< ":" << metaData->m_sampleRate
-				<< ":" << (int) metaData->m_sampleBytes
+				<< ":" << (int) (metaData->m_sampleBytes & 0xF)
 				<< ":" << (int) metaData->m_sampleBits
 				<< ":" << metaData->m_blockSize
 				<< ":" << metaData->m_nbSamples
+				<< "|" << metaData->m_nbBlocks
 				<< ":" << metaData->m_remainderSamples
 				<< ":" << metaData->m_nbCompleteBlocks
 				<< " samplesPerBlock: " << samplesPerBlock
-				<< " bytesPerFrame: " << metaData->m_nbSamples * 2 * metaData->m_sampleBytes
+				<< " bytesPerFrame: " << metaData->m_nbSamples * 2 * (metaData->m_sampleBytes & 0xF)
 				<< std::endl;
 
 		m_currentMeta = *metaData;
@@ -129,7 +119,7 @@ void UDPSink::write(const IQSampleVector& samples_in)
 
 	if (metaData->m_remainderSamples > 0)
 	{
-		memcpy((void *) m_buf, (const void *) &samples_in[metaData->m_nbCompleteBlocks*samplesPerBlock], 2*metaData->m_remainderSamples*metaData->m_sampleBytes);
+		memcpy((void *) m_buf, (const void *) &samples_in[metaData->m_nbCompleteBlocks*samplesPerBlock], 2 * metaData->m_remainderSamples * (metaData->m_sampleBytes & 0xF));
 		m_socket.SendDataGram((const void *) m_buf, (int) m_udpSize, m_address, m_port);
 	}
 }

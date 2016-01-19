@@ -33,12 +33,15 @@ public:
 #pragma pack(push, 1)
 	struct MetaData
 	{
+        // critical data
 		uint64_t m_centerFrequency;   //!< center frequency in Hz
 		uint32_t m_sampleRate;        //!< sample rate in Hz
-		uint8_t  m_sampleBytes;       //!< number of bytes per sample + MSB: remainder sent first in meta block
+		uint8_t  m_sampleBytes;       //!< MSB(4): indicators, LSB(4) number of bytes per sample
 		uint8_t  m_sampleBits;        //!< number of effective bits per sample
 		uint16_t m_blockSize;         //!< payload size
-		uint32_t m_nbSamples;         //!< total number of samples sent
+		uint32_t m_nbSamples;         //!< number of samples in a hardware block
+        // end of critical data
+		uint16_t m_nbBlocks;          //!< number of hardware blocks in the frame
 		uint16_t m_remainderSamples;  //!< number of remainder I/Q samples
 		uint16_t m_nbCompleteBlocks;  //!< number of blocks full of samples
 		uint32_t m_tv_sec;            //!< seconds of timestamp at start time of frame processing

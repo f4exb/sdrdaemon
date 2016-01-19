@@ -286,83 +286,91 @@ The block of "meta" data consists of the following (values expressed in bytes):
     </tr>
     <tr>
         <td>0</td>
-        <td>4</td>
-        <td>unsigned integer</td>
-        <td>Seconds of Unix timestamp at the beginning of the sending processing</td>
-    </tr>
-    <tr>
-        <td>4</td>
-        <td>4</td>
-        <td>unsigned integer</td>
-        <td>Microseconds of Unix timestamp at the beginning of the sending processing</td>
-    </tr>
-    <tr>
-        <td>8</td>
         <td>8</td>
         <td>unsigned integer</td>
         <td>Center frequency of reception in Hz</td>
     </tr>
     <tr>
-        <td>16</td>
+        <td>8</td>
         <td>4</td>
         <td>unsigned integer</td>
         <td>Stream sample rate (Samples/second)</td>
     </tr>
     <tr>
-        <td>20</td>
+        <td>12</td>
         <td>1([7:5])</td>
         <td>bitfield</td>
         <td>Reserved</td>
     </tr>
     <tr>
-        <td>20</td>
+        <td>12</td>
         <td>1([4])</td>
         <td>bitfield</td>
         <td>Stream is compressed with LZ4</td>
     </tr>
     <tr>
-        <td>20</td>
+        <td>12</td>
         <td>1([3:0])</td>
         <td>bitfield</td>
         <td>number of bytes per sample. Practically 1 or 2</td>
     </tr>
     <tr>
-        <td>21</td>
+        <td>13</td>
         <td>1</td>
         <td>unsigned integer</td>
         <td>number of effective bits per sample. Practically 8 to 16</td>
     </tr>
     <tr>
-        <td>22</td>
+        <td>14</td>
         <td>2</td>
         <td>unsigned integer</td>
         <td>UDP expected payload size</td>
     </tr>
     <tr>
-        <td>24</td>
+        <td>16</td>
         <td>4</td>
         <td>unsigned integer</td>
-        <td>Number of I/Q samples in the data stream that follows</td>
+        <td>Number of I/Q samples in one hardware block</td>
     </tr>
     <tr>
-        <td>28</td>
+        <td>20</td>
+        <td>4=2</td>
+        <td>unsigned integer</td>
+        <td>Number of hardware blocks in the frame</td>
+    </tr>
+    <tr>
+        <td>22</td>
         <td>2</td>
         <td>unsigned integer</td>
-        <td>Number of remainder samples in the last frame</td>
+        <td>Number of remainder samples in the last UDP block</td>
     </tr>
     <tr>
-        <td>30</td>
+        <td>24</td>
         <td>2</td>
         <td>unsigned integer</td>
         <td>Number of UDP blocks full of samples</td>
     </tr>
     <tr>
-        <td>32</td>
+        <td>26</td>
+        <td>4</td>
+        <td>unsigned integer</td>
+        <td>Seconds of Unix timestamp at the beginning of the sending processing</td>
+    </tr>
+    <tr>
+        <td>30</td>
+        <td>4</td>
+        <td>unsigned integer</td>
+        <td>Microseconds of Unix timestamp at the beginning of the sending processing</td>
+    </tr>
+    <tr>
+        <td>34</td>
         <td>8</td>
         <td>unsigned integer</td>
         <td>64 bit CRC of the above</td>
     </tr>
 </table>
+
+Total size is 42 bytes including the 8 bytes CRC.
 
 <h2>I/Q data blocks</h2>
 
@@ -384,29 +392,32 @@ UDP block:
 Frame:
 |Meta:xxxxxxxxxxxxxxxxx|I/Q:I/Q:I/Q:I/Q:I/Q:xx|I/Q:I/Q:I/Q:I/Q:I/Q:xx|I/Q:I/Q:I/Q:xxxxxxxxxx|
 
-Number of samples in the frame: 13
-Complete blocks...............:  2
-Remainder samples.............:  3
+Number of samples in a hardware block: 13
+Number of blocks in a frame..........:  1 (always if uncompressed)
+Complete blocks......................:  2
+Remainder samples....................:  3
 </pre>
 
 </h3>Compressed stream</h3>
 
 <pre>
-hardware block:
+2 hardware blocks to be sent in one frame:
+|I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q|
 |I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q|
 
 compressed block:
-|yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy|
+|yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy|
 
 UDP block:
 |xxxxxxxxxxxxxxxxxxxxxx|
 
 Frame:
-|Meta:xxxxxxxxxxxxxxxxx|yyyyyyyyyyyyyyyyyyyyyy|yyyyyyyyyyyyyyyyy:xxxx|
+|Meta:xxxxxxxxxxxxxxxxx|yyyyyyyyyyyyyyyyyyyyyy|yyyyyyyyyyyyyyyyyyyyyy|yyyyyyyyyyyyyyyyy:xxxx|
 
-Number of samples in the frame: 13
-Complete blocks...............:  1
-Remainder bytes...............: 17
+Number of samples in a hardware block: 13
+Number of blocks in a frame..........:  2 
+Complete blocks......................:  2
+Remainder bytes......................: 17
 </pre>
 
 <h1>GNUradio supoort</h1>

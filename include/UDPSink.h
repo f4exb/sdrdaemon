@@ -33,21 +33,24 @@ public:
 #pragma pack(push, 1)
 	struct MetaData
 	{
+        // critical data
 		uint64_t m_centerFrequency;   //!< center frequency in Hz
 		uint32_t m_sampleRate;        //!< sample rate in Hz
-		uint8_t  m_sampleBytes;       //!< number of bytes per sample + MSB: remainder sent first in meta block
+		uint8_t  m_sampleBytes;       //!< MSB(4): indicators, LSB(4) number of bytes per sample
 		uint8_t  m_sampleBits;        //!< number of effective bits per sample
 		uint16_t m_blockSize;         //!< payload size
-		uint32_t m_nbSamples;         //!< total number of samples sent in this frame
-		uint16_t m_remainderSamples;  //!< number of remainder I/Q samples
-		uint16_t m_nbCompleteBlocks;  //!< number of blocks full of samples
+		uint32_t m_nbSamples;         //!< number of samples in a hardware block
+        // end of critical data
+		uint16_t m_nbBlocks;          //!< number of hardware blocks in the frame
+		uint16_t m_remainderSamples;  //!< number of remainder I/Q samples = m_nbSamples % (m_blockSize / (2 * m_sampleBytes))
+		uint16_t m_nbCompleteBlocks;  //!< number of blocks full of samples = m_nbSamples / (m_blockSize / (2 * m_sampleBytes))
 		uint32_t m_tv_sec;            //!< seconds of timestamp at start time of frame processing
 		uint32_t m_tv_usec;           //!< microseconds of timestamp at start time of frame processing
 		uint64_t m_crc;               //!< 64 bit CRC of the above
 
 		bool operator==(const MetaData& rhs)
 		{
-		    return (memcmp((const void *) this, (const void *) &rhs, sizeof(MetaData) - 16) == 0);
+		    return (memcmp((const void *) this, (const void *) &rhs, 20) == 0); // Only the 20 first bytes are relevant (critical)
 		}
 
 		void init()
@@ -61,8 +64,6 @@ public:
 		}
 	};
 #pragma pack(pop)
-
-
 
 	/**
 	 * Construct UDP sink
@@ -91,7 +92,7 @@ public:
 
     void setCenterFrequency(uint64_t centerFrequency) { m_centerFrequency = centerFrequency; }
     void setSampleRate(uint32_t sampleRate) { m_sampleRate = sampleRate; }
-    void setSampleBytes(uint8_t sampleBytes) { m_sampleBytes = sampleBytes; }
+    void setSampleBytes(uint8_t sampleBytes) { m_sampleBytes = (sampleBytes & 0x0F) + (m_sampleBytes & 0xF0); }
     void setSampleBits(uint8_t sampleBits) { m_sampleBits = sampleBits; }
 
     /** Return true if the stream is OK, return false if there is an error. */
@@ -111,7 +112,7 @@ private:
 
     uint64_t     m_centerFrequency;   //!< center frequency in Hz
     uint32_t     m_sampleRate;        //!< sample rate in Hz
-    uint8_t      m_sampleBytes;       //!< number of bytes per sample + MSB: remainder sent first in meta block
+    uint8_t      m_sampleBytes;       //!< number of bytes per sample
     uint8_t      m_sampleBits;        //!< number of effective bits per sample
     uint32_t     m_nbSamples;         //!< total number of samples sent int the last frame
 

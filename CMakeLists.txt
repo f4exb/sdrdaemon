@@ -7,6 +7,7 @@ find_package(Threads)
 find_package(PkgConfig)
 find_package(Boost 1.47)
 find_package(ZeroMQ)
+find_package(LZ4)
 
 # Find Airspy library.
 pkg_check_modules(PKG_AIRSPY libairspy)

@@ -42,8 +42,7 @@ public:
 		uint32_t m_nbSamples;         //!< number of samples in a hardware block
         // end of critical data
 		uint16_t m_nbBlocks;          //!< number of hardware blocks in the frame
-		uint16_t m_remainderSamples;  //!< number of remainder I/Q samples
-		uint16_t m_nbCompleteBlocks;  //!< number of blocks full of samples
+		uint32_t m_nbBytes;           //!< total number of bytes in the frame
 		uint32_t m_tv_sec;            //!< seconds of timestamp at start time of frame processing
 		uint32_t m_tv_usec;           //!< microseconds of timestamp at start time of frame processing
 		uint64_t m_crc;               //!< 64 bit CRC of the above

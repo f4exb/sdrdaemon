@@ -340,15 +340,9 @@ The block of "meta" data consists of the following (values expressed in bytes):
     </tr>
     <tr>
         <td>22</td>
-        <td>2</td>
+        <td>4</td>
         <td>unsigned integer</td>
-        <td>Number of remainder samples in the last UDP block</td>
-    </tr>
-    <tr>
-        <td>24</td>
-        <td>2</td>
-        <td>unsigned integer</td>
-        <td>Number of UDP blocks full of samples</td>
+        <td>total number of bytes in the frame</td>
     </tr>
     <tr>
         <td>26</td>
@@ -383,10 +377,10 @@ When the stream is compressed UDP blocks are stuffed completely with bytes of th
 </h3>Uncompressed stream</h3>
 
 <pre>
-hardware block:
+hardware block (2 byte I or Q samples):
 |I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q|
 
-UDP block:
+UDP block (22 bytes):
 |xxxxxxxxxxxxxxxxxxxxxx|
 
 Frame:
@@ -394,21 +388,22 @@ Frame:
 
 Number of samples in a hardware block: 13
 Number of blocks in a frame..........:  1 (always if uncompressed)
-Complete blocks......................:  2
-Remainder samples....................:  3
+Number of bytes in a frame...........: 52 (4 * 13)
+Complete blocks......................:  2 (calculated)
+Remainder samples....................:  3 (calculated)
 </pre>
 
 </h3>Compressed stream</h3>
 
 <pre>
-2 hardware blocks to be sent in one frame:
+2 hardware blocks (2 byte I or Q samples) to be sent in one frame:
 |I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q|
 |I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q|
 
 compressed block:
 |yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy|
 
-UDP block:
+UDP block (22 bytes):
 |xxxxxxxxxxxxxxxxxxxxxx|
 
 Frame:
@@ -416,8 +411,9 @@ Frame:
 
 Number of samples in a hardware block: 13
 Number of blocks in a frame..........:  2 
-Complete blocks......................:  2
-Remainder bytes......................: 17
+Number of bytes in a frame...........: 61 (2 * 22 + 17)
+Complete blocks......................:  2 (calculated)
+Remainder bytes......................: 17 (calculated)
 </pre>
 
 <h1>GNUradio supoort</h1>

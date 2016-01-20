@@ -160,6 +160,12 @@ int sdrdmn_source_impl::get_sample_bits()
 	return d_sdrdmnbuf.getCurrentMeta().m_sampleBits;
 }
 
+float sdrdmn_source_impl::get_compression_ratio()
+{
+	uint32_t inputBytes = d_sdrdmnbuf.getCurrentMeta().m_nbSamples * 2 * (d_sdrdmnbuf.getCurrentMeta().m_sampleBytes & 0x0F);
+	return (float) d_sdrdmnbuf.getCurrentMeta().m_nbBytes / inputBytes;
+}
+
 void sdrdmn_source_impl::start_receive()
 {
 	d_socket->async_receive_from(

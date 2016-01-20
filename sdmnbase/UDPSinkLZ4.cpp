@@ -76,8 +76,8 @@ void UDPSinkLZ4::write(const IQSampleVector& samples_in)
 		m_lz4Meta.m_nbBytes = m_lz4Count;
 		m_lz4Meta.m_crc = m_crc64.calculate_crc((uint8_t *) &m_lz4Meta, sizeof(MetaData) - 8); // recalculate CRC
 
-		std::cerr << "UDPSinkLZ4::write: frame complete: ";
-		printMeta(&m_lz4Meta);
+		//std::cerr << "UDPSinkLZ4::write: frame complete: ";
+		//printMeta(&m_lz4Meta);
 
 		udpSend(); // output data to UDP
 
@@ -183,8 +183,9 @@ void UDPSinkLZ4::setLZ4Values(uint32_t nbSamples, uint8_t sampleBytes)
 
     std::cerr << "UDPSinkLZ4::setLZ4Values:"
     		<< " m_lz4HardBLockSize: " << m_lz4HardBLockSize
-			<< " m_lz4MaxInputBlocks: " << m_lz4MaxInputBlocks
-			<< " m_lz4MaxInputSize: " << m_lz4MaxInputSize
+			<< ", m_lz4MaxInputBlocks: " << m_lz4MaxInputBlocks
+			<< ", m_lz4MaxInputSize: " << m_lz4MaxInputSize
+			<< ", m_lz4BufSize: " << m_lz4BufSize
 			<< std::endl;
 
     if (m_lz4InputBuffer) {

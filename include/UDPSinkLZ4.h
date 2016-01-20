@@ -31,14 +31,17 @@ public:
 
 private:
     uint32_t      m_lz4MinInputSize;    //!< Minimum size of the input data in blocks for compression
+    uint32_t      m_lz4HardBLockSize;   //!< Input hardware block size
     uint32_t      m_lz4MaxInputBlocks;  //!< Maximum number of input hardware blocks to read in one frame
     uint32_t      m_lz4MaxInputSize;    //!< Maximum input size in bytes for the compression of one frame
     uint32_t      m_lz4InputBlockCount; //!< Current number of blocks processed
     uint32_t      m_lz4BufSize;         //!< Size of the LZ4 output buffer
+    uint32_t      m_lz4InputCount;      //!< Current read index in the LZ4 input buffer
     uint32_t      m_lz4Count;           //!< Current write index in the LZ4 output buffer
-    MetaData      m_lz4Meta;            //!< Meta data block specialized for LZ4
+    uint8_t*      m_lz4InputBuffer;     //!< LZ4 input buffer
     uint8_t*      m_lz4Buffer;          //!< LZ4 output buffer
     LZ4_stream_t* m_lz4Stream;          //!< LZ4 stream control structure
+    MetaData      m_lz4Meta;            //!< Meta data block specialized for LZ4
 
     void udpSend();
     void printMeta(MetaData *metaData);

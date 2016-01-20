@@ -24,6 +24,7 @@
 
 typedef std::int16_t FixReal;
 
+/*
 #pragma pack(push, 1)
 struct IQSample
 {
@@ -35,6 +36,25 @@ struct IQSample
 
 	inline IQSample& operator+=(const IQSample& other) { m_real += other.m_real; m_imag += other.m_imag; return *this; }
 	inline IQSample& operator-=(const IQSample& other) { m_real -= other.m_real; m_imag -= other.m_imag; return *this; }
+
+	inline void setReal(FixReal v) { m_real = v; }
+	inline void setImag(FixReal v) { m_imag = v; }
+
+	inline FixReal real() const { return m_real; }
+	inline FixReal imag() const { return m_imag; }
+
+	FixReal m_real;
+	FixReal m_imag;
+};
+#pragma pack(pop)
+*/
+
+#pragma pack(push, 1)
+struct IQSample
+{
+	IQSample() : m_real(0), m_imag(0) {}
+	IQSample(FixReal real) : m_real(real), m_imag(0) {}
+	IQSample(FixReal real, FixReal imag) : m_real(real), m_imag(imag) {}
 
 	inline void setReal(FixReal v) { m_real = v; }
 	inline void setImag(FixReal v) { m_imag = v; }

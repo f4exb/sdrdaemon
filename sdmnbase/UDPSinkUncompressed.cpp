@@ -54,17 +54,18 @@ void UDPSinkUncompressed::write(const IQSampleVector& samples_in)
 
 	if (!(*metaData == m_currentMeta))
 	{
-		std::cerr << "UDPSinkUncompressed::write: meta: " << metaData->m_tv_sec
-				<< ":" << metaData->m_tv_usec
-				<< ":" << metaData->m_centerFrequency
+		std::cerr << "UDPSinkUncompressed::write: meta: "
+				<< "|" << metaData->m_centerFrequency
 				<< ":" << metaData->m_sampleRate
 				<< ":" << (int) (metaData->m_sampleBytes & 0xF)
 				<< ":" << (int) metaData->m_sampleBits
 				<< ":" << metaData->m_blockSize
 				<< ":" << metaData->m_nbSamples
-				<< "|" << metaData->m_nbBlocks
+				<< "||" << metaData->m_nbBlocks
 				<< ":" << metaData->m_nbBytes
-				<< ":" << remainderSamples
+				<< "|" << metaData->m_tv_sec
+				<< ":" << metaData->m_tv_usec
+				<< " " << remainderSamples
 				<< ":" << nbCompleteBlocks
 				<< " samplesPerBlock: " << samplesPerBlock
 				<< std::endl;

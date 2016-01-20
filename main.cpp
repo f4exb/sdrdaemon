@@ -43,6 +43,8 @@
 #include "BladeRFSource.h"
 #include "include/SDRDaemon.h"
 
+#include <type_traits>
+
 #define UDPSIZE 512
 
 /** Flag is set on SIGINT / SIGTERM. */
@@ -414,6 +416,8 @@ int main(int argc, char **argv)
         delete srcsdr;
         exit(1);
     }
+
+    fprintf(stderr, (std::is_trivially_copyable<IQSample>::value ? "IQSample is trivially copiable\n" : "IQSample is NOT trivially copiable\n"));
 
     // Configure device and start streaming.
 

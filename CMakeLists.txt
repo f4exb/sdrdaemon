@@ -68,6 +68,7 @@ set(sdmnbase_SOURCES
     sdmnbase/Source.cpp
     sdmnbase/UDPSink.cpp
     sdmnbase/UDPSinkUncompressed.cpp
+    sdmnbase/UDPSinkLZ4.cpp
     sdmnbase/UDPSocket.cpp
 )
 
@@ -81,6 +82,7 @@ set(sdmnbase_HEADERS
     include/Source.h
     include/UDPSink.h
     include/UDPSinkUncompressed.h
+    include/UDPSinkLZ4.h
     include/UDPSocket.h
     include/util.h
 )

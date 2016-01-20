@@ -19,6 +19,7 @@
 #ifndef INCLUDE_UDPSINKLZ4_H_
 #define INCLUDE_UDPSINKLZ4_H_
 
+#include <lz4.h>
 #include "UDPSink.h"
 
 class UDPSinkLZ4 : public UDPSink
@@ -40,6 +41,7 @@ private:
     LZ4_stream_t* m_lz4Stream;          //!< LZ4 stream control structure
 
     void udpSend();
+    void printMeta(MetaData *metaData);
 };
 
 #endif /* INCLUDE_UDPSINKLZ4_H_ */

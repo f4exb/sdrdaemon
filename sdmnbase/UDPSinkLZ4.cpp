@@ -18,7 +18,6 @@
 
 #include <sys/time.h>
 #include <iostream>
-#include <lz4.h>
 
 #include "UDPSinkLZ4.h"
 
@@ -51,12 +50,15 @@ void UDPSinkLZ4::write(const IQSampleVector& samples_in)
 	MetaData *metaData = (MetaData *) m_bufMeta;
     struct timeval tv;
 
-    if (m_lz4InputBlockCount == m_lz4MaxInputBlocks) // send previous data
+    if (m_lz4MaxInputBlocks && (m_lz4InputBlockCount == m_lz4MaxInputBlocks)) // send previous data
     {
 		// update meta
 		m_lz4Meta.m_nbBlocks = m_lz4InputBlockCount;
 		m_lz4Meta.m_nbBytes = m_lz4Count;
 		m_lz4Meta.m_crc = m_crc64.calculate_crc((uint8_t *) &m_lz4Meta, sizeof(MetaData) - 8); // recalculate CRC
+
+		std::cerr << "UDPSinkLZ4::write: frame complete: ";
+		printMeta(&m_lz4Meta);
 
 		udpSend(); // output data to UDP
 
@@ -90,6 +92,8 @@ void UDPSinkLZ4::write(const IQSampleVector& samples_in)
 			m_lz4Meta.m_nbBytes = m_lz4Count;
 			m_lz4Meta.m_crc = m_crc64.calculate_crc((uint8_t *) &m_lz4Meta, sizeof(MetaData) - 8); // recalculate CRC
 
+			std::cerr << "UDPSinkLZ4::write: new meta, write data" << std::endl;
+
 			udpSend(); // output data to UDP
 
 			LZ4_resetStream(m_lz4Stream);
@@ -113,15 +117,8 @@ void UDPSinkLZ4::write(const IQSampleVector& samples_in)
 			}
 		}
 
-		std::cerr << "UDPSinkLZ4::write: meta: " << metaData->m_tv_sec
-				<< ":" << metaData->m_tv_usec
-				<< ":" << metaData->m_centerFrequency
-				<< ":" << metaData->m_sampleRate
-				<< ":" << (int) (metaData->m_sampleBytes & 0xF)
-				<< ":" << (int) metaData->m_sampleBits
-				<< ":" << metaData->m_blockSize
-				<< ":" << metaData->m_nbSamples
-				<< std::endl;
+		std::cerr << "UDPSinkLZ4::write: meta break: ";
+		printMeta(&m_lz4Meta);
 
 		m_currentMeta = *metaData;
 	}
@@ -137,6 +134,8 @@ void UDPSinkLZ4::udpSend()
 	uint32_t nbCompleteBlocks = m_udpSize;
 	uint32_t remainderBytes = m_udpSize;
 
+	std::cerr << "UDPSinkLZ4::udpSend: " << m_address << "(" << m_port << ")" << std::endl;
+
 	m_socket.SendDataGram((const void *) &m_lz4Meta, (int) m_udpSize, m_address, m_port);
 
 	for (unsigned int i = 0; i < nbCompleteBlocks; i++)
@@ -149,4 +148,19 @@ void UDPSinkLZ4::udpSend()
 		memcpy((void *) m_buf, (const void *) &m_lz4Buffer[nbCompleteBlocks*m_udpSize], remainderBytes);
 		m_socket.SendDataGram((const void *) m_buf, (int) m_udpSize, m_address, m_port);
 	}
+}
+
+void UDPSinkLZ4::printMeta(MetaData *metaData)
+{
+	std::cerr << metaData->m_tv_sec
+			<< ":" << metaData->m_tv_usec
+			<< ":" << metaData->m_centerFrequency
+			<< ":" << metaData->m_sampleRate
+			<< ":" << (int) (metaData->m_sampleBytes & 0xF)
+			<< ":" << (int) metaData->m_sampleBits
+			<< ":" << metaData->m_blockSize
+			<< ":" << metaData->m_nbSamples
+			<< "||" << metaData->m_nbBlocks
+			<< ":" << metaData->m_nbBytes
+			<< std::endl;
 }

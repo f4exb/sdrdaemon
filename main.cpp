@@ -34,6 +34,7 @@
 #include "DataBuffer.h"
 #include "Downsampler.h"
 #include "UDPSinkUncompressed.h"
+#include "UDPSinkLZ4.h"
 #include "MovingAverage.h"
 
 #include "RtlSdrSource.h"
@@ -291,6 +292,7 @@ int main(int argc, char **argv)
     unsigned int cfgport = 9091;
     Source  *srcsdr = 0;
     unsigned int outputbuf_samples = 48 * UDPSIZE;
+    uint32_t compressedMinSize = 0;
 
     fprintf(stderr,
             "SDRDaemon - Collect samples from SDR device and send it over the network via UDP\n");
@@ -303,11 +305,12 @@ int main(int argc, char **argv)
         { "daddress",   2, NULL, 'I' },
         { "dport",      1, NULL, 'D' },
         { "cport",      1, NULL, 'C' },
+        { "lz4",        1, NULL, 'z' },
         { NULL,         0, NULL, 0 } };
 
     int c, longindex, value;
     while ((c = getopt_long(argc, argv,
-            "t:c:d:b:I:D:C:",
+            "t:c:d:b:I:D:C:z:",
             longopts, &longindex)) >= 0)
     {
         switch (c)
@@ -346,6 +349,13 @@ int main(int argc, char **argv)
                		cfgport = value;
                 }
                 break;
+            case 'z':
+                if (!parse_int(optarg, value) || (value < 0)) {
+                    badarg("-z");
+                } else {
+               		compressedMinSize = value;
+                }
+                break;
             default:
                 usage();
                 fprintf(stderr, "ERROR: Invalid command line options\n");
@@ -377,7 +387,14 @@ int main(int argc, char **argv)
     }
 
     // Prepare output writer.
-    UDPSink *udp_output_instance = new UDPSinkUncompressed(dataaddress, dataport, UDPSIZE);
+    UDPSink *udp_output_instance;
+
+    if (compressedMinSize) {
+    	udp_output_instance = new UDPSinkLZ4(dataaddress, dataport, UDPSIZE, compressedMinSize);
+    } else {
+    	udp_output_instance = new UDPSinkUncompressed(dataaddress, dataport, UDPSIZE);
+    }
+
     std::unique_ptr<UDPSink> udp_output(udp_output_instance);
 
     if (!(*udp_output))

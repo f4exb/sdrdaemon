@@ -28,7 +28,9 @@ SDRdaemon requires:
  - C++11
  - Boost for compilation
  - Zero-MQ
- - LZ4
+ - LZ4 at least version 131
+   - source (https://github.com/Cyan4973/lz4)
+   - set custom install prefix with -DLIBLZ4_INSTALL_PREFIX=... on cmake command line
  - RTL-SDR library (http://sdr.osmocom.org/trac/wiki/rtl-sdr)
  - HackRF library (https://github.com/mossmann/hackrf/tree/master/host/libhackrf)
  - Airspy library (https://github.com/airspy/host/tree/master/libairspy)
@@ -122,7 +124,7 @@ Compile and install
 
 Typical commands:
 
-  - RTL-SDR: `./sdrdaemon -t rtlsdr -I 192.168.1.3 -D 9090 -C 9091 -c freq=433970000,srate=1000000,ppm=58,gain=40.2,decim=5,fcpos=2`
+  - RTL-SDR: `./sdrdaemon -t rtlsdr -I 192.168.1.3 -D 9090 -C 9091 -c freq=433970000,srate=1000000,ppmp=58,gain=40.2,decim=5,fcpos=2`
     - Use RTL-SDR device #0
     - Destination address for the data is: `192.168.1.3`
     - Using UDP port `9090` for the data (it is the default anyway)
@@ -410,7 +412,7 @@ Frame:
 |Meta:xxxxxxxxxxxxxxxxx|yyyyyyyyyyyyyyyyyyyyyy|yyyyyyyyyyyyyyyyyyyyyy|yyyyyyyyyyyyyyyyy:xxxx|
 
 Number of samples in a hardware block: 13
-Number of blocks in a frame..........:  2 
+Number of blocks in a frame..........:  2
 Number of bytes in a frame...........: 61 (2 * 22 + 17)
 Complete blocks......................:  2 (calculated)
 Remainder bytes......................: 17 (calculated)

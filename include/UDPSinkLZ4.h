@@ -42,6 +42,7 @@ private:
 
     void udpSend();
     void printMeta(MetaData *metaData);
+    void setLZ4Values(uint32_t nbSamples, uint8_t sampleBytes);
 };
 
 #endif /* INCLUDE_UDPSINKLZ4_H_ */

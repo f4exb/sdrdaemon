@@ -84,6 +84,12 @@ void UDPSinkLZ4::write(const IQSampleVector& samples_in)
 		if (m_lz4Count == 0) // nothing to write from the LZ4 buffer
 		{
 			m_lz4Meta = *metaData; // store for future use
+            setLZ4Values(metaData->m_nbSamples, m_sampleBytes);
+            std::cerr << "UDPSinkLZ4::write: new meta: no data: "
+            << m_lz4MaxInputBlocks
+            << ":" << m_lz4BufSize
+            << "||";
+            printMeta(&m_lz4Meta);
 		}
 		else
 		{
@@ -92,7 +98,11 @@ void UDPSinkLZ4::write(const IQSampleVector& samples_in)
 			m_lz4Meta.m_nbBytes = m_lz4Count;
 			m_lz4Meta.m_crc = m_crc64.calculate_crc((uint8_t *) &m_lz4Meta, sizeof(MetaData) - 8); // recalculate CRC
 
-			std::cerr << "UDPSinkLZ4::write: new meta, write data" << std::endl;
+			std::cerr << "UDPSinkLZ4::write: new meta: "
+            << m_lz4MaxInputBlocks
+            << ":" << m_lz4BufSize
+            << "||";
+            printMeta(&m_lz4Meta);
 
 			udpSend(); // output data to UDP
 
@@ -104,21 +114,9 @@ void UDPSinkLZ4::write(const IQSampleVector& samples_in)
 			// Calculate new LZ4 values if relevant sizes have changed
 			if ((metaData->m_nbSamples != m_currentMeta.m_nbSamples) || (m_sampleBytes != (m_currentMeta.m_sampleBytes & 0x0F)))
 			{
-				uint32_t hardBLockSize = metaData->m_nbSamples * 2 * m_sampleBytes;
-				m_lz4MaxInputBlocks = (m_lz4MinInputSize / hardBLockSize) + 1;
-				m_lz4MaxInputSize = m_lz4MaxInputBlocks * hardBLockSize;
-				m_lz4BufSize = LZ4_compressBound(m_lz4MaxInputSize);
-
-				if (m_lz4Buffer) {
-					delete[] m_lz4Buffer;
-				}
-
-				m_lz4Buffer = new uint8_t[m_lz4BufSize];
+                setLZ4Values(metaData->m_nbSamples, m_sampleBytes);
 			}
 		}
-
-		std::cerr << "UDPSinkLZ4::write: meta break: ";
-		printMeta(&m_lz4Meta);
 
 		m_currentMeta = *metaData;
 	}
@@ -163,4 +161,18 @@ void UDPSinkLZ4::printMeta(MetaData *metaData)
 			<< "||" << metaData->m_nbBlocks
 			<< ":" << metaData->m_nbBytes
 			<< std::endl;
+}
+
+void UDPSinkLZ4::setLZ4Values(uint32_t nbSamples, uint8_t sampleBytes)
+{
+    uint32_t hardBLockSize = nbSamples * 2 *sampleBytes;
+    m_lz4MaxInputBlocks = (m_lz4MinInputSize / hardBLockSize) + 1;
+    m_lz4MaxInputSize = m_lz4MaxInputBlocks * hardBLockSize;
+    m_lz4BufSize = LZ4_compressBound(m_lz4MaxInputSize);
+
+    if (m_lz4Buffer) {
+        delete[] m_lz4Buffer;
+    }
+
+    m_lz4Buffer = new uint8_t[m_lz4BufSize];
 }

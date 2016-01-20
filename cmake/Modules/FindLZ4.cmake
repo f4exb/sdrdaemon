@@ -5,6 +5,7 @@ FIND_PATH(LZ4_INCLUDE_DIRS
     NAMES lz4.h
     HINTS ${PC_LZ4_INCLUDE_DIR}
     ${CMAKE_INSTALL_PREFIX}/include
+    ${LIBLZ4_INSTALL_PREFIX}/include
     PATHS
     /usr/local/include
     /usr/include
@@ -16,7 +17,7 @@ FIND_LIBRARY(LZ4_LIBRARIES
     ${CMAKE_INSTALL_PREFIX}/lib
     ${CMAKE_INSTALL_PREFIX}/lib64
     PATHS
-    ${ZEROMQ_INCLUDE_DIRS}/../lib
+    ${LZ4_INCLUDE_DIRS}/../lib
     /usr/local/lib
     /usr/lib
 )

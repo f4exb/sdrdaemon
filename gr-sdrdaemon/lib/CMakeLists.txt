@@ -16,6 +16,11 @@
 # You should have received a copy of the GNU General Public License             
 # along with this program. If not, see <http://www.gnu.org/licenses/>.          
 
+#make sure our local CMake Modules path comes first
+list(INSERT CMAKE_MODULE_PATH 0 ${CMAKE_SOURCE_DIR}/cmake/Modules)
+
+find_package(LZ4 131)
+
 ########################################################################
 # Setup library
 ########################################################################
@@ -27,7 +32,7 @@ add_library(gnuradio-sdrdaemon SHARED
     SDRdaemonBuffer.cpp
     sdrdmnsource_impl.cc
 )
-target_link_libraries(gnuradio-sdrdaemon ${Boost_LIBRARIES}  ${GNURADIO_ALL_LIBRARIES})
+target_link_libraries(gnuradio-sdrdaemon ${Boost_LIBRARIES} ${LZ4_LIBRARIES} ${GNURADIO_ALL_LIBRARIES})
 set_target_properties(gnuradio-sdrdaemon PROPERTIES DEFINE_SYMBOL "gnuradio_SDRDAEMON_EXPORTS")
 
 ########################################################################

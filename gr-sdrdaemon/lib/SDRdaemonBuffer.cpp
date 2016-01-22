@@ -121,7 +121,7 @@ bool SDRdaemonBuffer::writeAndReadLZ4(uint8_t *array, std::size_t length, uint8_
     	}
     	else
     	{
-    		std::cerr << "SDRdaemonBuffer::writeAndReadLZ4: decoding OK" << std::endl;
+    		//std::cerr << "SDRdaemonBuffer::writeAndReadLZ4: decoding OK" << std::endl;
     		m_dataCount = 0; // reset read pointer
     	}
 

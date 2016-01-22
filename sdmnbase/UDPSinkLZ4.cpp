@@ -71,6 +71,8 @@ void UDPSinkLZ4::write(const IQSampleVector& samples_in)
 
 	if (m_lz4MaxInputBlocks && (m_lz4InputBlockCount == m_lz4MaxInputBlocks)) // send previous data
     {
+		// compress data
+		m_lz4Count = LZ4_compress((const char *) m_lz4InputBuffer, (char *) m_lz4Buffer, m_lz4MaxInputSize);
 		// update meta
 		m_lz4Meta.m_nbBlocks = m_lz4InputBlockCount;
 		m_lz4Meta.m_nbBytes = m_lz4Count;
@@ -87,6 +89,11 @@ void UDPSinkLZ4::write(const IQSampleVector& samples_in)
 		m_lz4InputCount = 0;
 		m_lz4Meta = *metaData; // store for future use
     }
+	else // accumulate data
+	{
+		memcpy((void *) &m_lz4InputBuffer[m_lz4InputBlockCount], (const void *) &samples_in[0], m_lz4HardBLockSize);
+		m_lz4InputBlockCount++;
+	}
 
 	if (!(*metaData == m_currentMeta)) // If critical meta data has changed send previous data and update current meta
 	{
@@ -102,6 +109,8 @@ void UDPSinkLZ4::write(const IQSampleVector& samples_in)
 		}
 		else
 		{
+			// compress data
+			m_lz4Count = LZ4_compress((const char *) m_lz4InputBuffer, (char *) m_lz4Buffer, m_lz4InputBlockCount * m_lz4HardBLockSize);
 			// update meta
 			m_lz4Meta.m_nbBlocks = m_lz4InputBlockCount;
 			m_lz4Meta.m_nbBytes = m_lz4Count;
@@ -131,12 +140,13 @@ void UDPSinkLZ4::write(const IQSampleVector& samples_in)
 		m_currentMeta = *metaData;
 	}
 
+	/*
 	// process hardware block (compress)
 	memcpy((void *) &m_lz4InputBuffer[m_lz4InputCount], (const void *) &samples_in[0], m_lz4HardBLockSize);
 	int compressedBytes = LZ4_compress_fast_continue(m_lz4Stream, (const char *) &m_lz4InputBuffer[m_lz4InputCount], (char *) &m_lz4Buffer[m_lz4Count], samples_in.size() * 2 * m_sampleBytes, m_lz4BufSize, 1);
 	m_lz4InputCount += m_lz4HardBLockSize;
 	m_lz4Count += compressedBytes;
-	m_lz4InputBlockCount++;
+	m_lz4InputBlockCount++;*/
 }
 
 void UDPSinkLZ4::udpSend()

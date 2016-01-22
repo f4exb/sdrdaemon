@@ -72,6 +72,8 @@ private:
     uint32_t m_lz4OutCount;           //!< Current position in LZ4 output Buffer
     uint32_t m_lz4InSize;             //!< Size in bytes of the LZ4 input data
     uint32_t m_lz4OutSize;            //!< Size in bytes of the LZ4 output data
+    uint32_t m_lz4OutNbBlocks;        //!< Number of output buffer blocks
+    uint32_t m_lz4OutBlockCount;      //!< Current position in output buffer blocks
 
     uint32_t m_dataCount;             //!< Current position of data to send
 };

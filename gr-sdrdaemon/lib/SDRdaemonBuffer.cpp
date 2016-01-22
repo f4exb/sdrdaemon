@@ -34,6 +34,8 @@ SDRdaemonBuffer::SDRdaemonBuffer(std::size_t blockSize) :
 	m_lz4OutCount(0),
 	m_lz4InSize(0),
 	m_lz4OutSize(0),
+	m_lz4OutNbBlocks(2),
+	m_lz4OutBlockCount(0),
 	m_dataCount(0)
 {
 	m_buf = new uint8_t[blockSize];
@@ -101,15 +103,20 @@ bool SDRdaemonBuffer::writeAndRead(uint8_t *array, std::size_t length, uint8_t *
 
 bool SDRdaemonBuffer::writeAndReadLZ4(uint8_t *array, std::size_t length, uint8_t *data, std::size_t& dataLength)
 {
-    if (m_lz4InCount + length < m_lz4InSize + m_blockSize)
+    if (m_lz4InCount + length < m_lz4InSize)
     {
         std::memcpy((void *) &m_lz4InBuffer[m_lz4InCount], (const void *) array, length); // copy data in compressed Buffer
         m_lz4InCount += length;
     }
+    else
+    {
+        std::memcpy((void *) &m_lz4InBuffer[m_lz4InCount], (const void *) array, m_lz4InSize - m_lz4InCount); // copy rest of data in compressed Buffer
+        m_lz4InCount += length; // exceed size so decompression will be activated
+    }
 
     if (m_lz4InCount >= m_lz4InSize) // full input compressed block retrieved
     {
-    	int bytesRead = LZ4_decompress_fast((const char*) m_lz4InBuffer, (char*) m_lz4OutBuffer, m_lz4OutSize);
+    	int bytesRead = LZ4_decompress_fast((const char*) m_lz4InBuffer, (char*) &m_lz4OutBuffer[m_lz4OutSize*m_lz4OutBlockCount], m_lz4OutSize);
 
     	if (bytesRead != m_lz4InSize)
     	{
@@ -119,34 +126,27 @@ bool SDRdaemonBuffer::writeAndReadLZ4(uint8_t *array, std::size_t length, uint8_
 					<< " out: " << m_lz4OutSize
 					<< std::endl;
     	}
-    	else
-    	{
-    		//std::cerr << "SDRdaemonBuffer::writeAndReadLZ4: decoding OK" << std::endl;
-    		m_dataCount = 0; // reset read pointer
-    	}
 
+    	m_lz4OutBlockCount = (++m_lz4OutBlockCount == m_lz4OutNbBlocks ? 0 : m_lz4OutBlockCount);
     	m_lz4InCount = 0;
     }
 
-    if (m_dataCount + length < m_lz4OutSize)
+    length *= 4;
+
+    if (m_dataCount + length < m_lz4OutSize*m_lz4OutNbBlocks)
     {
-    	std::memcpy((void *) data, (const void *) m_lz4OutBuffer, length);
+    	std::memcpy((void *) data, (const void *) &m_lz4OutBuffer[m_dataCount], length);
     	dataLength = length;
     	m_dataCount += length;
-    	return true;
-    }
-    else if (m_dataCount < m_lz4OutSize)
-    {
-    	std::memcpy((void *) data, (const void *) m_lz4OutBuffer, m_lz4OutSize - m_dataCount);
-    	dataLength =  m_lz4OutSize - m_dataCount;
-    	m_dataCount = m_lz4OutSize;
-    	return true;
     }
     else
     {
-    	dataLength = 0;
-    	return false;
+    	std::memcpy((void *) data, (const void *) &m_lz4OutBuffer[m_dataCount], (m_lz4OutSize*m_lz4OutNbBlocks) - m_dataCount);
+    	dataLength = (m_lz4OutSize*m_lz4OutNbBlocks) - m_dataCount;
+    	m_dataCount = 0;
     }
+
+	return true;
 }
 
 bool SDRdaemonBuffer::setLZ4Values()
@@ -170,8 +170,9 @@ bool SDRdaemonBuffer::setLZ4Values()
 			delete[] m_lz4OutBuffer;
 		}
 
-		m_lz4OutBuffer = new uint8_t[lz4OutSize];
+		m_lz4OutBuffer = new uint8_t[lz4OutSize * m_lz4OutNbBlocks];
 		m_lz4OutSize = lz4OutSize;
+		m_lz4OutBlockCount = 0;
 	}
 
 	return true;

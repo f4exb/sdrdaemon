@@ -24,6 +24,7 @@
 
 #include <stdint.h>
 #include <cstddef>
+#include <lz4.h>
 #include "CRC64.h"
 
 
@@ -55,11 +56,24 @@ public:
 	const MetaData& getCurrentMeta() const { return m_currentMeta; }
 
 private:
+	bool writeAndReadLZ4(uint8_t *array, std::size_t length, uint8_t *data, std::size_t& dataLength);
+    bool setLZ4Values();
+
 	std::size_t m_blockSize;
-	bool m_sync;
+	bool m_sync; //!< Meta data acquired (Stream synchronized)
+	bool m_lz4;  //!< Stream is compressed with LZ4
 	MetaData m_currentMeta;
 	CRC64 m_crc64;
-	uint8_t *m_buf;
+	uint8_t *m_buf; //!< UDP block buffer
+
+    uint8_t *m_lz4InBuffer;           //!< Buffer for LZ4 compressed input dataLength
+    uint8_t *m_lz4OutBuffer;          //!< Buffer for original data as output of the LZ4 uncompress
+    uint32_t m_lz4InCount;            //!< Current position in LZ4 input buffer
+    uint32_t m_lz4OutCount;           //!< Current position in LZ4 output Buffer
+    uint32_t m_lz4InSize;             //!< Size in bytes of the LZ4 input data
+    uint32_t m_lz4OutSize;            //!< Size in bytes of the LZ4 output data
+
+    uint32_t m_dataCount;             //!< Current position of data to send
 };
 
 #endif /* GR_SDRDAEMON_LIB_SDRDAEMONBUFFER_H_ */

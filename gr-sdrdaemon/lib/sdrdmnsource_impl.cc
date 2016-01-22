@@ -162,7 +162,7 @@ int sdrdmn_source_impl::get_sample_bits()
 
 float sdrdmn_source_impl::get_compression_ratio()
 {
-	uint32_t inputBytes = d_sdrdmnbuf.getCurrentMeta().m_nbSamples * 2 * (d_sdrdmnbuf.getCurrentMeta().m_sampleBytes & 0x0F);
+	uint32_t inputBytes = d_sdrdmnbuf.getCurrentMeta().m_nbSamples * d_sdrdmnbuf.getCurrentMeta().m_nbBlocks *  2 * (d_sdrdmnbuf.getCurrentMeta().m_sampleBytes & 0x0F);
 	return (float) d_sdrdmnbuf.getCurrentMeta().m_nbBytes / inputBytes;
 }
 

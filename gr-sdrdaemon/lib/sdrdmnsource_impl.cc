@@ -36,7 +36,7 @@
 namespace gr {
 namespace sdrdaemon {
 
-const int sdrdmn_source_impl::BUF_SIZE_PAYLOADS = 50;
+const int sdrdmn_source_impl::BUF_SIZE_PAYLOADS = 512;
 
 sdrdmn_source::sptr sdrdmn_source::make(std::size_t itemsize,
 		const std::string &ipaddr,

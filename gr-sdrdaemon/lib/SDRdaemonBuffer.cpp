@@ -107,7 +107,8 @@ bool SDRdaemonBuffer::writeAndReadLZ4(uint8_t *array, std::size_t length, uint8_
 	// send data if a block is ready
 	if (m_blockCount != m_lz4OutBlockCount)
 	{
-		std::size_t sendLength = 5*length;
+		//std::size_t sendLength = 5*length;
+		std::size_t sendLength = m_lz4OutSize;
 
 	    if (m_dataCount + sendLength < m_lz4OutSize)
 	    {

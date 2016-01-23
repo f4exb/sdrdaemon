@@ -19,6 +19,8 @@
 #ifndef INCLUDE_UTIL_H_
 #define INCLUDE_UTIL_H_
 
+#include <cmath>
+
 inline bool parse_dbl(const char *s, double& v)
 {
     char *endp;
@@ -47,6 +49,16 @@ inline bool parse_dbl(const char *s, double& v)
     }
 
     return (*endp == '\0');
+}
+
+inline float db2P(int db)
+{
+	return pow(10.0, (db / 10.0));
+}
+
+inline float db2A(int db)
+{
+	return pow(10.0, (db / 20.0));
 }
 
 #endif /* INCLUDE_UTIL_H_ */

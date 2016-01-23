@@ -57,6 +57,9 @@ set(LIBHACKRF_LIBRARIES    ${LIBHACKRF_LIBRARIES} ${LIBUSB_LIBRARY} ${ZEROMQ_LIB
 set(LIBRTLSDR_INCLUDE_DIRS ${LIBRTLSDR_INCLUDE_DIR} ${LIBUSB_INCLUDE_DIR})
 set(LIBRTLSDR_LIBRARIES    ${LIBRTLSDR_LIBRARIES} ${LIBUSB_LIBRARY} ${ZEROMQ_LIBRARIES})
 
+set(LIBTEST_INCLUDE_DIRS $(ZEROMQ_INCLUDE_DIRS))
+set(LIBTEST_LIBRARIES    ${ZEROMQ_LIBRARIES})
+
 # Compiler flags.
 set(CMAKE_CXX_FLAGS "-Wall -std=c++11 -O2 -ffast-math -ftree-vectorize ${EXTRA_FLAGS}")
 
@@ -134,6 +137,16 @@ set(sdmnrtlsdr_HEADERS
     include/RtlSdrSource.h
 )
 
+# Test sources
+
+set(sdmntest_SOURCES
+    sdmnbase/TestSource.cpp
+)
+
+set(sdmntest_HEADERS
+    include/TestSource.h
+)
+
 # Libraries
 
 add_library(sdmnbase STATIC
@@ -156,6 +169,11 @@ add_library(sdmnrtlsdr STATIC
     ${sdmnrtlsdr_SOURCES}
 )
 
+add_library(sdmntest STATIC
+    ${sdmntest_SOURCES}
+)
+
+
 add_executable(sdrdaemon
     main.cpp
 )
@@ -171,6 +189,7 @@ target_link_libraries(sdrdaemon
     sdmnbladerf
     sdmnhackrf
     sdmnrtlsdr
+    sdmntest
     ${CMAKE_THREAD_LIBS_INIT}
     ${EXTRA_LIBS}
 )
@@ -207,7 +226,15 @@ target_link_libraries(sdmnrtlsdr
     ${LIBRTLSDR_LIBRARIES}
 )
 
+target_include_directories(sdmntest PUBLIC
+    ${LIBTEST_INCLUDE_DIRS}
+)
+
+target_link_libraries(sdmntest
+    ${LIBTEST_LIBRARIES}
+)
+
 target_link_libraries(sdmnbase ${LZ4_LIBRARIES})
 
 install(TARGETS sdrdaemon DESTINATION bin)
-install(TARGETS sdmnbase sdmnairspy sdmnbladerf sdmnhackrf sdmnrtlsdr DESTINATION lib)
+install(TARGETS sdmnbase sdmnairspy sdmnbladerf sdmnhackrf sdmnrtlsdr sdmntest DESTINATION lib)

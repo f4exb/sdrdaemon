@@ -41,6 +41,7 @@
 #include "HackRFSource.h"
 #include "AirspySource.h"
 #include "BladeRFSource.h"
+#include "TestSource.h"
 #include "include/SDRDaemon.h"
 
 //#include <type_traits>
@@ -120,10 +121,11 @@ void usage()
     fprintf(stderr,
     "Usage: sdrdaemon [options]\n"
             "  -t devtype     Device type:\n"
-            "                   - rtlsdr: RTL-SDR devices\n"
-            "                   - hackrf: HackRF One or Jawbreaker\n"
-            "                   - airspy: Airspy\n"
+            "                   - rtlsdr:  RTL-SDR devices\n"
+            "                   - hackrf:  HackRF One or Jawbreaker\n"
+            "                   - airspy:  Airspy\n"
             "                   - bladerf: BladeRF\n"
+            "                   - test:    Test signal generator (CW carrier)\n"
             "  -c config      Startup configuration. Comma separated key=value configuration pairs\n"
             "                 or just key for switches. See below for valid values\n"
             "  -d devidx      Device index, 'list' to show device list (default 0)\n"
@@ -148,7 +150,8 @@ void usage()
             "  gain=<float>   Set LNA gain in dB, or 'auto',\n"
             "                 or 'list' to just get a list of valid values (default auto)\n"
             "  blklen=<int>   Set read buffer size in seconds (default RTL-SDR default)\n"
-            "  ppm=<int>      Set LO correction in PPM (default 0)\n"
+            "  ppmp=<int>     Set LO correction in positive PPM. Takes precedence over ppmn parameter (default 0)\n"
+            "  ppmn=<int>     Set LO correction in negative PPM (default 0)\n"
             "  agc            Enable RTL AGC mode (default disabled)\n"
             "\n"
             "Configuration options for HackRF devices\n"
@@ -156,6 +159,8 @@ void usage()
             "                 valid values: 1M to 6G\n"
             "  srate=<int>    IF sample rate in Hz (default 5000000)\n"
             "                 (valid ranges: [2500000,20000000]))\n"
+            "  ppmp=<float>   Set LO correction in positive PPM. Takes precedence over ppmn parameter (default 0)\n"
+            "  ppmn=<float>   Set LO correction in negative PPM (default 0)\n"
             "  lgain=<int>    LNA gain in dB. 'list' to just get a list of valid values: (default 16)\n"
             "  vgain=<int>    VGA gain in dB. 'list' to just get a list of valid values: (default 22)\n"
             "  bwfilter=<int> Filter bandwidth in MHz. 'list' to just get a list of valid values: (default 2.5)\n"
@@ -167,6 +172,8 @@ void usage()
             "                 valid values: 24M to 1.8G\n"
             "  srate=<int>    IF sample rate in Hz. Depends on Airspy firmware and libairspy support\n"
             "                 Airspy firmware and library must support dynamic sample rate query. (default 10000000)\n"
+            "  ppmp=<float>   Set LO correction in positive PPM. Takes precedence over ppmn parameter (default 0)\n"
+            "  ppmn=<float>   Set LO correction in negative PPM (default 0)\n"
             "  lgain=<int>    LNA gain in dB. 'list' to just get a list of valid values: (default 8)\n"
             "  mgain=<int>    Mixer gain in dB. 'list' to just get a list of valid values: (default 8)\n"
             "  vgain=<int>    VGA gain in dB. 'list' to just get a list of valid values: (default 8)\n"
@@ -183,6 +190,13 @@ void usage()
             "  lgain=<int>    LNA gain in dB. 'list' to just get a list of valid values: (default 3)\n"
             "  v1gain=<int>   VGA1 gain in dB. 'list' to just get a list of valid values: (default 20)\n"
             "  v2gain=<int>   VGA2 gain in dB. 'list' to just get a list of valid values: (default 9)\n"
+            "\n"
+            "Configuration options for the test signal generator\n"
+            "  freq=<int>     Center frequency sent in meta data in Hz (default 435000000)\n"
+            "  srate=<int>    IF sample rate in Hz. Valid values: 8k to 10M (default 5000000)\n"
+            "  dfp=<int>      Positive shift frequency of carrier from center frequency in Hz (default 100000)\n"
+            "  dfn=<int>      Negative shift frequency of carrier from center frequency in Hz (default 100000)\n"
+            "  power=<int>    Signal peak power in negative dB. (default 0)\n"
             "\n");
 }
 
@@ -231,6 +245,10 @@ static bool get_device(std::vector<std::string> &devnames, std::string& devtype,
     {
         BladeRFSource::get_device_names(devnames);
     }
+    else if (strcasecmp(devtype.c_str(), "test") == 0)
+    {
+        TestSource::get_device_names(devnames);
+    }
     else
     {
         fprintf(stderr, "ERROR: wrong device type (-t option) must be one of the following:\n");
@@ -276,6 +294,11 @@ static bool get_device(std::vector<std::string> &devnames, std::string& devtype,
     {
         // Open BladeRF device.
         *srcsdr = new BladeRFSource(devnames[devidx].c_str());
+    }
+    else if (strcasecmp(devtype.c_str(), "test") == 0)
+    {
+        // Open test device.
+        *srcsdr = new TestSource(0);
     }
 
     return true;

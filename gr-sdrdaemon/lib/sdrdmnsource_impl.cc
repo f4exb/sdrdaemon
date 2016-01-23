@@ -65,7 +65,7 @@ sdrdmn_source_impl::sdrdmn_source_impl(size_t itemsize,
 		d_offset(0)
 {
 	// Give us some more room to play.
-	d_rxbuf = new char[4 * d_payload_size];
+	d_rxbuf = new char[BUF_SIZE_PAYLOADS * d_payload_size];
 	d_residbuf = new char[BUF_SIZE_PAYLOADS * d_payload_size];
 
 	connect(host, port);

@@ -76,6 +76,7 @@ private:
     uint32_t m_lz4OutBlockCount;      //!< Current position in output buffer blocks
 
     uint32_t m_dataCount;             //!< Current position of data to send
+    uint32_t m_blockCount;            //!< Current data block being sent
 };
 
 #endif /* GR_SDRDAEMON_LIB_SDRDAEMONBUFFER_H_ */

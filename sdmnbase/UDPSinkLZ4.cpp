@@ -21,34 +21,21 @@
 
 #include "UDPSinkLZ4.h"
 
-UDPSinkLZ4::UDPSinkLZ4(const std::string& address, unsigned int port, unsigned int udpSize, unsigned int lz4MinInputSize) :
+UDPSinkLZ4::UDPSinkLZ4(const std::string& address, unsigned int port, unsigned int udpSize, unsigned int minFrameSize) :
 		UDPSink(address, port, udpSize),
-		m_lz4MinInputSize(lz4MinInputSize),
-		m_lz4HardBLockSize(0),
-		m_lz4MaxInputBlocks(0),
-		m_lz4MaxInputSize(0),
-		m_lz4InputBlockCount(0),
-		m_lz4BufSize(0),
-		m_lz4InputCount(0),
-		m_lz4Count(0),
-		m_lz4InputBuffer(0),
-		m_lz4Buffer(0),
-		m_lz4Stream(0)
+		m_minFrameSize(minFrameSize),
+		m_hardBlockSize(0),
+		m_maxInputBlocks(0),
+		m_inputBlockCount(0),
+		m_inputBuffer(0)
 {
-	m_lz4Meta.init();
-	m_lz4Stream = LZ4_createStream();
+	m_currentMeta.init();
 }
 
 UDPSinkLZ4::~UDPSinkLZ4()
 {
-	LZ4_freeStream(m_lz4Stream);
-
-    if (m_lz4InputBuffer) {
-    	delete[] m_lz4InputBuffer;
-    }
-
-	if (m_lz4Buffer) {
-		delete[] m_lz4Buffer;
+	if (m_inputBuffer) {
+		delete[] m_inputBuffer;
 	}
 }
 
@@ -61,111 +48,89 @@ void UDPSinkLZ4::write(const IQSampleVector& samples_in)
 
     metaData->m_centerFrequency = m_centerFrequency;
     metaData->m_sampleRate = m_sampleRate;
-    metaData->m_sampleBytes = 0x10 + (m_sampleBytes & 0x0F); // add LZ4 indicator
+    metaData->m_sampleBytes = m_sampleBytes;
     metaData->m_sampleBits = m_sampleBits;
     metaData->m_blockSize = m_udpSize;
     metaData->m_nbSamples = samples_in.size();
     metaData->m_tv_sec = tv.tv_sec;
     metaData->m_tv_usec = tv.tv_usec;
-	metaData->m_crc = m_crc64.calculate_crc((uint8_t *) m_bufMeta, sizeof(MetaData) - 8);
 
-	if (m_lz4MaxInputBlocks && (m_lz4InputBlockCount == m_lz4MaxInputBlocks)) // send previous data
-    {
-		// compress data
-		m_lz4Count = LZ4_compress((const char *) m_lz4InputBuffer, (char *) m_lz4Buffer, m_lz4MaxInputSize);
-		// update meta
-		m_lz4Meta.m_nbBlocks = m_lz4InputBlockCount;
-		m_lz4Meta.m_nbBytes = m_lz4Count;
-		m_lz4Meta.m_crc = m_crc64.calculate_crc((uint8_t *) &m_lz4Meta, sizeof(MetaData) - 8); // recalculate CRC
-
-		//std::cerr << "UDPSinkLZ4::write: frame complete: ";
-		//printMeta(&m_lz4Meta);
-
-		udpSend(); // output data to UDP
-
-		LZ4_resetStream(m_lz4Stream);
-		m_lz4InputBlockCount = 0;
-		m_lz4Count = 0;
-		m_lz4InputCount = 0;
-		m_lz4Meta = *metaData; // store for future use
-    }
-	else // accumulate data
+	if (!(m_currentMeta == *metaData))
 	{
-		memcpy((void *) &m_lz4InputBuffer[m_lz4InputBlockCount], (const void *) &samples_in[0], m_lz4HardBLockSize);
-		m_lz4InputBlockCount++;
-	}
-
-	if (!(*metaData == m_currentMeta)) // If critical meta data has changed send previous data and update current meta
-	{
-		if (m_lz4Count == 0) // nothing to write from the LZ4 buffer
+		if (m_inputBlockCount > 0) // if some data is in buffer send it with the old meta data
 		{
-			m_lz4Meta = *metaData; // store for future use
-            setLZ4Values(metaData->m_nbSamples, m_sampleBytes);
-            std::cerr << "UDPSinkLZ4::write: new meta: no data: "
-            << m_lz4MaxInputBlocks
-            << ":" << m_lz4BufSize
-            << " ";
-            printMeta(&m_lz4Meta);
+			m_sendMeta = m_currentMeta;
+			m_sendMeta.m_sampleBytes = 0x10 + (m_sendMeta.m_sampleBytes & 0x0F); // add LZ4 indicator
+			m_sendMeta.m_nbBlocks = m_inputBlockCount;
+			m_sendMeta.m_nbBytes = m_inputBlockCount * m_hardBlockSize;
+			m_sendMeta.m_crc = m_crc64.calculate_crc((uint8_t *) &m_sendMeta, sizeof(MetaData) - 8);
+
+			udpSend();
+
+			m_inputBlockCount = 0;
 		}
-		else
+
+		if ((m_currentMeta.m_nbSamples != metaData->m_nbSamples) || (m_currentMeta.m_sampleBytes != metaData->m_sampleBytes))
 		{
-			// compress data
-			m_lz4Count = LZ4_compress((const char *) m_lz4InputBuffer, (char *) m_lz4Buffer, m_lz4InputBlockCount * m_lz4HardBLockSize);
-			// update meta
-			m_lz4Meta.m_nbBlocks = m_lz4InputBlockCount;
-			m_lz4Meta.m_nbBytes = m_lz4Count;
-			m_lz4Meta.m_crc = m_crc64.calculate_crc((uint8_t *) &m_lz4Meta, sizeof(MetaData) - 8); // recalculate CRC
-
-			std::cerr << "UDPSinkLZ4::write: new meta: "
-            << m_lz4MaxInputBlocks
-            << ":" << m_lz4BufSize
-            << " ";
-            printMeta(&m_lz4Meta);
-
-			udpSend(); // output data to UDP
-
-			LZ4_resetStream(m_lz4Stream);
-			m_lz4InputBlockCount = 0;
-			m_lz4Count = 0;
-			m_lz4InputCount = 0;
-			m_lz4Meta = *metaData; // store for future use
-
-			// Calculate new LZ4 values if relevant sizes have changed
-			if ((metaData->m_nbSamples != m_currentMeta.m_nbSamples) || (m_sampleBytes != (m_currentMeta.m_sampleBytes & 0x0F)))
-			{
-                setLZ4Values(metaData->m_nbSamples, m_sampleBytes);
-			}
+			updateSizes(metaData);
 		}
+
+		std::cerr << "UDPSinkLZ4::write: changed meta: ";
+		printMeta(metaData);
 
 		m_currentMeta = *metaData;
 	}
+	else if (m_inputBlockCount == m_maxInputBlocks) // input buffer is full so send it
+	{
+		m_sendMeta = m_currentMeta;
+		m_sendMeta.m_sampleBytes = 0x10 + (m_sendMeta.m_sampleBytes & 0x0F); // add LZ4 indicator
+		m_sendMeta.m_nbBlocks = m_inputBlockCount;
+		m_sendMeta.m_nbBytes = m_inputBlockCount * m_hardBlockSize;
+		m_sendMeta.m_crc = m_crc64.calculate_crc((uint8_t *) &m_sendMeta, sizeof(MetaData) - 8);
 
-	/*
-	// process hardware block (compress)
-	memcpy((void *) &m_lz4InputBuffer[m_lz4InputCount], (const void *) &samples_in[0], m_lz4HardBLockSize);
-	int compressedBytes = LZ4_compress_fast_continue(m_lz4Stream, (const char *) &m_lz4InputBuffer[m_lz4InputCount], (char *) &m_lz4Buffer[m_lz4Count], samples_in.size() * 2 * m_sampleBytes, m_lz4BufSize, 1);
-	m_lz4InputCount += m_lz4HardBLockSize;
-	m_lz4Count += compressedBytes;
-	m_lz4InputBlockCount++;*/
+		udpSend();
+
+		m_inputBlockCount = 0;
+	}
+
+	memcpy((void *) &m_inputBuffer[m_inputBlockCount*m_hardBlockSize], (const void *) &samples_in[0], m_hardBlockSize);
+	m_inputBlockCount++;
 }
 
 void UDPSinkLZ4::udpSend()
 {
-	uint32_t nbCompleteBlocks = m_lz4Count / m_udpSize;
-	uint32_t remainderBytes = m_lz4Count % m_udpSize;
+	uint32_t nbCompleteBlocks = m_sendMeta.m_nbBytes / m_udpSize;
+	uint32_t nbRemainderBytes = m_sendMeta.m_nbBytes % m_udpSize;
 
-	m_socket.SendDataGram((const void *) &m_lz4Meta, (int) m_udpSize, m_address, m_port);
+	m_socket.SendDataGram((const void *) &m_sendMeta, (int) m_udpSize, m_address, m_port);
 
 	for (unsigned int i = 0; i < nbCompleteBlocks; i++)
 	{
-		m_socket.SendDataGram((const void *) &m_lz4Buffer[i*m_udpSize], (int) m_udpSize, m_address, m_port);
+		m_socket.SendDataGram((const void *) &m_inputBuffer[i*m_udpSize], (int) m_udpSize, m_address, m_port);
 	}
 
-	if (remainderBytes > 0)
+	if (nbRemainderBytes > 0)
 	{
-		memcpy((void *) m_buf, (const void *) &m_lz4Buffer[nbCompleteBlocks*m_udpSize], remainderBytes);
+		memcpy((void *) m_buf, (const void *) &m_inputBuffer[nbCompleteBlocks*m_udpSize], nbRemainderBytes);
 		m_socket.SendDataGram((const void *) m_buf, (int) m_udpSize, m_address, m_port);
 	}
+}
+
+void UDPSinkLZ4::updateSizes(MetaData *metaData)
+{
+	m_hardBlockSize = metaData->m_nbSamples * 2 * metaData->m_sampleBytes;
+	m_maxInputBlocks = (m_minFrameSize / m_hardBlockSize) + 1;
+
+	std::cerr << "UDPSinkLZ4::updateSizes:"
+			<< " m_hardBlockSize: "  << m_hardBlockSize
+			<< " m_maxInputBlocks: " << m_maxInputBlocks
+			<< std::endl;
+
+	if (m_inputBuffer) {
+		delete[] m_inputBuffer;
+	}
+
+	m_inputBuffer = new uint8_t[m_hardBlockSize * m_maxInputBlocks];
 }
 
 void UDPSinkLZ4::printMeta(MetaData *metaData)
@@ -182,31 +147,4 @@ void UDPSinkLZ4::printMeta(MetaData *metaData)
 	        << "|" << metaData->m_tv_sec
 			<< ":" << metaData->m_tv_usec
 			<< std::endl;
-}
-
-void UDPSinkLZ4::setLZ4Values(uint32_t nbSamples, uint8_t sampleBytes)
-{
-    m_lz4HardBLockSize = nbSamples * 2 *sampleBytes;
-    m_lz4MaxInputBlocks = (m_lz4MinInputSize / m_lz4HardBLockSize) + 1;
-    m_lz4MaxInputSize = m_lz4MaxInputBlocks * m_lz4HardBLockSize;
-    m_lz4BufSize = LZ4_compressBound(m_lz4MaxInputSize);
-
-    std::cerr << "UDPSinkLZ4::setLZ4Values:"
-    		<< " m_lz4HardBLockSize: " << m_lz4HardBLockSize
-			<< ", m_lz4MaxInputBlocks: " << m_lz4MaxInputBlocks
-			<< ", m_lz4MaxInputSize: " << m_lz4MaxInputSize
-			<< ", m_lz4BufSize: " << m_lz4BufSize
-			<< std::endl;
-
-    if (m_lz4InputBuffer) {
-    	delete[] m_lz4InputBuffer;
-    }
-
-    m_lz4InputBuffer = new uint8_t[m_lz4MaxInputSize];
-
-    if (m_lz4Buffer) {
-        delete[] m_lz4Buffer;
-    }
-
-    m_lz4Buffer = new uint8_t[m_lz4BufSize];
 }

@@ -25,27 +25,22 @@
 class UDPSinkLZ4 : public UDPSink
 {
 public:
-	UDPSinkLZ4(const std::string& address, unsigned int port, unsigned int udpSize, unsigned int lz4MinInputSize);
+	UDPSinkLZ4(const std::string& address, unsigned int port, unsigned int udpSize, unsigned int minFrameSize);
 	virtual ~UDPSinkLZ4();
 	virtual void write(const IQSampleVector& samples_in);
 
 private:
-    uint32_t      m_lz4MinInputSize;    //!< Minimum size of the input data in blocks for compression
-    uint32_t      m_lz4HardBLockSize;   //!< Input hardware block size
-    uint32_t      m_lz4MaxInputBlocks;  //!< Maximum number of input hardware blocks to read in one frame
-    uint32_t      m_lz4MaxInputSize;    //!< Maximum input size in bytes for the compression of one frame
-    uint32_t      m_lz4InputBlockCount; //!< Current number of blocks processed
-    uint32_t      m_lz4BufSize;         //!< Size of the LZ4 output buffer
-    uint32_t      m_lz4InputCount;      //!< Current read index in the LZ4 input buffer
-    uint32_t      m_lz4Count;           //!< Current write index in the LZ4 output buffer
-    uint8_t*      m_lz4InputBuffer;     //!< LZ4 input buffer
-    uint8_t*      m_lz4Buffer;          //!< LZ4 output buffer
-    LZ4_stream_t* m_lz4Stream;          //!< LZ4 stream control structure
-    MetaData      m_lz4Meta;            //!< Meta data block specialized for LZ4
-
     void udpSend();
+    void updateSizes(MetaData *metaData);
     void printMeta(MetaData *metaData);
-    void setLZ4Values(uint32_t nbSamples, uint8_t sampleBytes);
+
+    MetaData m_currentMeta;     //!< meta data according to current values
+    MetaData m_sendMeta;        //!< meta data to send over UDP
+    uint32_t m_minFrameSize;    //!< minimal size of data frame in bytes
+    uint32_t m_hardBlockSize;   //!< size of a hardware block in bytes (obtained from the device)
+    uint32_t m_maxInputBlocks;  //!< maximum number of input blocks to satisfy the minimum frame size
+    uint32_t m_inputBlockCount; //!< current count of input blocks in the input frame
+    uint8_t  *m_inputBuffer;    //!< input data frame buffer
 };
 
 #endif /* INCLUDE_UDPSINKLZ4_H_ */

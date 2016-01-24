@@ -154,6 +154,8 @@ void UDPSinkLZ4::updateSizes(MetaData *metaData)
 
 uint32_t UDPSinkLZ4::compressInput()
 {
+	//std::cerr << "UDPSinkLZ4::compressInput: outsize: "<< m_hardBlockSize * m_inputBlockCount << std::endl;
+
 	uint32_t compSize  = LZ4_compress((const char *) m_inputBuffer, (char *) m_outputBuffer, m_hardBlockSize * m_inputBlockCount);
 
 //	uint32_t compSizeU = LZ4_decompress_fast((const char*) m_outputBuffer, (char*) m_inputBuffer, m_hardBlockSize * m_inputBlockCount);
@@ -166,7 +168,7 @@ uint32_t UDPSinkLZ4::compressInput()
 //			<< std::endl;
 //	}
 
-	return compSize; // add CRC
+	return compSize;
 }
 
 void UDPSinkLZ4::printMeta(MetaData *metaData)

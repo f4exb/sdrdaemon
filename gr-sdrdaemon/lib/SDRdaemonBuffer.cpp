@@ -150,7 +150,7 @@ bool SDRdaemonBuffer::writeAndReadLZ4(uint8_t *array, std::size_t length, uint8_
         int compressedSize = LZ4_decompress_fast((const char*) m_lz4InBuffer, (char*) m_lz4OutBuffer, m_lz4OutSize);
         m_nbDecodes++;
 
-        if (compressedSize == m_lz4InSize) // less CRC
+        if (compressedSize == m_lz4InSize)
     	{
     		/*
     		std::cerr << "SDRdaemonBuffer::writeAndReadLZ4: decoding OK:"
@@ -165,12 +165,11 @@ bool SDRdaemonBuffer::writeAndReadLZ4(uint8_t *array, std::size_t length, uint8_
     	}
     	else
     	{
-    		/*
-    		std::cerr << "SDRdaemonBuffer::writeAndReadLZ4: decoding error:"
-    				<< " read: " << compressedSize
-					<< " expected: " << m_lz4InSize
-					<< " out: " << m_lz4OutSize
-					<< std::endl;*/
+//    		std::cerr << "SDRdaemonBuffer::writeAndReadLZ4: decoding error:"
+//    				<< " read: " << compressedSize
+//					<< " expected: " << m_lz4InSize
+//					<< " out: " << m_lz4OutSize
+//					<< std::endl;
 
     		//if (compressedSize > 0)
     		//{

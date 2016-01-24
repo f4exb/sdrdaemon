@@ -108,7 +108,12 @@ void UDPSinkLZ4::udpSend()
 	uint32_t nbCompleteBlocks = m_sendMeta.m_nbBytes / m_udpSize;
 	uint32_t nbRemainderBytes = m_sendMeta.m_nbBytes % m_udpSize;
 
-	m_socket.SendDataGram((const void *) &m_sendMeta, (int) m_udpSize, m_address, m_port);
+	uint64_t dataCRC = m_crc64.calculate_crc(m_outputBuffer, m_sendMeta.m_nbBytes);
+	//uint64_t dataCRC = 0x0123456789ABCDEFL;
+
+	memcpy((void *) m_buf, (const void *) &m_sendMeta, sizeof(MetaData));
+	memcpy((void *) &m_buf[sizeof(MetaData)], (const void *) &dataCRC, 8);
+	m_socket.SendDataGram((const void *) m_buf, (int) m_udpSize, m_address, m_port);
 
 	for (unsigned int i = 0; i < nbCompleteBlocks; i++)
 	{
@@ -144,12 +149,13 @@ void UDPSinkLZ4::updateSizes(MetaData *metaData)
 		delete[] m_outputBuffer;
 	}
 
-	m_outputBuffer = new uint8_t[m_maxOutputSize];
+	m_outputBuffer = new uint8_t[m_maxOutputSize + 8]; // reserve 8 bytes for CRC64
 }
 
 uint32_t UDPSinkLZ4::compressInput()
 {
 	uint32_t compSize  = LZ4_compress((const char *) m_inputBuffer, (char *) m_outputBuffer, m_hardBlockSize * m_inputBlockCount);
+
 //	uint32_t compSizeU = LZ4_decompress_fast((const char*) m_outputBuffer, (char*) m_inputBuffer, m_hardBlockSize * m_inputBlockCount);
 //
 //	if (compSize != compSizeU)
@@ -160,7 +166,7 @@ uint32_t UDPSinkLZ4::compressInput()
 //			<< std::endl;
 //	}
 
-	return compSize;
+	return compSize; // add CRC
 }
 
 void UDPSinkLZ4::printMeta(MetaData *metaData)

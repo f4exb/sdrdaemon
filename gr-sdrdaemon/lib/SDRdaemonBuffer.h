@@ -89,6 +89,9 @@ private:
     uint32_t m_lz4OutSize;            //!< Size in bytes of the LZ4 output data (original uncomressed data)
     uint32_t m_nbDecodes;
     uint32_t m_nbSuccessfulDecodes;
+    uint32_t m_nbCRCOK;
+    uint64_t m_dataCRC;
+
 };
 
 #endif /* GR_SDRDAEMON_LIB_SDRDAEMONBUFFER_H_ */

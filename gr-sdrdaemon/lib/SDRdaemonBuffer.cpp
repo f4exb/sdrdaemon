@@ -30,9 +30,14 @@ SDRdaemonBuffer::SDRdaemonBuffer(std::size_t blockSize) :
 	m_lz4(false),
 	m_lz4InBuffer(0),
 	m_lz4InCount(0),
-	m_lz4InSize(0)
+	m_lz4InSize(0),
+	m_lz4OutBuffer(0),
+	m_lz4OutSize(0),
+	m_nbDecodes(0),
+	m_nbSuccessfulDecodes(0)
 {
 	m_buf = new uint8_t[blockSize];
+	m_currentMeta.init();
 }
 
 SDRdaemonBuffer::~SDRdaemonBuffer()
@@ -48,8 +53,14 @@ bool SDRdaemonBuffer::writeAndRead(uint8_t *array, std::size_t length, uint8_t *
 	if (m_crc64.calculate_crc(array, sizeof(MetaData) - 8) == metaData->m_crc)
 	{
 		dataLength = 0;
-		std::cerr << "SDRdaemonBuffer::writeAndRead: ";
-		printMeta(metaData);
+
+		if (!(m_currentMeta == *metaData))
+		{
+			std::cerr << "SDRdaemonBuffer::writeAndRead: ";
+			printMeta(metaData);
+		}
+
+		m_currentMeta = *metaData;
 
 		// sanity checks
 		if (metaData->m_blockSize == m_blockSize) // sent blocksize matches given blocksize
@@ -71,7 +82,6 @@ bool SDRdaemonBuffer::writeAndRead(uint8_t *array, std::size_t length, uint8_t *
 			m_sync = false;
 		}
 
-		m_currentMeta = *metaData;
 		return false;
 	}
 	else
@@ -108,8 +118,55 @@ bool SDRdaemonBuffer::writeAndReadLZ4(uint8_t *array, std::size_t length, uint8_
     else
     {
         std::memcpy((void *) &m_lz4InBuffer[m_lz4InCount], (const void *) array, m_lz4InSize - m_lz4InCount); // copy rest of data in compressed Buffer
-    	std::memcpy((void *) data, (const void *) m_lz4InBuffer, m_lz4InSize); // send what is in buffer
-    	dataLength = m_lz4InSize;
+        m_lz4InCount += length;
+    }
+
+    if (m_lz4InCount >= m_lz4InSize) // full input compressed block retrieved
+    {
+        if (m_nbDecodes == 100)
+        {
+        	std::cerr << "SDRdaemonBuffer::writeAndReadLZ4: decoding: " << m_nbSuccessfulDecodes << "/" <<  m_nbDecodes << std::endl;
+
+        	m_nbDecodes = 0;
+        	m_nbSuccessfulDecodes = 0;
+        }
+
+        int compressedSize = LZ4_decompress_fast((const char*) m_lz4InBuffer, (char*) m_lz4OutBuffer, m_lz4OutSize);
+        m_nbDecodes++;
+
+    	if (compressedSize == m_lz4InSize)
+    	{
+    		/*
+    		std::cerr << "SDRdaemonBuffer::writeAndReadLZ4: decoding OK:"
+    				<< " read: " << compressedSize
+					<< " expected: " << m_lz4InSize
+					<< " out: " << m_lz4OutSize
+					<< std::endl;
+            */
+    		std::memcpy((void *) data, (const void *) m_lz4OutBuffer, m_lz4OutSize); // send what is in buffer
+        	dataLength = m_lz4OutSize;
+        	m_nbSuccessfulDecodes++;
+    	}
+    	else
+    	{
+    		/*
+    		std::cerr << "SDRdaemonBuffer::writeAndReadLZ4: decoding error:"
+    				<< " read: " << compressedSize
+					<< " expected: " << m_lz4InSize
+					<< " out: " << m_lz4OutSize
+					<< std::endl;*/
+
+    		//if (compressedSize > 0)
+    		//{
+				std::memcpy((void *) data, (const void *) m_lz4OutBuffer, m_lz4OutSize); // send what is in buffer
+				dataLength = m_lz4OutSize;
+    		//}
+    		//else
+    		//{
+    		//	dataLength = 0;
+    		//}
+    	}
+
 		m_lz4InCount = 0;
     }
 
@@ -118,17 +175,29 @@ bool SDRdaemonBuffer::writeAndReadLZ4(uint8_t *array, std::size_t length, uint8_
 
 void SDRdaemonBuffer::updateSizes(MetaData *metaData)
 {
-	if (m_currentMeta.m_nbBytes != metaData->m_nbBytes)
+	m_lz4InSize = metaData->m_nbBytes; // compressed input size
+	uint32_t sampleBytes = metaData->m_sampleBytes & 0x0F;
+	uint32_t originalSize = sampleBytes * 2 * metaData->m_nbSamples * metaData->m_nbBlocks;
+
+	if (originalSize != m_lz4OutSize)
 	{
-		m_lz4InSize = metaData->m_nbBytes;
+		uint32_t masInputSize = LZ4_compressBound(originalSize);
 
 		if (m_lz4InBuffer) {
 			delete[] m_lz4InBuffer;
 		}
 
 		m_lz4InBuffer = new uint8_t[m_lz4InSize]; // provide extra space for a full UDP block
-		m_lz4InCount = 0;
+
+		if (m_lz4OutBuffer) {
+			delete[] m_lz4OutBuffer;
+		}
+
+		m_lz4OutBuffer = new uint8_t[originalSize];
+		m_lz4OutSize = originalSize;
 	}
+
+	m_lz4InCount = 0;
 }
 
 

@@ -27,7 +27,9 @@ UDPSinkLZ4::UDPSinkLZ4(const std::string& address, unsigned int port, unsigned i
 		m_hardBlockSize(0),
 		m_maxInputBlocks(0),
 		m_inputBlockCount(0),
-		m_inputBuffer(0)
+		m_inputBuffer(0),
+		m_maxOutputSize(0),
+		m_outputBuffer(0)
 {
 	m_currentMeta.init();
 }
@@ -36,6 +38,10 @@ UDPSinkLZ4::~UDPSinkLZ4()
 {
 	if (m_inputBuffer) {
 		delete[] m_inputBuffer;
+	}
+
+	if (m_outputBuffer) {
+		delete[] m_outputBuffer;
 	}
 }
 
@@ -62,7 +68,7 @@ void UDPSinkLZ4::write(const IQSampleVector& samples_in)
 			m_sendMeta = m_currentMeta;
 			m_sendMeta.m_sampleBytes = 0x10 + (m_sendMeta.m_sampleBytes & 0x0F); // add LZ4 indicator
 			m_sendMeta.m_nbBlocks = m_inputBlockCount;
-			m_sendMeta.m_nbBytes = m_inputBlockCount * m_hardBlockSize;
+			m_sendMeta.m_nbBytes = compressInput();
 			m_sendMeta.m_crc = m_crc64.calculate_crc((uint8_t *) &m_sendMeta, sizeof(MetaData) - 8);
 
 			udpSend();
@@ -85,7 +91,7 @@ void UDPSinkLZ4::write(const IQSampleVector& samples_in)
 		m_sendMeta = m_currentMeta;
 		m_sendMeta.m_sampleBytes = 0x10 + (m_sendMeta.m_sampleBytes & 0x0F); // add LZ4 indicator
 		m_sendMeta.m_nbBlocks = m_inputBlockCount;
-		m_sendMeta.m_nbBytes = m_inputBlockCount * m_hardBlockSize;
+		m_sendMeta.m_nbBytes = compressInput();
 		m_sendMeta.m_crc = m_crc64.calculate_crc((uint8_t *) &m_sendMeta, sizeof(MetaData) - 8);
 
 		udpSend();
@@ -106,12 +112,12 @@ void UDPSinkLZ4::udpSend()
 
 	for (unsigned int i = 0; i < nbCompleteBlocks; i++)
 	{
-		m_socket.SendDataGram((const void *) &m_inputBuffer[i*m_udpSize], (int) m_udpSize, m_address, m_port);
+		m_socket.SendDataGram((const void *) &m_outputBuffer[i*m_udpSize], (int) m_udpSize, m_address, m_port);
 	}
 
 	if (nbRemainderBytes > 0)
 	{
-		memcpy((void *) m_buf, (const void *) &m_inputBuffer[nbCompleteBlocks*m_udpSize], nbRemainderBytes);
+		memcpy((void *) m_buf, (const void *) &m_outputBuffer[nbCompleteBlocks*m_udpSize], nbRemainderBytes);
 		m_socket.SendDataGram((const void *) m_buf, (int) m_udpSize, m_address, m_port);
 	}
 }
@@ -131,6 +137,30 @@ void UDPSinkLZ4::updateSizes(MetaData *metaData)
 	}
 
 	m_inputBuffer = new uint8_t[m_hardBlockSize * m_maxInputBlocks];
+
+	m_maxOutputSize = LZ4_compressBound(m_hardBlockSize * m_maxInputBlocks);
+
+	if (m_outputBuffer) {
+		delete[] m_outputBuffer;
+	}
+
+	m_outputBuffer = new uint8_t[m_maxOutputSize];
+}
+
+uint32_t UDPSinkLZ4::compressInput()
+{
+	uint32_t compSize  = LZ4_compress((const char *) m_inputBuffer, (char *) m_outputBuffer, m_hardBlockSize * m_inputBlockCount);
+//	uint32_t compSizeU = LZ4_decompress_fast((const char*) m_outputBuffer, (char*) m_inputBuffer, m_hardBlockSize * m_inputBlockCount);
+//
+//	if (compSize != compSizeU)
+//	{
+//		std::cerr << "UDPSinkLZ4::compressInput: error"
+//			<< " compSize: " << compSize
+//			<< " compSizeU: " << compSizeU
+//			<< std::endl;
+//	}
+
+	return compSize;
 }
 
 void UDPSinkLZ4::printMeta(MetaData *metaData)

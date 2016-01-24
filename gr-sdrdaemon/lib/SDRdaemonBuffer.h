@@ -47,6 +47,21 @@ public:
 		uint32_t m_tv_sec;            //!< seconds of timestamp at start time of frame processing
 		uint32_t m_tv_usec;           //!< microseconds of timestamp at start time of frame processing
 		uint64_t m_crc;               //!< 64 bit CRC of the above
+
+		bool operator==(const MetaData& rhs)
+		{
+		    return (memcmp((const void *) this, (const void *) &rhs, 20) == 0); // Only the 20 first bytes are relevant (critical)
+		}
+
+		void init()
+		{
+			memset((void *) this, 0, sizeof(MetaData));
+		}
+
+		void operator=(const MetaData& rhs)
+		{
+			memcpy((void *) this, (const void *) &rhs, sizeof(MetaData));
+		}
 	};
 #pragma pack(pop)
 
@@ -67,9 +82,13 @@ private:
 	CRC64 m_crc64;           //!< CRC64 calculator
 	uint8_t *m_buf;          //!< UDP block buffer
 
-    uint8_t *m_lz4InBuffer;           //!< Buffer for LZ4 compressed input dataLength
+    uint8_t *m_lz4InBuffer;           //!< Buffer for LZ4 compressed input
     uint32_t m_lz4InCount;            //!< Current position in LZ4 input buffer
     uint32_t m_lz4InSize;             //!< Size in bytes of the LZ4 input data
+    uint8_t *m_lz4OutBuffer;          //!< Buffer for LZ4 uncompressed output
+    uint32_t m_lz4OutSize;            //!< Size in bytes of the LZ4 output data (original uncomressed data)
+    uint32_t m_nbDecodes;
+    uint32_t m_nbSuccessfulDecodes;
 };
 
 #endif /* GR_SDRDAEMON_LIB_SDRDAEMONBUFFER_H_ */

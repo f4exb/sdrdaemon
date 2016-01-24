@@ -27,6 +27,7 @@ class UDPSinkLZ4 : public UDPSink
 public:
 	UDPSinkLZ4(const std::string& address, unsigned int port, unsigned int udpSize, unsigned int minFrameSize);
 	virtual ~UDPSinkLZ4();
+	uint32_t compressInput();
 	virtual void write(const IQSampleVector& samples_in);
 
 private:
@@ -41,6 +42,8 @@ private:
     uint32_t m_maxInputBlocks;  //!< maximum number of input blocks to satisfy the minimum frame size
     uint32_t m_inputBlockCount; //!< current count of input blocks in the input frame
     uint8_t  *m_inputBuffer;    //!< input data frame buffer
+    uint32_t m_maxOutputSize;   //!< Maximum compressed output size
+    uint8_t  *m_outputBuffer;   //!< Output compressed data buffer
 };
 
 #endif /* INCLUDE_UDPSINKLZ4_H_ */

@@ -757,7 +757,7 @@
     </param>
     <param>
       <key>const</key>
-      <value>2.0/(1&lt;&lt;(samp_bits))</value>
+      <value>2.0/(1&lt;&lt;16)</value>
     </param>
     <param>
       <key>affinity</key>

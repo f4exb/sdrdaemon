@@ -24,7 +24,8 @@ void Decimators::decimate2_inf(unsigned int& sampleSize, const IQSampleVector& i
 	std::size_t len = in.size();
 	out.resize(len/2);
 	IQSampleVector::iterator it = out.begin();
-	unsigned int decimation_shift = (sampleSize < 15 ? 0 : sampleSize - 15);
+	unsigned int trunk_shift = (sampleSize < 15 ? 0 : sampleSize - 15); // trunk to keep 16 bits (shift right)
+	unsigned int norm_shift  = (sampleSize < 15 ? 15 - sampleSize : 0); // shift to normalize to 16 bits (shift left)
 
 	std::int32_t xreal, yimag;
 
@@ -32,17 +33,17 @@ void Decimators::decimate2_inf(unsigned int& sampleSize, const IQSampleVector& i
 	{
 		xreal = in[pos+0].real() - in[pos+1].imag();
 		yimag = in[pos+0].imag() + in[pos+1].real();
-        it->setReal(xreal >> decimation_shift);
-        it->setImag(yimag >> decimation_shift);
+        it->setReal(xreal << norm_shift >> trunk_shift);
+        it->setImag(yimag << norm_shift >> trunk_shift);
         ++it;
         xreal =  in[pos+3].imag() - in[pos+2].real();
         yimag = -in[pos+2].imag() - in[pos+3].real();
-        it->setReal(xreal >> decimation_shift);
-        it->setImag(yimag >> decimation_shift);
+        it->setReal(xreal << norm_shift >> trunk_shift);
+        it->setImag(yimag << norm_shift >> trunk_shift);
         ++it;
 	}
 
-	sampleSize += (1 - decimation_shift);
+	sampleSize += (1 - trunk_shift);
 }
 
 /** double byte samples to double byte samples decimation by 2 high band */
@@ -51,7 +52,8 @@ void Decimators::decimate2_sup(unsigned int& sampleSize, const IQSampleVector& i
 	std::size_t len = in.size();
 	out.resize(len/2);
 	IQSampleVector::iterator it = out.begin();
-	unsigned int decimation_shift = (sampleSize < 15 ? 0 : sampleSize - 15);
+	unsigned int trunk_shift = (sampleSize < 15 ? 0 : sampleSize - 15); // trunk to keep 16 bits (shift right)
+	unsigned int norm_shift  = (sampleSize < 15 ? 15 - sampleSize : 0); // shift to normalize to 16 bits (shift left)
 
 	std::int32_t xreal, yimag;
 
@@ -59,17 +61,17 @@ void Decimators::decimate2_sup(unsigned int& sampleSize, const IQSampleVector& i
 	{
 		xreal =  in[pos+0].imag() - in[pos+1].real();
 		yimag = -in[pos+0].real() - in[pos+1].imag();
-        it->setReal(xreal >> decimation_shift);
-        it->setImag(yimag >> decimation_shift);
+        it->setReal(xreal << norm_shift >> trunk_shift);
+        it->setImag(yimag << norm_shift >> trunk_shift);
         ++it;
         xreal = in[pos+3].real() - in[pos+2].imag();
         yimag = in[pos+2].real() + in[pos+3].imag();
-        it->setReal(xreal >> decimation_shift);
-        it->setImag(yimag >> decimation_shift);
+        it->setReal(xreal << norm_shift >> trunk_shift);
+        it->setImag(yimag << norm_shift >> trunk_shift);
         ++it;
 	}
 
-	sampleSize += (1 - decimation_shift);
+	sampleSize += (1 - trunk_shift);
 }
 
 /** double byte samples to double byte samples decimation by 2 centered */
@@ -78,7 +80,8 @@ void Decimators::decimate2_cen(unsigned int& sampleSize, const IQSampleVector& i
 	std::size_t len = in.size();
 	out.resize(len/2);
 	IQSampleVector::iterator it = out.begin();
-	unsigned int decimation_shift = (sampleSize < 15 ? 0 : sampleSize - 15);
+	unsigned int trunk_shift = (sampleSize < 15 ? 0 : sampleSize - 15); // trunk to keep 16 bits (shift right)
+	unsigned int norm_shift  = (sampleSize < 15 ? 15 - sampleSize : 0); // shift to normalize to 16 bits (shift left)
 	int32_t intbuf[2];
 
 	for (unsigned int pos = 0; pos < len - 1; pos += 2)
@@ -92,12 +95,12 @@ void Decimators::decimate2_cen(unsigned int& sampleSize, const IQSampleVector& i
 				&intbuf[0],
 				&intbuf[1]);
 
-		it->setReal(intbuf[0] >> decimation_shift);
-		it->setImag(intbuf[1] >> decimation_shift);
+		it->setReal(intbuf[0] << norm_shift >> trunk_shift);
+		it->setImag(intbuf[1] << norm_shift >> trunk_shift);
 		++it;
 	}
 
-	sampleSize += (1 - decimation_shift);
+	sampleSize += (1 - trunk_shift);
 }
 
 /** double byte samples to double byte samples decimation by 4 low band
@@ -110,7 +113,8 @@ void Decimators::decimate4_inf(unsigned int& sampleSize, const IQSampleVector& i
 	std::size_t len = in.size();
 	out.resize(len/4);
 	IQSampleVector::iterator it = out.begin();
-	unsigned int decimation_shift = (sampleSize < 14 ? 0 : sampleSize - 14);
+	unsigned int trunk_shift = (sampleSize < 14 ? 0 : sampleSize - 14); // trunk to keep 16 bits (shift right)
+	unsigned int norm_shift  = (sampleSize < 14 ? 14 - sampleSize : 0); // shift to normalize to 16 bits (shift left)
 
 	std::int32_t xreal, yimag;
 
@@ -118,12 +122,12 @@ void Decimators::decimate4_inf(unsigned int& sampleSize, const IQSampleVector& i
 	{
 		xreal = in[pos+0].real() - in[pos+1].imag() + in[pos+3].imag() - in[pos+2].real();
 		yimag = in[pos+0].imag() - in[pos+2].imag() + in[pos+1].real() - in[pos+3].real();
-        it->setReal(xreal >> decimation_shift);
-        it->setImag(yimag >> decimation_shift);
+        it->setReal(xreal << norm_shift >> trunk_shift);
+        it->setImag(yimag << norm_shift >> trunk_shift);
         ++it;
 	}
 
-	sampleSize += (2 - decimation_shift);
+	sampleSize += (2 - trunk_shift);
 }
 
 /** double byte samples to double byte samples decimation by 4 high band */
@@ -132,7 +136,8 @@ void Decimators::decimate4_sup(unsigned int& sampleSize, const IQSampleVector& i
 	std::size_t len = in.size();
 	out.resize(len/4);
 	IQSampleVector::iterator it = out.begin();
-	unsigned int decimation_shift = (sampleSize < 14 ? 0 : sampleSize - 14);
+	unsigned int trunk_shift = (sampleSize < 14 ? 0 : sampleSize - 14); // trunk to keep 16 bits (shift right)
+	unsigned int norm_shift  = (sampleSize < 14 ? 14 - sampleSize : 0); // shift to normalize to 16 bits (shift left)
 
 	std::int32_t xreal, yimag;
 
@@ -140,12 +145,12 @@ void Decimators::decimate4_sup(unsigned int& sampleSize, const IQSampleVector& i
 	{
 		xreal =  in[pos+0].imag() - in[pos+1].real() - in[pos+2].imag() + in[pos+3].real();
 		yimag = -in[pos+0].real() - in[pos+1].imag() + in[pos+2].real() + in[pos+3].imag();
-        it->setReal(xreal >> decimation_shift);
-        it->setImag(yimag >> decimation_shift);
+        it->setReal(xreal << norm_shift >> trunk_shift);
+        it->setImag(yimag << norm_shift >> trunk_shift);
         ++it;
 	}
 
-	sampleSize += (2 - decimation_shift);
+	sampleSize += (2 - trunk_shift);
 }
 
 /** double byte samples to double byte samples decimation by 4 centered */
@@ -154,7 +159,8 @@ void Decimators::decimate4_cen(unsigned int& sampleSize, const IQSampleVector& i
 	std::size_t len = in.size();
 	out.resize(len/4);
 	IQSampleVector::iterator it = out.begin();
-	unsigned int decimation_shift = (sampleSize < 14 ? 0 : sampleSize - 14);
+	unsigned int trunk_shift = (sampleSize < 14 ? 0 : sampleSize - 14); // trunk to keep 16 bits (shift right)
+	unsigned int norm_shift  = (sampleSize < 14 ? 14 - sampleSize : 0); // shift to normalize to 16 bits (shift left)
 	int32_t intbuf[4];
 
 	for (unsigned int pos = 0; pos < len - 3; pos += 4)
@@ -182,12 +188,12 @@ void Decimators::decimate4_cen(unsigned int& sampleSize, const IQSampleVector& i
 				&intbuf[2],
 				&intbuf[3]);
 
-		it->setReal(intbuf[2] >> decimation_shift);
-		it->setImag(intbuf[3] >> decimation_shift);
+		it->setReal(intbuf[2] << norm_shift >> trunk_shift);
+		it->setImag(intbuf[3] << norm_shift >> trunk_shift);
 		++it;
 	}
 
-	sampleSize += (2 - decimation_shift);
+	sampleSize += (2 - trunk_shift);
 }
 
 /** double byte samples to double byte samples decimation by 8 low band */
@@ -196,7 +202,8 @@ void Decimators::decimate8_inf(unsigned int& sampleSize, const IQSampleVector& i
 	std::size_t len = in.size();
 	out.resize(len/8);
 	IQSampleVector::iterator it = out.begin();
-	unsigned int decimation_shift = (sampleSize < 13 ? 0 : sampleSize - 13);
+	unsigned int trunk_shift = (sampleSize < 13 ? 0 : sampleSize - 13); // trunk to keep 16 bits (shift right)
+	unsigned int norm_shift  = (sampleSize < 13 ? 13 - sampleSize : 0); // shift to normalize to 16 bits (shift left)
 
 	std::int32_t xreal[2], yimag[2];
 
@@ -208,12 +215,12 @@ void Decimators::decimate8_inf(unsigned int& sampleSize, const IQSampleVector& i
 		xreal[1] = in[pos+0].real() - in[pos+1].imag() + in[pos+3].imag() - in[pos+2].real();
 		yimag[1] = in[pos+0].imag() - in[pos+2].imag() + in[pos+1].real() - in[pos+3].real();
 		m_decimator2.myDecimate(xreal[0], yimag[0], &xreal[1], &yimag[1]);
-        it->setReal(xreal[1] >> decimation_shift);
-        it->setImag(yimag[1] >> decimation_shift);
+        it->setReal(xreal[1] << norm_shift >> trunk_shift);
+        it->setImag(yimag[1] << norm_shift >> trunk_shift);
         ++it;
 	}
 
-	sampleSize += (3 - decimation_shift);
+	sampleSize += (3 - trunk_shift);
 }
 
 /** double byte samples to double byte samples decimation by 8 high band */
@@ -222,7 +229,8 @@ void Decimators::decimate8_sup(unsigned int& sampleSize, const IQSampleVector& i
 	std::size_t len = in.size();
 	out.resize(len/8);
 	IQSampleVector::iterator it = out.begin();
-	unsigned int decimation_shift = (sampleSize < 13 ? 0 : sampleSize - 13);
+	unsigned int trunk_shift = (sampleSize < 13 ? 0 : sampleSize - 13); // trunk to keep 16 bits (shift right)
+	unsigned int norm_shift  = (sampleSize < 13 ? 13 - sampleSize : 0); // shift to normalize to 16 bits (shift left)
 
 	std::int32_t xreal[2], yimag[2];
 
@@ -234,12 +242,12 @@ void Decimators::decimate8_sup(unsigned int& sampleSize, const IQSampleVector& i
 		xreal[1] =  in[pos+0].imag() - in[pos+1].real() - in[pos+2].imag() + in[pos+3].real();
 		yimag[1] = -in[pos+0].real() - in[pos+1].imag() + in[pos+2].real() + in[pos+3].imag();
 		m_decimator2.myDecimate(xreal[0], yimag[0], &xreal[1], &yimag[1]);
-        it->setReal(xreal[1] >> decimation_shift);
-        it->setImag(yimag[1] >> decimation_shift);
+        it->setReal(xreal[1] << norm_shift >> trunk_shift);
+        it->setImag(yimag[1] << norm_shift >> trunk_shift);
         ++it;
 	}
 
-	sampleSize += (3 - decimation_shift);
+	sampleSize += (3 - trunk_shift);
 }
 
 /** double byte samples to double byte samples decimation by 8 centered */
@@ -248,7 +256,8 @@ void Decimators::decimate8_cen(unsigned int& sampleSize, const IQSampleVector& i
 	std::size_t len = in.size();
 	out.resize(len/8);
 	IQSampleVector::iterator it = out.begin();
-	unsigned int decimation_shift = (sampleSize < 13 ? 0 : sampleSize - 13);
+	unsigned int trunk_shift = (sampleSize < 13 ? 0 : sampleSize - 13); // trunk to keep 16 bits (shift right)
+	unsigned int norm_shift  = (sampleSize < 13 ? 13 - sampleSize : 0); // shift to normalize to 16 bits (shift left)
 	int32_t intbuf[8];
 
 	for (unsigned int pos = 0; pos < len - 7; pos += 8)
@@ -300,12 +309,12 @@ void Decimators::decimate8_cen(unsigned int& sampleSize, const IQSampleVector& i
 				&intbuf[6],
 				&intbuf[7]);
 
-		it->setReal(intbuf[6] >> decimation_shift);
-		it->setImag(intbuf[7] >> decimation_shift);
+		it->setReal(intbuf[6] << norm_shift >> trunk_shift);
+		it->setImag(intbuf[7] << norm_shift >> trunk_shift);
 		++it;
 	}
 
-	sampleSize += (3 - decimation_shift);
+	sampleSize += (3 - trunk_shift);
 }
 
 /** double byte samples to double byte samples decimation by 16 low band */
@@ -314,7 +323,8 @@ void Decimators::decimate16_inf(unsigned int& sampleSize, const IQSampleVector& 
 	std::size_t len = in.size();
 	out.resize(len/16);
 	IQSampleVector::iterator it = out.begin();
-	unsigned int decimation_shift = (sampleSize < 12 ? 0 : sampleSize - 12);
+	unsigned int trunk_shift = (sampleSize < 12 ? 0 : sampleSize - 12); // trunk to keep 16 bits (shift right)
+	unsigned int norm_shift  = (sampleSize < 12 ? 12 - sampleSize : 0); // shift to normalize to 16 bits (shift left)
 
 	std::int32_t xreal[4], yimag[4];
 
@@ -332,12 +342,12 @@ void Decimators::decimate16_inf(unsigned int& sampleSize, const IQSampleVector& 
 
 		m_decimator4.myDecimate(xreal[1], yimag[1], &xreal[3], &yimag[3]);
 
-		it->setReal(xreal[3] >> decimation_shift);
-        it->setImag(yimag[3] >> decimation_shift);
+		it->setReal(xreal[3] << norm_shift >> trunk_shift);
+        it->setImag(yimag[3] << norm_shift >> trunk_shift);
         ++it;
 	}
 
-	sampleSize += (4 - decimation_shift);
+	sampleSize += (4 - trunk_shift);
 }
 
 /** double byte samples to double byte samples decimation by 16 high band */
@@ -346,7 +356,8 @@ void Decimators::decimate16_sup(unsigned int& sampleSize, const IQSampleVector& 
 	std::size_t len = in.size();
 	out.resize(len/16);
 	IQSampleVector::iterator it = out.begin();
-	unsigned int decimation_shift = (sampleSize < 12 ? 0 : sampleSize - 12);
+	unsigned int trunk_shift = (sampleSize < 12 ? 0 : sampleSize - 12); // trunk to keep 16 bits (shift right)
+	unsigned int norm_shift  = (sampleSize < 12 ? 12 - sampleSize : 0); // shift to normalize to 16 bits (shift left)
 
 	std::int32_t xreal[4], yimag[4];
 
@@ -364,12 +375,12 @@ void Decimators::decimate16_sup(unsigned int& sampleSize, const IQSampleVector& 
 
 		m_decimator4.myDecimate(xreal[1], yimag[1], &xreal[3], &yimag[3]);
 
-		it->setReal(xreal[3] >> decimation_shift);
-        it->setImag(yimag[3] >> decimation_shift);
+		it->setReal(xreal[3] << norm_shift >> trunk_shift);
+        it->setImag(yimag[3] << norm_shift >> trunk_shift);
         ++it;
 	}
 
-	sampleSize += (4 - decimation_shift);
+	sampleSize += (4 - trunk_shift);
 }
 
 /** double byte samples to double byte samples decimation by 16 centered */
@@ -378,7 +389,8 @@ void Decimators::decimate16_cen(unsigned int& sampleSize, const IQSampleVector& 
 	std::size_t len = in.size();
 	out.resize(len/16);
 	IQSampleVector::iterator it = out.begin();
-	unsigned int decimation_shift = (sampleSize < 12 ? 0 : sampleSize - 12);
+	unsigned int trunk_shift = (sampleSize < 12 ? 0 : sampleSize - 12); // trunk to keep 16 bits (shift right)
+	unsigned int norm_shift  = (sampleSize < 12 ? 12 - sampleSize : 0); // shift to normalize to 16 bits (shift left)
 	int32_t intbuf[16];
 
 	for (unsigned int pos = 0; pos < len - 15; pos += 16)
@@ -479,12 +491,12 @@ void Decimators::decimate16_cen(unsigned int& sampleSize, const IQSampleVector& 
 				&intbuf[14],
 				&intbuf[15]);
 
-		it->setReal(intbuf[14] >> decimation_shift);
-		it->setImag(intbuf[15] >> decimation_shift);
+		it->setReal(intbuf[14] << norm_shift >> trunk_shift);
+		it->setImag(intbuf[15] << norm_shift >> trunk_shift);
 		++it;
 	}
 
-	sampleSize += (4 - decimation_shift);
+	sampleSize += (4 - trunk_shift);
 }
 
 /** double byte samples to double byte samples decimation by 32 low band */
@@ -493,7 +505,8 @@ void Decimators::decimate32_inf(unsigned int& sampleSize, const IQSampleVector& 
 	std::size_t len = in.size();
 	out.resize(len/32);
 	IQSampleVector::iterator it = out.begin();
-	unsigned int decimation_shift = (sampleSize < 11 ? 0 : sampleSize - 11);
+	unsigned int trunk_shift = (sampleSize < 11 ? 0 : sampleSize - 11); // trunk to keep 16 bits (shift right)
+	unsigned int norm_shift  = (sampleSize < 11 ? 11 - sampleSize : 0); // shift to normalize to 16 bits (shift left)
 
 	std::int32_t xreal[8], yimag[8];
 
@@ -516,12 +529,12 @@ void Decimators::decimate32_inf(unsigned int& sampleSize, const IQSampleVector& 
 
 		m_decimator8.myDecimate(xreal[3], yimag[3], &xreal[7], &yimag[7]);
 
-		it->setReal(xreal[7] >> decimation_shift);
-        it->setImag(yimag[7] >> decimation_shift);
+		it->setReal(xreal[7] << norm_shift >> trunk_shift);
+        it->setImag(yimag[7] << norm_shift >> trunk_shift);
         ++it;
 	}
 
-	sampleSize += (5 - decimation_shift);
+	sampleSize += (5 - trunk_shift);
 }
 
 /** double byte samples to double byte samples decimation by 32 high band */
@@ -530,7 +543,8 @@ void Decimators::decimate32_sup(unsigned int& sampleSize, const IQSampleVector& 
 	std::size_t len = in.size();
 	out.resize(len/32);
 	IQSampleVector::iterator it = out.begin();
-	unsigned int decimation_shift = (sampleSize < 11 ? 0 : sampleSize - 11);
+	unsigned int trunk_shift = (sampleSize < 11 ? 0 : sampleSize - 11); // trunk to keep 16 bits (shift right)
+	unsigned int norm_shift  = (sampleSize < 11 ? 11 - sampleSize : 0); // shift to normalize to 16 bits (shift left)
 
 	std::int32_t xreal[8], yimag[8];
 
@@ -553,12 +567,12 @@ void Decimators::decimate32_sup(unsigned int& sampleSize, const IQSampleVector& 
 
 		m_decimator8.myDecimate(xreal[3], yimag[3], &xreal[7], &yimag[7]);
 
-		it->setReal(xreal[7] >> decimation_shift);
-        it->setImag(yimag[7] >> decimation_shift);
+		it->setReal(xreal[7] << norm_shift >> trunk_shift);
+        it->setImag(yimag[7] << norm_shift >> trunk_shift);
         ++it;
 	}
 
-	sampleSize += (5 - decimation_shift);
+	sampleSize += (5 - trunk_shift);
 }
 
 /** double byte samples to double byte samples decimation by 32 centered */
@@ -567,7 +581,8 @@ void Decimators::decimate32_cen(unsigned int& sampleSize, const IQSampleVector& 
 	std::size_t len = in.size();
 	out.resize(len/32);
 	IQSampleVector::iterator it = out.begin();
-	unsigned int decimation_shift = (sampleSize < 11 ? 0 : sampleSize - 11);
+	unsigned int trunk_shift = (sampleSize < 11 ? 0 : sampleSize - 11); // trunk to keep 16 bits (shift right)
+	unsigned int norm_shift  = (sampleSize < 11 ? 11 - sampleSize : 0); // shift to normalize to 16 bits (shift left)
 	int32_t intbuf[32];
 
 	for (unsigned int pos = 0; pos < len - 31; pos += 32)
@@ -765,12 +780,12 @@ void Decimators::decimate32_cen(unsigned int& sampleSize, const IQSampleVector& 
 				&intbuf[30],
 				&intbuf[31]);
 
-		it->setReal(intbuf[30] >> decimation_shift);
-		it->setImag(intbuf[31] >> decimation_shift);
+		it->setReal(intbuf[30] << norm_shift >> trunk_shift);
+		it->setImag(intbuf[31] << norm_shift >> trunk_shift);
 		++it;
 	}
 
-	sampleSize += (5 - decimation_shift);
+	sampleSize += (5 - trunk_shift);
 }
 
 /** double byte samples to double byte samples decimation by 64 low band */
@@ -779,7 +794,8 @@ void Decimators::decimate64_inf(unsigned int& sampleSize, const IQSampleVector& 
 	std::size_t len = in.size();
 	out.resize(len/64);
 	IQSampleVector::iterator it = out.begin();
-	unsigned int decimation_shift = (sampleSize < 10 ? 0 : sampleSize - 10);
+	unsigned int trunk_shift = (sampleSize < 10 ? 0 : sampleSize - 10); // trunk to keep 16 bits (shift right)
+	unsigned int norm_shift  = (sampleSize < 10 ? 10 - sampleSize : 0); // shift to normalize to 16 bits (shift left)
 
 	std::int32_t xreal[16], yimag[16];
 
@@ -811,12 +827,12 @@ void Decimators::decimate64_inf(unsigned int& sampleSize, const IQSampleVector& 
 
 		m_decimator16.myDecimate(xreal[7], yimag[7], &xreal[15], &yimag[15]);
 
-		it->setReal(xreal[15] >> decimation_shift);
-        it->setImag(yimag[15] >> decimation_shift);
+		it->setReal(xreal[15] << norm_shift >> trunk_shift);
+        it->setImag(yimag[15] << norm_shift >> trunk_shift);
         ++it;
 	}
 
-	sampleSize += (6 - decimation_shift);
+	sampleSize += (6 - trunk_shift);
 }
 
 /** double byte samples to double byte samples decimation by 64 high band */
@@ -825,7 +841,8 @@ void Decimators::decimate64_sup(unsigned int& sampleSize, const IQSampleVector& 
 	std::size_t len = in.size();
 	out.resize(len/64);
 	IQSampleVector::iterator it = out.begin();
-	unsigned int decimation_shift = (sampleSize < 10 ? 0 : sampleSize - 10);
+	unsigned int trunk_shift = (sampleSize < 10 ? 0 : sampleSize - 10); // trunk to keep 16 bits (shift right)
+	unsigned int norm_shift  = (sampleSize < 10 ? 10 - sampleSize : 0); // shift to normalize to 16 bits (shift left)
 
 	std::int32_t xreal[16], yimag[16];
 
@@ -857,12 +874,12 @@ void Decimators::decimate64_sup(unsigned int& sampleSize, const IQSampleVector& 
 
 		m_decimator16.myDecimate(xreal[7], yimag[7], &xreal[15], &yimag[15]);
 
-		it->setReal(xreal[15] >> decimation_shift);
-        it->setImag(yimag[15] >> decimation_shift);
+		it->setReal(xreal[15] << norm_shift >> trunk_shift);
+        it->setImag(yimag[15] << norm_shift >> trunk_shift);
         ++it;
 	}
 
-	sampleSize += (6 - decimation_shift);
+	sampleSize += (6 - trunk_shift);
 }
 
 /** double byte samples to double byte samples decimation by 64 centered */
@@ -871,7 +888,8 @@ void Decimators::decimate64_cen(unsigned int& sampleSize, const IQSampleVector& 
 	std::size_t len = in.size();
 	out.resize(len/64);
 	IQSampleVector::iterator it = out.begin();
-	unsigned int decimation_shift = (sampleSize < 10 ? 0 : sampleSize - 10);
+	unsigned int trunk_shift = (sampleSize < 10 ? 0 : sampleSize - 10); // trunk to keep 16 bits (shift right)
+	unsigned int norm_shift  = (sampleSize < 10 ? 10 - sampleSize : 0); // shift to normalize to 16 bits (shift left)
 	int32_t intbuf[64];
 
 	for (unsigned int pos = 0; pos < len - 63; pos += 64)
@@ -1262,10 +1280,10 @@ void Decimators::decimate64_cen(unsigned int& sampleSize, const IQSampleVector& 
 				&intbuf[62],
 				&intbuf[63]);
 
-		it->setReal(intbuf[62] >> decimation_shift);
-		it->setImag(intbuf[63] >> decimation_shift);
+		it->setReal(intbuf[62] << norm_shift >> trunk_shift);
+		it->setImag(intbuf[63] << norm_shift >> trunk_shift);
 		++it;
 	}
 
-	sampleSize += (6 - decimation_shift);
+	sampleSize += (6 - trunk_shift);
 }

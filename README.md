@@ -336,7 +336,7 @@ The block of "meta" data consists of the following (values expressed in bytes):
     </tr>
     <tr>
         <td>20</td>
-        <td>4=2</td>
+        <td>2</td>
         <td>unsigned integer</td>
         <td>Number of hardware blocks in the frame</td>
     </tr>
@@ -363,6 +363,12 @@ The block of "meta" data consists of the following (values expressed in bytes):
         <td>8</td>
         <td>unsigned integer</td>
         <td>64 bit CRC of the above</td>
+    </tr>
+    <tr>
+        <td>42</td>
+        <td>8</td>
+        <td>unsigned integer</td>
+        <td>64 bit CRC of the data that follows. Only in the compressed case for now.</td>
     </tr>
 </table>
 

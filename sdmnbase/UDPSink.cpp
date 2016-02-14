@@ -22,7 +22,7 @@ UDPSink::UDPSink(const std::string& address, unsigned int port, unsigned int udp
         m_address(address),
 		m_port(port),
 		m_udpSize(udpSize),
-		m_centerFrequency(100000000),
+		m_centerFrequency(100000),
 		m_sampleRate(48000),
 		m_sampleBytes(1),
 		m_sampleBits(8),

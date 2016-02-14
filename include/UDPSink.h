@@ -34,7 +34,7 @@ public:
 	struct MetaData
 	{
         // critical data
-		uint64_t m_centerFrequency;   //!< center frequency in Hz
+		uint32_t m_centerFrequency;   //!< center frequency in kHz
 		uint32_t m_sampleRate;        //!< sample rate in Hz
 		uint8_t  m_sampleBytes;       //!< MSB(4): indicators, LSB(4) number of bytes per sample
 		uint8_t  m_sampleBits;        //!< number of effective bits per sample
@@ -89,8 +89,12 @@ public:
         return ret;
     }
 
-    void setCenterFrequency(uint64_t centerFrequency) { m_centerFrequency = centerFrequency; }
+    /** Set center frequency given in Hz */
+    void setCenterFrequency(uint64_t centerFrequency) { m_centerFrequency = centerFrequency / 1000; }
+
+    /** Set sample rate given in Hz */
     void setSampleRate(uint32_t sampleRate) { m_sampleRate = sampleRate; }
+
     void setSampleBytes(uint8_t sampleBytes) { m_sampleBytes = (sampleBytes & 0x0F) + (m_sampleBytes & 0xF0); }
     void setSampleBits(uint8_t sampleBits) { m_sampleBits = sampleBits; }
 
@@ -106,7 +110,7 @@ protected:
 	unsigned int m_udpSize; //!< Size of UDP block in number of samples
     std::string  m_error;
 
-    uint64_t     m_centerFrequency;   //!< center frequency in Hz
+    uint32_t     m_centerFrequency;   //!< center frequency in kHz
     uint32_t     m_sampleRate;        //!< sample rate in Hz
     uint8_t      m_sampleBytes;       //!< number of bytes per sample
     uint8_t      m_sampleBits;        //!< number of effective bits per sample

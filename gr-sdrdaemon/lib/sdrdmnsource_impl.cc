@@ -147,7 +147,7 @@ int sdrdmn_source_impl::get_port(void)
 
 int sdrdmn_source_impl::get_center_freq_khz()
 {
-	return d_sdrdmnbuf.getCurrentMeta().m_centerFrequency / 1000;
+	return d_sdrdmnbuf.getCurrentMeta().m_centerFrequency;
 }
 
 int sdrdmn_source_impl::get_sample_rate_hz()

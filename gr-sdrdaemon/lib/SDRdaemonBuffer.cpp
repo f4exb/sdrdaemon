@@ -71,7 +71,7 @@ bool SDRdaemonBuffer::writeAndRead(uint8_t *array, std::size_t length, uint8_t *
 			if (metaData->m_sampleBytes & 0x10)
 			{
 				m_lz4 = true;
-				updateSizes(metaData);
+				updateLZ4Sizes(metaData);
 			}
 			else
 			{
@@ -188,7 +188,7 @@ bool SDRdaemonBuffer::writeAndReadLZ4(uint8_t *array, std::size_t length, uint8_
     return dataLength != 0;
 }
 
-void SDRdaemonBuffer::updateSizes(MetaData *metaData)
+void SDRdaemonBuffer::updateLZ4Sizes(MetaData *metaData)
 {
 	m_lz4InSize = metaData->m_nbBytes; // compressed input size
 	uint32_t sampleBytes = metaData->m_sampleBytes & 0x0F;

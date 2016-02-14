@@ -72,7 +72,7 @@ public:
 
 private:
 	bool writeAndReadLZ4(uint8_t *array, std::size_t length, uint8_t *data, std::size_t& dataLength);
-	void updateSizes(MetaData *metaData);
+	void updateLZ4Sizes(MetaData *metaData);
     void printMeta(MetaData *metaData);
 
 	std::size_t m_blockSize; //!< UDP block (payload) size

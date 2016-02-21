@@ -134,6 +134,8 @@ void usage()
             "  -D port        Data port. Samples are sent on this UDP port (default 9090)\n"
             "  -C port        Configuration port (default 9091). The configuration string as described below\n"
             "                 is sent on this port via 0MQ (Zero-MQ) in TCP to control the device\n"
+    		"  -z minBytes    Compress stream using LZ4 with a minimum block size in bytes of minBytes.\n"
+    		"                 The actual block size is adjusted to the next integer frame size.\n"
             "\n"
             "Configuration options for the decimator:\n"
             "  decim=<int>    log2 of decimation factor (default 0: no decimation)\n"

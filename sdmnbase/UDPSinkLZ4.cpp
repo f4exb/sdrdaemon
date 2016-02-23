@@ -83,8 +83,6 @@ void UDPSinkLZ4::write(const IQSampleVector& samples_in)
 
 		std::cerr << "UDPSinkLZ4::write: changed meta: ";
 		printMeta(metaData);
-
-		m_currentMeta = *metaData;
 	}
 	else if (m_inputBlockCount == m_maxInputBlocks) // input buffer is full so send it
 	{
@@ -97,6 +95,11 @@ void UDPSinkLZ4::write(const IQSampleVector& samples_in)
 		udpSend();
 
 		m_inputBlockCount = 0;
+	}
+
+	if (m_inputBlockCount == 0)
+	{
+		m_currentMeta = *metaData;
 	}
 
 	memcpy((void *) &m_inputBuffer[m_inputBlockCount*m_hardBlockSize], (const void *) &samples_in[0], m_hardBlockSize);

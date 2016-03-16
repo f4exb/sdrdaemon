@@ -37,10 +37,18 @@
 #include "UDPSinkLZ4.h"
 #include "MovingAverage.h"
 
-#include "RtlSdrSource.h"
-#include "HackRFSource.h"
-#include "AirspySource.h"
-#include "BladeRFSource.h"
+#ifdef HAS_RTLSDR
+    #include "RtlSdrSource.h"
+#endif
+#ifdef HAS_HACKRF
+    #include "HackRFSource.h"
+#endif
+#ifdef HAS_AIRSPY
+    #include "AirspySource.h"
+#endif
+#ifdef HAS_BLADERF
+    #include "BladeRFSource.h"
+#endif
 #include "TestSource.h"
 #include "include/SDRDaemon.h"
 
@@ -121,10 +129,18 @@ void usage()
     fprintf(stderr,
     "Usage: sdrdaemon [options]\n"
             "  -t devtype     Device type:\n"
+#ifdef HAS_RTLSDR
             "                   - rtlsdr:  RTL-SDR devices\n"
+#endif
+#ifdef HAS_HACKRF
             "                   - hackrf:  HackRF One or Jawbreaker\n"
+#endif
+#ifdef HAS_AIRSPY
             "                   - airspy:  Airspy\n"
+#endif
+#ifdef HAS_BLADERF
             "                   - bladerf: BladeRF\n"
+#endif
             "                   - test:    Test signal generator (CW carrier)\n"
             "  -c config      Startup configuration. Comma separated key=value configuration pairs\n"
             "                 or just key for switches. See below for valid values\n"
@@ -144,6 +160,7 @@ void usage()
             "                   - 1: Supradyne\n"
             "                   - 2: Centered\n"
             "\n"
+#ifdef HAS_RTLSDR
             "Configuration options for RTL-SDR devices\n"
             "  freq=<int>     Frequency of radio station in Hz (default 100000000)\n"
             "                 valid values: 10M to 2.2G (working range depends on device)\n"
@@ -156,6 +173,8 @@ void usage()
             "  ppmn=<int>     Set LO correction in negative PPM (default 0)\n"
             "  agc            Enable RTL AGC mode (default disabled)\n"
             "\n"
+#endif
+#ifdef HAS_HACKRF
             "Configuration options for HackRF devices\n"
             "  freq=<int>     Frequency of radio station in Hz (default 100000000)\n"
             "                 valid values: 1M to 6G\n"
@@ -169,6 +188,8 @@ void usage()
             "  extamp         Enable extra RF amplifier (default disabled)\n"
             "  antbias        Enable antemma bias (default disabled)\n"
             "\n"
+#endif
+#ifdef HAS_AIRSPY
             "Configuration options for Airspy devices\n"
             "  freq=<int>     Frequency of radio station in Hz (default 100000000)\n"
             "                 valid values: 24M to 1.8G\n"
@@ -183,6 +204,8 @@ void usage()
             "  lagc           Enable LNA AGC (default disabled)\n"
             "  magc           Enable mixer AGC (default disabled)\n"
             "\n"
+#endif
+#ifdef HAS_BLADERF
             "Configuration options for BladeRF devices\n"
             "  freq=<int>     Frequency of radio station in Hz (default 300000000)\n"
             "                 valid values (with XB200): 100k to 3.8G\n"
@@ -193,6 +216,7 @@ void usage()
             "  v1gain=<int>   VGA1 gain in dB. 'list' to just get a list of valid values: (default 20)\n"
             "  v2gain=<int>   VGA2 gain in dB. 'list' to just get a list of valid values: (default 9)\n"
             "\n"
+#endif
             "Configuration options for the test signal generator\n"
             "  freq=<int>     Center frequency sent in meta data in Hz (default 435000000)\n"
             "  srate=<int>    IF sample rate in Hz. Valid values: 8k to 10M (default 5000000)\n"
@@ -231,30 +255,57 @@ bool parse_int(const char *s, int& v, bool allow_unit=false)
 
 static bool get_device(std::vector<std::string> &devnames, std::string& devtype, Source **srcsdr, int devidx)
 {
+    bool deviceDefined = false;
+#ifdef HAS_RTLSDR
     if (strcasecmp(devtype.c_str(), "rtlsdr") == 0)
     {
         RtlSdrSource::get_device_names(devnames);
+        deviceDefined = true;
     }
-    else if (strcasecmp(devtype.c_str(), "hackrf") == 0)
+#endif
+#ifdef HAS_HACKRF
+    if (strcasecmp(devtype.c_str(), "hackrf") == 0)
     {
         HackRFSource::get_device_names(devnames);
+        deviceDefined = true;
     }
-    else if (strcasecmp(devtype.c_str(), "airspy") == 0)
+#endif
+#ifdef HAS_AIRSPY
+    if (strcasecmp(devtype.c_str(), "airspy") == 0)
     {
         AirspySource::get_device_names(devnames);
+        deviceDefined = true;
     }
-    else if (strcasecmp(devtype.c_str(), "bladerf") == 0)
+#endif
+#ifdef HAS_BLADERF
+    if (strcasecmp(devtype.c_str(), "bladerf") == 0)
     {
         BladeRFSource::get_device_names(devnames);
+        deviceDefined = true;
     }
-    else if (strcasecmp(devtype.c_str(), "test") == 0)
+#endif
+    if (strcasecmp(devtype.c_str(), "test") == 0)
     {
         TestSource::get_device_names(devnames);
+        deviceDefined = true;
     }
-    else
+
+    if (!deviceDefined)
     {
         fprintf(stderr, "ERROR: wrong device type (-t option) must be one of the following:\n");
-        fprintf(stderr, "       rtlsdr, hackrf, airspy, bladerf\n");
+#ifdef HAS_RTLSDR
+        fprintf(stderr, "       rtlsdr\n");
+#endif
+#ifdef HAS_HACKRF
+        fprintf(stderr, "       hackrf\n");
+#endif
+#ifdef HAS_AIRSPY
+        fprintf(stderr, "       airspy\n");
+#endif
+#ifdef HAS_BLADERF
+        fprintf(stderr, "       bladerf\n");
+#endif
+        fprintf(stderr, "       test\n");
         return false;
     }
 
@@ -277,27 +328,35 @@ static bool get_device(std::vector<std::string> &devnames, std::string& devtype,
 
     fprintf(stderr, "using device %d: %s\n", devidx, devnames[devidx].c_str());
 
+#ifdef HAS_RTLSDR
     if (strcasecmp(devtype.c_str(), "rtlsdr") == 0)
     {
         // Open RTL-SDR device.
         *srcsdr = new RtlSdrSource(devidx);
     }
-    else if (strcasecmp(devtype.c_str(), "hackrf") == 0)
+#endif
+#ifdef HAS_HACKRF
+    if (strcasecmp(devtype.c_str(), "hackrf") == 0)
     {
         // Open HackRF device.
         *srcsdr = new HackRFSource(devidx);
     }
-    else if (strcasecmp(devtype.c_str(), "airspy") == 0)
+#endif
+#ifdef HAS_AIRSPY
+    if (strcasecmp(devtype.c_str(), "airspy") == 0)
     {
         // Open Airspy device.
         *srcsdr = new AirspySource(devidx);
     }
-    else if (strcasecmp(devtype.c_str(), "bladerf") == 0)
+#endif
+#ifdef HAS_BLADERF
+    if (strcasecmp(devtype.c_str(), "bladerf") == 0)
     {
         // Open BladeRF device.
         *srcsdr = new BladeRFSource(devnames[devidx].c_str());
     }
-    else if (strcasecmp(devtype.c_str(), "test") == 0)
+#endif
+    if (strcasecmp(devtype.c_str(), "test") == 0)
     {
         // Open test device.
         *srcsdr = new TestSource(0);

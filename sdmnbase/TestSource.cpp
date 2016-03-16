@@ -35,13 +35,15 @@ TestSource::TestSource(int dev_index) :
     m_dev(dev_index),
     m_block_length(default_block_length),
     m_thread(0),
+    m_carrierOffset(100000),
 	m_phase(0.0),
 	m_freq(435000000),
 	m_srate(5000000),
 	m_amplitude(1.0)
 {
     m_this = this;
-    m_deltaPhase = getDeltaPhase(100000);
+    m_confFreq = 435000000; // default frequency center position in Source.h is centered
+    m_deltaPhase = getDeltaPhase(m_carrierOffset, m_srate);
 }
 
 
@@ -53,8 +55,9 @@ TestSource::~TestSource()
 
 bool TestSource::configure(parsekv::pairs_type& m)
 {
-    uint32_t sample_rate = 1000000;
+    uint32_t sample_rate = m_srate;
     uint32_t frequency = m_confFreq;
+    int32_t carrierOffset = m_carrierOffset;
     float deltaPhase = m_deltaPhase;
     float amplitude = 1.0;
     int block_length =  default_block_length;
@@ -67,20 +70,20 @@ bool TestSource::configure(parsekv::pairs_type& m)
 		std::cerr << "TestSource::configure(m): srate: " << m["srate"] << std::endl;
 		sample_rate = atoi(m["srate"].c_str());
 
-		if ((sample_rate < 225001)
-				|| ((sample_rate > 300000) && (sample_rate < 900001))
-				|| (sample_rate > 3200000))
+		if ((sample_rate < 8000) || (sample_rate > 10000000))
 		{
 			m_error = "Invalid sample rate";
 			return false;
 		}
+
+        deltaPhase = getDeltaPhase(carrierOffset, sample_rate);
 
 		changeFlags |= 0x5; // change delta phase and sample rate
 
         if (m_fcPos != 2)
         {
             changeFlags |= 0x2; // need to adjust actual center frequency if not centered
-        }        
+        }
 	}
 
 	if (m.find("freq") != m.end())
@@ -88,7 +91,7 @@ bool TestSource::configure(parsekv::pairs_type& m)
 		std::cerr << "TestSource::configure(m): freq: " << m["freq"] << std::endl;
 		frequency = atoi(m["freq"].c_str());
 
-		if ((frequency < 10000000) || (frequency > 2200000000))
+		if ((frequency < 10000) || (frequency > 9999999000))
 		{
 			m_error = "Invalid frequency";
 			return false;
@@ -102,14 +105,14 @@ bool TestSource::configure(parsekv::pairs_type& m)
 		std::cerr << "TestSource::configure(m): dfp: " << m["dfp"] << std::endl;
 		int32_t carrierOffset = atoi(m["dfp"].c_str());
 
-		if ((carrierOffset > (int32_t) m_srate/2) || (carrierOffset < 0))
+		if ((carrierOffset > (int32_t) sample_rate/2) || (carrierOffset < 0))
 		{
 			m_error = "Invalid positive carrier offset";
 			return false;
 		}
 		else
 		{
-			deltaPhase = getDeltaPhase(carrierOffset);
+			deltaPhase = getDeltaPhase(carrierOffset, sample_rate);
 		}
 
 		dfp = true;
@@ -121,14 +124,14 @@ bool TestSource::configure(parsekv::pairs_type& m)
 		std::cerr << "TestSource::configure(m): dfn: " << m["dfn"] << std::endl;
 		int32_t carrierOffset = atoi(m["dfn"].c_str());
 
-		if ((carrierOffset > (int32_t) m_srate/2) || (carrierOffset < 0))
+		if ((carrierOffset > (int32_t) sample_rate/2) || (carrierOffset < 0))
 		{
 			m_error = "Invalid negative carrier offset";
 			return false;
 		}
 		else
 		{
-			deltaPhase = getDeltaPhase(-carrierOffset);
+			deltaPhase = getDeltaPhase(-carrierOffset, sample_rate);
 		}
 
 		changeFlags |= 0x4;
@@ -205,13 +208,14 @@ bool TestSource::configure(parsekv::pairs_type& m)
 		tuner_freq = frequency;
 	}
 
-	return configure(changeFlags, sample_rate, tuner_freq, deltaPhase, amplitude, block_length);
+	return configure(changeFlags, sample_rate, tuner_freq, carrierOffset, deltaPhase, amplitude, block_length);
 }
 
 // Configure test generator.
 bool TestSource::configure(std::uint32_t changeFlags,
 		std::uint32_t sample_rate,
 		std::uint32_t frequency,
+        std::int32_t carrierOffset,
 		float deltaPhase,
         float amplitude,
         int block_length)
@@ -229,6 +233,7 @@ bool TestSource::configure(std::uint32_t changeFlags,
     if (changeFlags & 0x4)
     {
     	m_deltaPhase = deltaPhase;
+        m_carrierOffset = carrierOffset;
     }
 
     if (changeFlags & 0x8)

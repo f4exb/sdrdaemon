@@ -82,6 +82,7 @@ private:
     bool configure(std::uint32_t changeFlags,
     		       std::uint32_t sample_rate,
                    std::uint32_t frequency,
+                   std::int32_t carrierOffset,
 				   float deltaPhase,
                    float tuner_gain,
                    int block_length=default_block_length);
@@ -97,12 +98,13 @@ private:
     static void run();
     static int read_samples(uint8_t *data, int wantSize, int& getSize, float& phasor, int sampleRate, float deltaPhase, float amplitude);
 
-    float getDeltaPhase(int32_t deltaFrequency) const { return 2.0 * M_PI * ((float) deltaFrequency / m_srate); }
+    float getDeltaPhase(int32_t deltaFrequency, uint32_t sample_rate) const { return 2.0 * M_PI * ((float) deltaFrequency / sample_rate); }
 
     int               m_dev;
     int               m_block_length;
     std::thread       *m_thread;
     static TestSource *m_this;
+    int32_t           m_carrierOffset;
     float             m_phase;
     float             m_deltaPhase;
     uint64_t          m_freq;

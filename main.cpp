@@ -218,7 +218,7 @@ void usage()
             "\n"
 #endif
             "Configuration options for the test signal generator\n"
-            "  freq=<int>     Center frequency sent in meta data in Hz (default 435000000)\n"
+            "  freq=<int>     Center frequency sent in meta data in Hz. Valid values 10k to 10G (default 435000000)\n"
             "  srate=<int>    IF sample rate in Hz. Valid values: 8k to 10M (default 5000000)\n"
             "  dfp=<int>      Positive shift frequency of carrier from center frequency in Hz (default 100000)\n"
             "  dfn=<int>      Negative shift frequency of carrier from center frequency in Hz (default 100000)\n"

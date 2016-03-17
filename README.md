@@ -31,10 +31,10 @@ SDRdaemon requires:
  - LZ4 at least version 131
    - source (https://github.com/Cyan4973/lz4)
    - set custom install prefix with -DLIBLZ4_INSTALL_PREFIX=... on cmake command line
- - RTL-SDR library (http://sdr.osmocom.org/trac/wiki/rtl-sdr)
- - HackRF library (https://github.com/mossmann/hackrf/tree/master/host/libhackrf)
- - Airspy library (https://github.com/airspy/host/tree/master/libairspy)
- - BladeRF library (https://github.com/Nuand/bladeRF/tree/master/host)
+ - RTL-SDR library (http://sdr.osmocom.org/trac/wiki/rtl-sdr) for RTL-SDR support
+ - HackRF library (https://github.com/mossmann/hackrf/tree/master/host/libhackrf) for HackRF support
+ - Airspy library (https://github.com/airspy/host/tree/master/libairspy) for Airspy support
+ - BladeRF library (https://github.com/Nuand/bladeRF/tree/master/host) for BladeRF support
  - supported hardware
  - Python with Zero-MQ support to use the provided control script
  - A computer or embedded device such as the Raspberry Pi 2 to which you connect the hardware.
@@ -56,7 +56,7 @@ Branches:
 
 <h2>Airspy support</h2>
 
-For now Airspy support must be installed even if no Airspy device is connected.
+Airspy support must be installed for SDRdaemon to work with an Airspy device.
 
 If you install from source (https://github.com/airspy/host/tree/master/libairspy) in your own installation path you have to specify the include path and library path. For example if you installed it in `/opt/install/libairspy` you have to add `-DLIBAIRSPY_LIBRARIES=/opt/install/libairspy/lib/libairspy.so -DLIBAIRSPY_INCLUDE_DIR=/opt/install/libairspy/include` to the cmake options.
 
@@ -66,7 +66,7 @@ To install the library from a Debian/Ubuntu installation just do:
 
 <h2>BladeRF support</h2>
 
-For now BladeRF support must be installed even if no Airspy device is connected.
+BladeRF support must be installed for SDRdaemon to work with a BladeRF device.
 
 If you install from source (https://github.com/Nuand/bladeRF) in your own installation path you have to specify the include path and library path. For example if you installed it in `/opt/install/libbladerf` you have to add `-DLIBBLADERF_LIBRARIES=/opt/install/libbladeRF/lib/libbladeRF.so -DLIBBLADERF_INCLUDE_DIR=/opt/install/libbladeRF/include` to the cmake options.
 
@@ -78,7 +78,7 @@ Note: for the BladeRF to work effectively on FM broadcast frequencies you have t
 
 <h2>HackRF support</h2>
 
-For now HackRF support must be installed even if no HackRF device is connected.
+HackRF support must be installed for SDRdaemon to work with a HackRF device.
 
 If you install from source (https://github.com/mossmann/hackrf/tree/master/host/libhackrf) in your own installation path you have to specify the include path and library path. For example if you installed it in `/opt/install/libhackrf` you have to add `-DLIBHACKRF_LIBRARIES=/opt/install/libhackrf/lib/libhackrf.so -DLIBHACKRF_INCLUDE_DIR=/opt/install/libhackrf/include` to the cmake options.
 
@@ -88,7 +88,7 @@ To install the library from a Debian/Ubuntu installation just do:
 
 <h2>RTL-SDR support</h2>
 
-The Osmocom RTL-SDR library must be installed before you can build SDRdaemon.
+The Osmocom RTL-SDR library must be installed before you can use SDRdaemon with a RTL-SDR device.
 See http://sdr.osmocom.org/trac/wiki/rtl-sdr for more information.
 SDRdaemon has been tested successfully with RTL-SDR 0.5.3. Normally your distribution should provide the appropriate librtlsdr package.
 If you go with your own installation of librtlsdr you have to specify the include path and library path. For example if you installed it in `-DLIBRTLSDR_LIBRARIES=/opt/install/librtlsdr/lib/librtlsdr.so -DLIBRTLSDR_INCLUDE_DIR=/opt/install/librtlsdr/include` to the cmake options
@@ -105,12 +105,6 @@ top level directory. Then do like this:
  - `mkdir build`
  - `cd build`
  - `cmake ..`
-
-CMake tries to find librtlsdr. If this fails, you need to specify
-the location of the library in one the following ways:
-
- - `cmake .. -DRTLSDR_INCLUDE_DIR=/path/rtlsdr/include -DRTLSDR_LIBRARY_PATH=/path/rtlsdr/lib/librtlsdr.a`
- - `PKG_CONFIG_PATH=/path/to/rtlsdr/lib/pkgconfig cmake ..`
 
 Compile and install
 
@@ -176,10 +170,22 @@ Typical commands:
       - VGA2 gain: _3 dB_
       - Decimation: 2^_3_ = 8; thus stream sample rate is 400 kHz
       - Position of center frequency: _1_ is supra-dyne (decimation around fc/4)
+  - Test signal source: `./sdrdaemon -t test -I 10.0.2.2 -D 9090 -c power=40,decim=2,srate=500000,dfp=25000`
+    - Destination address for the data is: `192.168.1.3`
+    - Using UDP port `9090` for the data (it is the default anyway)
+    - Carrier relative power is _-40 dB_
+    - Base sample rate is _500 kHz_
+    - Decimation is 2^_2_ = 4; thus stream sample rate is 125 kHz
+    - Carrier frequency shift from the center is _25 kHz_
 
 <h2>All options</h2>
 
- - `-t devtype` is mandatory and must be `rtlsdr` for RTL-SDR devices or `hackrf` for HackRF.
+ - `-t devtype` is mandatory and must be either (depending on support libraries installed): 
+    - `rtlsdr` for RTL-SDR devices 
+    - `hackrf` for HackRF devices
+    - `airspy` for Airspy
+    - `bladerf` for BladeRF
+    - `test` for test signal source (always available)
  - `-c config` Comma separated list of configuration options as key=value pairs or just key for switches. Depends on device type (see next paragraphs).
  - `-d devidx` Device index, 'list' to show device list (default 0)
  - `-r pcmrate` Audio sample rate in Hz (default 48000 Hz)
@@ -250,6 +256,14 @@ Note that these options can be used both as the initial configuration as the arg
   - `lgain=<x>` LNA gain in dB. Valid values are: `0, 3, 6, list`. `list` lists valid values and exits. (default `3`)
   - `v1gain=<x>` VGA1 gain in dB. Valid values are: `5, 6, 7, 8 ,9 ,10, 11 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, list`. `list` lists valid values and exits. (default `20`)  
   - `v2gain=<x>` VGA2 gain in dB. Valid values are: `0, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30, list`. `list` lists valid values and exits. (default `9`)  
+
+<h3>Test</h3>
+
+  - `freq=<int>` Desired center frequency in Hz sent in the meta data. Valid range 10 kHz to 10 GHz exclusive (default `435000000` i.e. 435 MHz).
+  - `srate=<int>` Base sample rate in Hz. Valid range is 8kHZ to 10MHz. (default `5000000` i.e. 5 MS/s).
+  - `power=<int>` Relative power of CW signaler in negative dB (i.e. 40 is -40 dB) (default `0`).
+  - `dfp=<int>` Positive shift frequency of carrier from center frequency in Hz (default `100000` i.e. 100 kHz)
+  - `dfn=<int>` Negative shift frequency of carrier from center frequency in Hz (default `100000` i.e. -100 kHz)
 
 <h2>Dynamic remote control</h2>
 

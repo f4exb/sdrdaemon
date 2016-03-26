@@ -71,8 +71,7 @@ bool parse_int(const char *s, int& v, bool allow_unit=false)
 
 int main(int argc, char **argv)
 {
-    fprintf(stderr,
-            "sdrdmnctl - Send SDRdaemon instance a configuration string for its attached device using nanomsg\n");
+    fprintf(stderr, "sdrdmnctl - Send SDRdaemon instance a configuration string for its attached device using nanomsg\n");
 
     const struct option longopts[] = {
         { "config",     2, NULL, 'c' },
@@ -125,14 +124,16 @@ int main(int argc, char **argv)
     assert(sender != -1);
 
     int millis = timeout * 1000;
-    int rc = nn_setsockopt (sender, NN_SOL_SOCKET, NN_SNDTIMEO,
-                       &millis, sizeof (millis));
+    int rc = nn_setsockopt (sender, NN_SOL_SOCKET, NN_SNDTIMEO, &millis, sizeof (millis));
     assert (rc == 0);
 
 	std::ostringstream os;
 	os << "tcp://" << cmdaddress << ":" << cfgport;
-    rc = nn_connect(sender, os.str().c_str());
+	std::string addrstrng = os.str();
+    rc = nn_connect(sender, addrstrng.c_str());
     assert(rc >= 0);
+
+    std::cerr << "Address: " << addrstrng << "; Config: " << config_str << std::endl;
 
     int config_size = config_str.size();
     rc = nn_send(sender, (void *) config_str.c_str(), config_str.size(), 0);

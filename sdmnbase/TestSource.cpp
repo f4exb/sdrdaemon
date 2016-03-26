@@ -310,17 +310,29 @@ void TestSource::run()
 	std::cerr << "TestSource::run" << std::endl;
 
     IQSampleVector iqsamples;
+    void *msgBuf = 0;
 
     while (!m_this->m_stop_flag->load() && get_samples(&iqsamples))
     {
         m_this->m_buf->push(move(iqsamples));
 
-        if (m_this->m_zmqSocket.recv (&m_this->m_zmqRequest, ZMQ_NOBLOCK))
+        // if (m_this->m_zmqSocket.recv (&m_this->m_zmqRequest, ZMQ_NOBLOCK))
+        // {
+        //     std::size_t msgSize = m_this->m_zmqRequest.size();
+        //     std::string msg((char *) m_this->m_zmqRequest.data(), msgSize);
+        //     std::cerr << "TestSource::run: received: " << msg << std::endl;
+        //     m_this->Source::configure(msg);
+        // }
+
+        int len = nn_recv(m_this->m_nnReceiver, &msgBuf, NN_MSG, NN_DONTWAIT);
+
+        if ((len > 0) && msgBuf)
         {
-            std::size_t msgSize = m_this->m_zmqRequest.size();
-            std::string msg((char *) m_this->m_zmqRequest.data(), msgSize);
+            std::string msg((char *) msgBuf, len);
             std::cerr << "TestSource::run: received: " << msg << std::endl;
             m_this->Source::configure(msg);
+            nn_freemsg(msgBuf);
+            msgBuf = 0;
         }
     }
 }

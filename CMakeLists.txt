@@ -97,7 +97,7 @@ endif(LIBUSB_INCLUDE_DIR AND LIBUSB_LIBRARY)
 pkg_check_modules(PKG_LIBNANOMSG libnanomsg)
 find_path(LIBNANOMSG_INCLUDE_DIR nanomsg/nn.h
           HINT ${PKG_LIBNANOMSG_INCLUDE_DIRS})
-find_library(LIBNANOMSG_LIBRARIES libnanomsg.a
+find_library(LIBNANOMSG_LIBRARIES libnanomsg.so
           HINT ${PKG_LIBNANOMSG_LIBRARIES_DIRS})
 if(LIBNANOMSG_INCLUDE_DIR AND LIBNANOMSG_LIBRARIES)
     set(LIBNANOMSG_FOUND TRUE CACHE INTERNAL "libnanomsg found")
@@ -181,7 +181,11 @@ add_library(sdmntest STATIC
 
 
 add_executable(sdrdaemon
-    main.cpp
+    sdrdaemon.cpp
+)
+
+add_executable(sdrdmnctl
+    sdrdmnctl.cpp
 )
 
 include_directories(
@@ -315,5 +319,15 @@ target_link_libraries(sdrdaemon
     ${EXTRA_LIBS}
 )
 
-install(TARGETS sdrdaemon DESTINATION bin)
+target_include_directories(sdrdmnctl PUBLIC
+    ${LIBNANOMSG_INCLUDE_DIR}
+)
+
+target_link_libraries(sdrdmnctl
+    ${LIBNANOMSG_LIBRARIES}
+    ${CMAKE_THREAD_LIBS_INIT}
+    ${EXTRA_LIBS}
+)
+
+install(TARGETS sdrdaemon sdrdmnctl DESTINATION bin)
 install(TARGETS sdmnbase ${DEVICE_TARGETS} sdmntest DESTINATION lib)

@@ -9,7 +9,7 @@ SDRdaemon
 
 It conveys meta data in the data flow so that the receiving application is informed about parameters essential to render correctly the data coming next such as the sample rate, the number of bytes used for the samples, the number of effective sample bits, the center frequency... (See the "Data format" chapter for detals).
 
-While running the program accepts configuration commands on a TCP port using Zero-MQ messages with a content in the same format as the configuration string given on the command line (See the "Running" chapter for details). This provides a dynamic control of the device or features of the application such as the decimation. A Python script is provided to send such messages.
+While running the program accepts configuration commands on a TCP port using nanomsg messages with a content in the same format as the configuration string given on the command line (See the "Running" chapter for details). This provides a dynamic control of the device or features of the application such as the decimation. A Python script is provided to send such messages.
 
 Hardware supported:
 
@@ -26,8 +26,8 @@ SDRdaemon requires:
 
  - Linux
  - C++11
- - Boost for compilation
- - Zero-MQ
+ - Boost includes only (library is not linked with SDRdaemon)
+ - nanomsg
  - LZ4 at least version 131
    - source (https://github.com/Cyan4973/lz4)
    - set custom install prefix with -DLIBLZ4_INSTALL_PREFIX=... on cmake command line
@@ -36,7 +36,6 @@ SDRdaemon requires:
  - Airspy library (https://github.com/airspy/host/tree/master/libairspy) for Airspy support
  - BladeRF library (https://github.com/Nuand/bladeRF/tree/master/host) for BladeRF support
  - supported hardware
- - Python with Zero-MQ support to use the provided control script
  - A computer or embedded device such as the Raspberry Pi 2 to which you connect the hardware.
 
 For the latest version, see https://github.com/f4exb/SDRdaemon
@@ -52,7 +51,7 @@ Branches:
 
 <h2>Base requirements</h2>
 
-  - `sudo apt-get install cmake pkg-config libusb-1.0-0-dev libasound2-dev libboost-all-dev liblz4-dev libzmq3-dev python-zmq`
+  - `sudo apt-get install cmake pkg-config libusb-1.0-0-dev libasound2-dev libboost-all-dev liblz4-dev libnanomsg-dev`
 
 <h2>Airspy support</h2>
 
@@ -96,6 +95,10 @@ If you go with your own installation of librtlsdr you have to specify the includ
 To install the library from a Debian/Ubuntu installation just do:
 
   - `sudo apt-get install librtlsdr-dev`
+
+<h2>nanomsg custom installation</h2>
+
+If you build nanomsg from source obtained either by git clone or a released source package and install it in your own path (ex: `/opt/install/nanomsg`) you will need to specify the include and library paths like this: `-DLIBNANOMSG_LIBRARIES=/opt/install/nanomsg/lib/libnanomsg.so -DLIBNANOMSG_INCLUDE_DIR=/opt/install/nanomsg/include`
 
 <h1>Installing</h1>
 
@@ -267,19 +270,19 @@ Note that these options can be used both as the initial configuration as the arg
 
 <h2>Dynamic remote control</h2>
 
-SDRdaemon listens on a TCP port (the configuration port) for incoming Zero-MQ messages consisting of a configuration string as described just above. You can use the Python script `zmqclient.py` in the root directory to send such messages. It defaults to the localhost (`127.0.0.1`) and port `9091`. The configuration string is given as the argument of the message `-m` parameter. Example:
+SDRdaemon listens on a TCP port (the configuration port) for incoming nanomsg messages consisting of a configuration string as described just above. You can use the utility `sdrdmnctl` in the bin directory of the installation directory (sits along `sdrdaemon`) to send such messages. It defaults to the localhost (`127.0.0.1`) and port `9091`. The configuration string is given as the `-c` option (same as for `sdrdaemon`). Example:
 
-`python zmqclient.py -I 192.168.1.3 -P 9999 -m frequency=433970000`
+`/opt/install/sdrdaemon/bin/sdrdmnctl -I 192.168.1.3 -C 9999 -c frequency=433970000`
 
 The complete list of options is:
 
   - `-I` IP address (or name defined by the DNS) of the machine hosting SDRdaemon (default `127.0.0.1`).
-  - `-P` TCP port where SDRdaemon listens for configuration commands using Zero-MQ (default: `9091`).
-  - `-m` message string. This is where you specify the configuration as a comma separated list of key=values (default: `freq=100000000`).
+  - `-C` TCP port where SDRdaemon listens for configuration commands using nanomsg (default: `9091`).
+  - `-c` message string. This is where you specify the configuration as a comma separated list of key=values (default: `freq=100000000`).
   - `-t` timeout in seconds. Timeout after which communication with SDRdaemon is abandoned (default: `2`).
   - `-h` online help
 
-The Zero-MQ connection is specified as a paired connection (`ZMQ_PAIR`). The connection can be managed by any program at the convenience of the user as long as the connection type is respected.
+The nanomsg connection is specified as a paired connection (`NN_PAIR`). The connection can be managed by any program at the convenience of the user as long as the connection type is respected.
 
 <h1>Data formats</h1>
 

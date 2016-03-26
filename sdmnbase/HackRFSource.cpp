@@ -559,6 +559,7 @@ bool HackRFSource::start(DataBuffer<IQSample> *buf, std::atomic_bool *stop_flag)
 void HackRFSource::run(hackrf_device* dev, std::atomic_bool *stop_flag)
 {
     std::cerr << "HackRFSource::run" << std::endl;
+    void *msgBuf = 0;
 
     hackrf_error rc = (hackrf_error) hackrf_start_rx(dev, rx_callback, 0);
 
@@ -568,12 +569,15 @@ void HackRFSource::run(hackrf_device* dev, std::atomic_bool *stop_flag)
         {
             sleep(1);
 
-            if (m_this->m_zmqSocket.recv (&m_this->m_zmqRequest, ZMQ_NOBLOCK))
+            int len = nn_recv(m_this->m_nnReceiver, &msgBuf, NN_MSG, NN_DONTWAIT);
+
+            if ((len > 0) && msgBuf)
             {
-                std::size_t msgSize = m_this->m_zmqRequest.size();
-                std::string msg((char *) m_this->m_zmqRequest.data(), msgSize);
+                std::string msg((char *) msgBuf, len);
                 std::cerr << "HackRFSource::run: received: " << msg << std::endl;
                 m_this->Source::configure(msg);
+                nn_freemsg(msgBuf);
+                msgBuf = 0;
             }
         }
 

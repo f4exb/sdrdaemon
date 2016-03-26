@@ -25,8 +25,8 @@ find_package(LZ4 131)
 # Find Airspy library.
 pkg_check_modules(PKG_AIRSPY libairspy)
 find_path(LIBAIRSPY_INCLUDE_DIR airspy.h
-          HINT ${PKG_LIBAIRSPY_INCLUDE_DIRS})
-find_library(LIBAIRSPY_LIBRARIES libairspy.a
+          HINT ${PKG_LIBAIRSPY_INCLUDE_DIR})
+find_library(LIBAIRSPY_LIBRARIES libairspy.so
           HINT ${PKG_LIBAIRSPY_LIBRARIES_DIRS})
 if(LIBAIRSPY_INCLUDE_DIR AND LIBAIRSPY_LIBRARIES)
     set(LIBAIRSPY_FOUND TRUE CACHE INTERNAL "libairspy found")
@@ -54,7 +54,7 @@ endif(LIBBLADERF_INCLUDE_DIR AND LIBBLADERF_LIBRARIES)
 pkg_check_modules(PKG_HACKRF libhackrf)
 find_path(LIBHACKRF_INCLUDE_DIR hackrf.h
           HINT ${PKG_LIBHACKRF_INCLUDE_DIRS})
-find_library(LIBHACKRF_LIBRARIES libhackrf.a
+find_library(LIBHACKRF_LIBRARIES libhackrf.so
           HINT ${PKG_LIBHACKRF_LIBRARIES_DIRS})
 if(LIBHACKRF_INCLUDE_DIR AND LIBHACKRF_LIBRARIES)
     set(LIBHACKRF_FOUND TRUE CACHE INTERNAL "libhackrf found")
@@ -68,7 +68,7 @@ endif(LIBHACKRF_INCLUDE_DIR AND LIBHACKRF_LIBRARIES)
 pkg_check_modules(PKG_RTLSDR librtlsdr)
 find_path(LIBRTLSDR_INCLUDE_DIR rtl-sdr.h
           HINT ${PKG_LIBRTLSDR_INCLUDE_DIRS})
-find_library(LIBRTLSDR_LIBRARIES librtlsdr.a
+find_library(LIBRTLSDR_LIBRARIES librtlsdr.so
           HINT ${PKG_LIBRTLSDR_LIBRARIES_DIRS})
 if(LIBRTLSDR_INCLUDE_DIR AND LIBRTLSDR_LIBRARIES)
     set(LIBRTLSDR_FOUND TRUE CACHE INTERNAL "librtlsdr found")

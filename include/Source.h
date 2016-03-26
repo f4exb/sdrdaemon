@@ -43,8 +43,6 @@ public:
 		m_fcPos(2),
 		m_buf(0),
 		m_downsampler(0)
-		// m_zmqContext(1),
-		// m_zmqSocket(m_zmqContext, ZMQ_PAIR)
     {
         m_nnReceiver = nn_socket(AF_SP, NN_PAIR);
         assert(m_nnReceiver != -1);
@@ -71,9 +69,8 @@ public:
     	std::ostringstream os;
     	os << "tcp://*:" << ctlPort;
 
-      int rc = nn_bind(m_nnReceiver, os.str().c_str());
-      assert(rc >= 0);
-    	//m_zmqSocket.bind (os.str().c_str());
+        int rc = nn_bind(m_nnReceiver, os.str().c_str());
+        assert(rc >= 0);
     }
 
     /**
@@ -134,10 +131,7 @@ protected:
     DataBuffer<IQSample> *m_buf;
     std::atomic_bool     *m_stop_flag;
     Downsampler          *m_downsampler;
-    // zmq::context_t        m_zmqContext;
-    // zmq::socket_t         m_zmqSocket;
-    // zmq::message_t        m_zmqRequest;
-    int m_nnReceiver;
+    int                   m_nnReceiver; //!< nanomsg socket handle
 
 
     /** Configure device and prepare for streaming from parameters map */

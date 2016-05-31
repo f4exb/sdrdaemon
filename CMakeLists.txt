@@ -21,6 +21,7 @@ find_package(Threads)
 find_package(PkgConfig)
 find_package(Boost 1.47)
 find_package(LZ4 131)
+find_package(CM256)
 
 # Find Airspy library.
 pkg_check_modules(PKG_AIRSPY libairspy)
@@ -152,11 +153,43 @@ set(sdmnbase_HEADERS
     include/util.h
 )
 
+set(sdmnfecbase_SOURCES
+    sdmnbase/CRC64.cpp
+    sdmnbase/Decimators.cpp
+    sdmnbase/Downsampler.cpp
+    sdmnbase/IntHalfbandFilter.cpp
+    sdmnbase/Source.cpp
+    sdmnbase/UDPSink.cpp
+    sdmnbase/UDPSinkUncompressed.cpp
+    sdmnbase/UDPSinkLZ4.cpp
+    sdmnbase/UDPSocket.cpp
+)
+
+set(sdmnfecbase_HEADERS
+    include/CRC64.h
+    include/DataBuffer.h
+    include/Decimators.h
+    include/Downsampler.h
+    include/IntHalfbandFilter.h
+    include/parsekv.h
+    include/Source.h
+    include/UDPSink.h
+    include/UDPSinkUncompressed.h
+    include/UDPSinkLZ4.h
+    include/UDPSocket.h
+    include/util.h
+)
+
 # Base sources
 
 set(sdmnbase_SOURCES
     ${sdmnbase_SOURCES}
     ${sdmnbase_HEADERS}
+)
+
+set(sdmnfecbase_SOURCES
+    ${sdmnfecbase_SOURCES}
+    ${sdmnfecbase_HEADERS}
 )
 
 # Test sources
@@ -175,13 +208,20 @@ add_library(sdmnbase STATIC
     ${sdmnbase_SOURCES}
 )
 
+add_library(sdmnfecbase STATIC
+    ${sdmnfecbase_SOURCES}
+)
+
 add_library(sdmntest STATIC
     ${sdmntest_SOURCES}
 )
 
-
 add_executable(sdrdaemon
     sdrdaemon.cpp
+)
+
+add_executable(sdrdaemonfec
+    sdrdaemonfec.cpp
 )
 
 add_executable(sdrdmnctl
@@ -191,6 +231,7 @@ add_executable(sdrdmnctl
 include_directories(
     ${CMAKE_SOURCE_DIR}/include
     ${LIBNANOMSG_INCLUDE_DIR}
+    ${CM256_INCLUDE_DIR}
     ${EXTRA_INCLUDES}
 )
 
@@ -310,9 +351,18 @@ target_link_libraries(sdmntest
 )
 
 target_link_libraries(sdmnbase ${LZ4_LIBRARIES})
+target_link_libraries(sdmnfecbase ${LZ4_LIBRARIES} ${CM256_LIBRARIES})
 
 target_link_libraries(sdrdaemon
     sdmnbase
+    ${DEVICE_LIBRARIES}
+    sdmntest
+    ${CMAKE_THREAD_LIBS_INIT}
+    ${EXTRA_LIBS}
+)
+
+target_link_libraries(sdrdaemonfec
+    sdmnfecbase
     ${DEVICE_LIBRARIES}
     sdmntest
     ${CMAKE_THREAD_LIBS_INIT}
@@ -329,5 +379,5 @@ target_link_libraries(sdrdmnctl
     ${EXTRA_LIBS}
 )
 
-install(TARGETS sdrdaemon sdrdmnctl DESTINATION bin)
-install(TARGETS sdmnbase ${DEVICE_TARGETS} sdmntest DESTINATION lib)
+install(TARGETS sdrdaemon sdrdaemonfec sdrdmnctl DESTINATION bin)
+install(TARGETS sdmnbase sdmnfecbase ${DEVICE_TARGETS} sdmntest DESTINATION lib)

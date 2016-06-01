@@ -160,6 +160,7 @@ set(sdmnfecbase_SOURCES
     sdmnbase/IntHalfbandFilter.cpp
     sdmnbase/Source.cpp
     sdmnbase/UDPSink.cpp
+    sdmnbase/UDPSinkFEC.cpp
     sdmnbase/UDPSinkUncompressed.cpp
     sdmnbase/UDPSinkLZ4.cpp
     sdmnbase/UDPSocket.cpp
@@ -174,6 +175,7 @@ set(sdmnfecbase_HEADERS
     include/parsekv.h
     include/Source.h
     include/UDPSink.h
+    include/UDPSinkFEC.h
     include/UDPSinkUncompressed.h
     include/UDPSinkLZ4.h
     include/UDPSocket.h

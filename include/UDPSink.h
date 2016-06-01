@@ -98,6 +98,8 @@ public:
     void setSampleBytes(uint8_t sampleBytes) { m_sampleBytes = (sampleBytes & 0x0F) + (m_sampleBytes & 0xF0); }
     void setSampleBits(uint8_t sampleBits) { m_sampleBits = sampleBits; }
 
+    virtual void setNbBlocksFEC(int nbBlocksFEC) {};
+
     /** Return true if the stream is OK, return false if there is an error. */
     operator bool() const
     {

@@ -17,6 +17,37 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/Modules)
 
 project (sdrdaemon)
 
+EXECUTE_PROCESS( COMMAND uname -m COMMAND tr -d '\n' OUTPUT_VARIABLE ARCHITECTURE )
+message( STATUS "Architecture: ${ARCHITECTURE}" )
+
+if(${ARCHITECTURE} MATCHES "x86_64|AMD64|x86")
+    SET(USE_SIMD "SSSE3" CACHE STRING "Use SIMD SSSE3 instructions")
+elseif(${ARCHITECTURE} MATCHES "armv7l")
+    SET(USE_SIMD "NEON" CACHE STRING "Use SIMD NEON instructions")
+endif()
+
+if(USE_SIMD MATCHES SSSE3)
+    if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_CLANGXX)
+        set( CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -mssse3" )
+        set( CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -mssse3" )
+        message(STATUS "g++ SSSE3")
+        add_definitions(-DUSE_SIMD)
+    endif()
+elseif(USE_SIMD MATCHES NEON)
+    if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_CLANGXX)
+        set( CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -mfpu=neon" )
+        set( CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -mfpu=neon" )
+        message(STATUS "g++ NEON")
+        add_definitions(-DUSE_NEON)
+    endif()
+endif()
+
+if(USE_SIMD)
+    message(STATUS "SIMD defined")
+else(USE_SIMD)
+    message(STATUS "SIMD not defined")
+endif(USE_SIMD)
+
 find_package(Threads)
 find_package(PkgConfig)
 find_package(Boost 1.47)
@@ -210,10 +241,6 @@ add_library(sdmnbase STATIC
     ${sdmnbase_SOURCES}
 )
 
-add_library(sdmnfecbase STATIC
-    ${sdmnfecbase_SOURCES}
-)
-
 add_library(sdmntest STATIC
     ${sdmntest_SOURCES}
 )
@@ -222,9 +249,15 @@ add_executable(sdrdaemon
     sdrdaemon.cpp
 )
 
-add_executable(sdrdaemonfec
-    sdrdaemonfec.cpp
-)
+if(USE_SIMD)
+    add_library(sdmnfecbase STATIC
+        ${sdmnfecbase_SOURCES}
+    )
+
+    add_executable(sdrdaemonfec
+        sdrdaemonfec.cpp
+    )
+endif(USE_SIMD)
 
 add_executable(sdrdmnctl
     sdrdmnctl.cpp
@@ -353,7 +386,6 @@ target_link_libraries(sdmntest
 )
 
 target_link_libraries(sdmnbase ${LZ4_LIBRARIES})
-target_link_libraries(sdmnfecbase ${LZ4_LIBRARIES} ${CM256_LIBRARIES})
 
 target_link_libraries(sdrdaemon
     sdmnbase
@@ -363,13 +395,17 @@ target_link_libraries(sdrdaemon
     ${EXTRA_LIBS}
 )
 
-target_link_libraries(sdrdaemonfec
-    sdmnfecbase
-    ${DEVICE_LIBRARIES}
-    sdmntest
-    ${CMAKE_THREAD_LIBS_INIT}
-    ${EXTRA_LIBS}
-)
+if(USE_SIMD)
+    target_link_libraries(sdmnfecbase ${LZ4_LIBRARIES} ${CM256_LIBRARIES})
+    
+    target_link_libraries(sdrdaemonfec
+        sdmnfecbase
+        ${DEVICE_LIBRARIES}
+        sdmntest
+        ${CMAKE_THREAD_LIBS_INIT}
+        ${EXTRA_LIBS}
+    )
+endif(USE_SIMD)
 
 target_include_directories(sdrdmnctl PUBLIC
     ${LIBNANOMSG_INCLUDE_DIR}
@@ -381,5 +417,10 @@ target_link_libraries(sdrdmnctl
     ${EXTRA_LIBS}
 )
 
-install(TARGETS sdrdaemon sdrdaemonfec sdrdmnctl DESTINATION bin)
-install(TARGETS sdmnbase sdmnfecbase ${DEVICE_TARGETS} sdmntest DESTINATION lib)
+if(USE_SIMD)
+    install(TARGETS sdrdaemon sdrdaemonfec sdrdmnctl DESTINATION bin)
+    install(TARGETS sdmnbase sdmnfecbase ${DEVICE_TARGETS} sdmntest DESTINATION lib)
+else(USE_SIMD)
+    install(TARGETS sdrdaemon sdrdmnctl DESTINATION bin)
+    install(TARGETS sdmnbase ${DEVICE_TARGETS} sdmntest DESTINATION lib)
+endif(USE_SIMD)

@@ -16,13 +16,46 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.          //
 ///////////////////////////////////////////////////////////////////////////////////
 
+/* Data structure:
+ *
+ * Fi: Frame index (Protected UDP blocks: original+FEC. This frame contains data super-frame)
+ * Bi: Block index (UDP block index in protected UDP blocks)
+ * sF: Sub-frame: 16 I/Q samples (64 bytes) or meta data (first UDP block in protected UDP blocks)
+ * OB: SuperBlock: original block containing a protected block
+ * FB: SuperBlock: FEC block
+ *
+ * One SuperBlock:
+ *
+ * |Fi|Bi|Bi|sF|sF|sF|sF|sF|sF| ....
+ * <--------------------------> SuperBlock
+ *       <--------------------> ProtectedBlock or FEC block
+ *
+ * Complete transmission:
+ *
+ * |OB|OB|OB|...|OB|FB|...|FB| : 128 OBs and 1 to 128 FBs
+ *
+ * 128 Original blocks are protected with 1 to 128 redundancy (FEC) blocks. This constitutes a transmission frame
+ * A transmission frame transmits a data super-frame carried by original blocks
+ * A transmission frame is composed of SuperBlocks that have a frame index. The block index is repeated in the SuperBlock as it is used by the decoder.
+ *   It also serves the purpose of ordering original blocks and therefore is repeated inside the protected block
+ * A data super-frame is composed of 128 data frames
+ * A data frame is transported in a ProtectefBlock
+ * A data frame is composed of 6 sub-frames
+ * A sub-frame is either a meta data frame (first one of a data super-frame) or 16 I/Q 2x2 bytes samples (64 bytes)
+ *
+*/
+
 #ifndef INCLUDE_UDPSINKFEC_H_
 #define INCLUDE_UDPSINKFEC_H_
 
+#include <atomic>
+#include <vector>
+#include <string>
+#include "cm256/cm256.h"
 #include "UDPSink.h"
 
-#define UDPSINKFEC_SUBFRAMESIZE 64
-#define UDPSINKFEC_NBSUBFRAMES 6
+#define UDPSINKFEC_UDPSIZE 512
+#define UDPSINKFEC_NBORIGINALBLOCKS 128
 
 class UDPSinkFEC : public UDPSink
 {
@@ -37,7 +70,7 @@ private:
     struct ProtectedBlock
     {
         uint8_t m_blockIndex;
-        uint8_t m_data[UDPSINKFEC_NBSUBFRAMES * UDPSINKFEC_SUBFRAMESIZE];
+        uint8_t m_data[UDPSINKFEC_UDPSIZE - 4]; //!< data frame designed to make SuperBlock exactly UDPSINKFEC_UDPSIZE bytes
     };
     struct SuperBlock
     {
@@ -45,13 +78,32 @@ private:
         uint8_t        m_blockIndex;
         ProtectedBlock m_protectedBlock;
     };
+    struct MetaDataFEC // This is contained in the first sub-frame of the first frame in a super-frame
+    {
+		uint32_t m_centerFrequency;   //!<  0 center frequency in kHz
+		uint32_t m_sampleRate;        //!<  4 sample rate in Hz
+		uint8_t  m_sampleBytes;       //!<  5 MSB(4): indicators, LSB(4) number of bytes per sample
+		uint8_t  m_sampleBits;        //!<  6 number of effective bits per sample
+		uint8_t  m_nbOriginalBlocks;  //!<  7 number of blocks with original (protected) data
+		uint8_t  m_nbFECBlocks;       //!<  8 number of blocks carrying FEC
+		uint32_t m_tv_sec;            //!<  9 seconds of timestamp at start time of super-frame processing
+		uint32_t m_tv_usec;           //!< 13 microseconds of timestamp at start time of super-frame processing
+		// 17
+    };
 #pragma pack(pop)
 
-    int m_nbBlocksFEC;
+    std::atomic_int m_nbBlocksFEC;
+    SuperBlock m_txBlocks[256];       //!< UDP blocks to send with original data + FEC
+    ProtectedBlock m_fecBlocks[256 - UDPSINKFEC_NBORIGINALBLOCKS];  //!< FEC data
+    int m_txBlockIndex;               //!< Current index in blocks to transmit
+    uint16_t m_frameCount;   //!< transmission frame count
+    int m_sampleIndex;      //!< Current sample index in protected block data
+    int m_nbDataSamples;     //!< Number of data samples in a complete protected block (no meta)
+    cm256_encoder_params m_cm256Params; //!< Main interface with CM256 encoder
+    cm256_block m_descriptorBlocks[256]; //!< Pointers to data for CM256 encoder
+    bool m_cm256Valid;
 
-    static const int m_subFrameSize;
-    static const int m_nbSubFrames;
-    static const int m_frameSize;
+    void transmitUDP();
 };
 
 

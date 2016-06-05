@@ -388,6 +388,7 @@ int main(int argc, char **argv)
     unsigned int outputbuf_samples = 48 * UDPSIZE;
     uint32_t compressedMinSize = 0;
     bool useFec = false;
+    unsigned int nbFECBlocks = 1;
 
     fprintf(stderr,
             "SDRDaemon - Collect samples from SDR device and send it over the network via UDP\n");
@@ -604,6 +605,14 @@ int main(int argc, char **argv)
         }
 
         udp_output->setCenterFrequency(srcsdr->get_received_frequency());
+
+        unsigned int confNbFECBlocks = srcsdr->get_nb_fec_blocks();
+
+        if (confNbFECBlocks != nbFECBlocks)
+        {
+            nbFECBlocks = confNbFECBlocks;
+            udp_output->setNbBlocksFEC(nbFECBlocks);
+        }
 
         // Possible downsampling and write to UDP
 

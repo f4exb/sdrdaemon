@@ -40,6 +40,7 @@ class Source
 public:
     Source() : m_confFreq(0),
 	    m_decim(0),
+	    m_nbFECBlocks(1),
 		m_fcPos(2),
 		m_buf(0),
 		m_downsampler(0)
@@ -95,6 +96,11 @@ public:
         return m_confFreq;
     }
 
+    unsigned int get_nb_fec_blocks() const
+    {
+        return m_nbFECBlocks;
+    }
+
     /** Print current parameters specific to device type */
     virtual void print_specific_parms() = 0;
 
@@ -127,6 +133,7 @@ protected:
     std::string           m_error;
     uint64_t              m_confFreq;
     unsigned int          m_decim;
+    unsigned int          m_nbFECBlocks;
     int                   m_fcPos;
     DataBuffer<IQSample> *m_buf;
     std::atomic_bool     *m_stop_flag;

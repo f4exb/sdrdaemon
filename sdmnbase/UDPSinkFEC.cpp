@@ -141,9 +141,7 @@ void UDPSinkFEC::transmitUDP()
 		m_txBlocks[i+m_cm256Params.OriginalCount].m_protectedBlock = m_fecBlocks[i];
 	}
 
-	// Transmit data via UDP
-	for (int i = 0; i < m_cm256Params.OriginalCount + m_cm256Params.RecoveryCount; i++)
-	{
-		m_socket.SendDataGram((const void *) &m_txBlocks[i*sizeof(SuperBlock)], (int) sizeof(SuperBlock), m_address, m_port);
-	}
+    std::cerr << "UDPSinkFEC::transmitUDP: "
+            << m_cm256Params.OriginalCount << " original blocks "
+            << m_cm256Params.RecoveryCount << " recovery blocks" << std::endl;
 }

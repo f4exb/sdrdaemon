@@ -19,6 +19,8 @@
 #include "Source.h"
 #include "Downsampler.h"
 
+#include <iostream>
+
 bool Source::configure(std::string& configureStr)
 {
     namespace qi = boost::spirit::qi;
@@ -38,6 +40,16 @@ bool Source::configure(std::string& configureStr)
             {
                 fprintf(stderr, "ERROR: downsampler configuration: %s\n", m_downsampler->error().c_str());
                 return false;
+            }
+        }
+
+        if (m.find("fecblk") != m.end())
+        {
+            int nbFECBlocks = atoi(m["fecblk"].c_str());
+
+            if ((nbFECBlocks >= 1) || (nbFECBlocks < 128))
+            {
+                m_nbFECBlocks = nbFECBlocks;
             }
         }
 

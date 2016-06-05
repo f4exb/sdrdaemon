@@ -29,6 +29,7 @@ UDPSinkFEC::UDPSinkFEC(const std::string& address, unsigned int port) :
 {
     m_nbDataSamples = ((UDPSINKFEC_UDPSIZE - 4) / 4);
     m_cm256Valid = (cm256_init() == 0);
+    m_currentMetaFEC.init();
 }
 
 UDPSinkFEC::~UDPSinkFEC()
@@ -62,6 +63,22 @@ void UDPSinkFEC::write(const IQSampleVector& samples_in)
 			memcpy((void *) m_txBlocks[m_txBlockIndex].m_protectedBlock.m_data, (const void *) &metaData, sizeof(MetaDataFEC));
 
 			m_sampleIndex = (sizeof(MetaDataFEC) / m_sampleBytes) + 1;
+
+			if (!(metaData == m_currentMetaFEC))
+			{
+		        std::cerr << "UDPSinkFEC::write: meta: "
+		                << "|" << metaData.m_centerFrequency
+		                << ":" << metaData.m_sampleRate
+		                << ":" << (int) (metaData.m_sampleBytes & 0xF)
+		                << ":" << (int) metaData.m_sampleBits
+		                << "|" << (int) metaData.m_nbOriginalBlocks
+		                << ":" << (int) metaData.m_nbFECBlocks
+		                << "|" << metaData.m_tv_sec
+		                << ":" << metaData.m_tv_usec
+		                << "|" << std::endl;
+
+			    m_currentMetaFEC = metaData;
+			}
 		}
 		else if (m_txBlockIndex == UDPSINKFEC_NBORIGINALBLOCKS) // transmission frame is complete
 		{
@@ -141,7 +158,8 @@ void UDPSinkFEC::transmitUDP()
 		m_txBlocks[i+m_cm256Params.OriginalCount].m_protectedBlock = m_fecBlocks[i];
 	}
 
-    std::cerr << "UDPSinkFEC::transmitUDP: "
-            << m_cm256Params.OriginalCount << " original blocks "
-            << m_cm256Params.RecoveryCount << " recovery blocks" << std::endl;
+    for (int i = 0; i < m_cm256Params.OriginalCount + m_cm256Params.RecoveryCount; i++)
+    {
+        m_socket.SendDataGram((const void *) &m_txBlocks[i], (int) m_udpSize, m_address, m_port);
+    }
 }

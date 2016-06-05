@@ -37,6 +37,8 @@ SDRdaemon requires:
  - BladeRF library (https://github.com/Nuand/bladeRF/tree/master/host) for BladeRF support
  - supported hardware
  - A computer or embedded device such as the Raspberry Pi 2 to which you connect the hardware.
+ 
+To enable the version with FEC (sdrdmnfec executable and libsdrdmnfec) you have to install [my version of CM256](https://github.com/f4exb/cm256). You will then have to specify the include and library paths on the cmake command line. Say if you install cm256 in `/opt/install/cm256` you will have to add `-DCM256_INCLUDE_DIR=/opt/install/cm256/include/cm256 -DCM256_LIBRARIES=/opt/install/cm256/lib/libcm256.so` to the cmake command
 
 For the latest version, see https://github.com/f4exb/SDRdaemon
 

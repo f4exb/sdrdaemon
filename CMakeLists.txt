@@ -28,15 +28,13 @@ endif()
 
 if(USE_SIMD MATCHES SSSE3)
     if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_CLANGXX)
-        set( CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -mssse3" )
-        set( CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -mssse3" )
+        set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mssse3" )
         message(STATUS "g++ SSSE3")
         add_definitions(-DUSE_SIMD)
     endif()
 elseif(USE_SIMD MATCHES NEON)
     if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_CLANGXX)
-        set( CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -mfpu=neon" )
-        set( CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -mfpu=neon" )
+        set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mfpu=neon" )
         message(STATUS "g++ NEON")
         add_definitions(-DUSE_NEON)
     endif()
@@ -155,7 +153,7 @@ set(LIBTEST_INCLUDE_DIRS ${LIBNANOMSG_INCLUDE_DIR})
 set(LIBTEST_LIBRARIES    ${LIBNANOMSG_LIBRARIES})
 
 # Compiler flags.
-set(CMAKE_CXX_FLAGS "-Wall -std=c++11 -O2 -ffast-math -ftree-vectorize ${EXTRA_FLAGS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++11 -O2 -ffast-math -ftree-vectorize ${EXTRA_FLAGS}")
 
 set(sdmnbase_SOURCES
     sdmnbase/CRC64.cpp

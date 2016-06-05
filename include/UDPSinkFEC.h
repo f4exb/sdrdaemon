@@ -51,7 +51,7 @@
 #include <atomic>
 #include <vector>
 #include <string>
-#include "cm256/cm256.h"
+#include "cm256.h"
 #include "UDPSink.h"
 
 #define UDPSINKFEC_UDPSIZE 512

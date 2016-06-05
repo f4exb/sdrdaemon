@@ -21,14 +21,14 @@
 #include "UDPSinkFEC.h"
 
 UDPSinkFEC::UDPSinkFEC(const std::string& address, unsigned int port) :
-    UDPSink::UDPSink(address, port, 512),
+    UDPSink::UDPSink(address, port, UDPSINKFEC_UDPSIZE),
     m_nbBlocksFEC(1),
 	m_txBlockIndex(0),
 	m_frameCount(0),
 	m_sampleIndex(0)
 {
     m_nbDataSamples = ((UDPSINKFEC_UDPSIZE - 4) / 4);
-    m_cm256Valid = (cm256_init() != 0);
+    m_cm256Valid = (cm256_init() == 0);
 }
 
 UDPSinkFEC::~UDPSinkFEC()

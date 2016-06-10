@@ -58,6 +58,21 @@ bool SDRdaemonFECBuffer::writeAndRead(uint8_t *array, std::size_t length, uint8_
     assert(length == udpSize);
 
     SuperBlock *superBlock = (SuperBlock *) array;
+    int frameIndex = superBlock->header.frameIndex;
 
-    return false;
+    if (frameIndex > m_frameHead) // new frame head
+    {
+        m_decoderSlotHead = (m_decoderSlotHead + (frameIndex - m_frameHead)) % nbDecoderSlots;
+        m_frameHead = frameIndex;
+    }
+
+    if (frameIndex - m_frameHead > nbDecoderSlots) // frameIndex - m_frameHead in range ]-slots:0]
+    {
+        int decoderSlotIndex = (m_decoderSlotHead + frameIndex - m_frameHead) % nbDecoderSlots;
+        return false;
+    }
+    else
+    {
+        return false;
+    }
 }

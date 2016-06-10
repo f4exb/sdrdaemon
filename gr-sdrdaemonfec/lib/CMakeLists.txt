@@ -65,11 +65,12 @@ include(GrPlatform) #define LIB_SUFFIX
 include(GrMiscUtils)
 
 add_library(gnuradio-sdrdaemonfec SHARED
-    CRC64.cpp
     SDRdaemonFECBuffer.cpp
     sdrdmnfecsource_impl.cc
 )
-target_link_libraries(gnuradio-sdrdaemonfec ${Boost_LIBRARIES} ${LZ4_LIBRARIES} ${GNURADIO_ALL_LIBRARIES})
+
+target_include_directories(gnuradio-sdrdaemonfec PUBLIC ${CM256_INCLUDE_DIR})
+target_link_libraries(gnuradio-sdrdaemonfec ${Boost_LIBRARIES} ${GNURADIO_ALL_LIBRARIES} ${CM256_LIBRARIES})
 set_target_properties(gnuradio-sdrdaemonfec PROPERTIES DEFINE_SYMBOL "gnuradio_SDRDAEMONFEC_EXPORTS")
 
 ########################################################################

@@ -59,7 +59,7 @@ sdrdmnfec_source_impl::sdrdmnfec_source_impl(size_t itemsize,
 		d_payload_size(payload_size),
 		d_eof(eof),
 		d_connected(false),
-		d_sdrdmnbuf(payload_size),
+		d_sdrdmnbuf(),
 		d_residual(0),
 		d_sent(0),
 		d_offset(0)
@@ -158,12 +158,6 @@ int sdrdmnfec_source_impl::get_sample_rate_hz()
 int sdrdmnfec_source_impl::get_sample_bits()
 {
 	return d_sdrdmnbuf.getCurrentMeta().m_sampleBits;
-}
-
-float sdrdmnfec_source_impl::get_compression_ratio()
-{
-	uint32_t inputBytes = d_sdrdmnbuf.getCurrentMeta().m_nbSamples * d_sdrdmnbuf.getCurrentMeta().m_nbBlocks *  2 * (d_sdrdmnbuf.getCurrentMeta().m_sampleBytes & 0x0F);
-	return (float) d_sdrdmnbuf.getCurrentMeta().m_nbBytes / inputBytes;
 }
 
 void sdrdmnfec_source_impl::start_receive()

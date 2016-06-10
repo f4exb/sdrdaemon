@@ -24,74 +24,103 @@
 
 #include <stdint.h>
 #include <cstddef>
-#include <lz4.h>
-#include "CRC64.h"
+#include "cm256.h"
 
+#define SDRDAEMONFEC_UDPSIZE 512
+#define SDRDAEMONFEC_NBORIGINALBLOCKS 128
+#define SDRDAEMONFEC_NBDECODERSLOTS 4
 
 class SDRdaemonFECBuffer
 {
 public:
 #pragma pack(push, 1)
-	struct MetaData
+	struct MetaDataFEC
 	{
-        // critical data
-		uint32_t m_centerFrequency;   //!< center frequency in kHz
-		uint32_t m_sampleRate;        //!< sample rate in Hz
-		uint8_t  m_sampleBytes;       //!< MSB(4): indicators, LSB(4) number of bytes per sample
-		uint8_t  m_sampleBits;        //!< number of effective bits per sample
-		uint16_t m_blockSize;         //!< payload size
-		uint32_t m_nbSamples;         //!< number of samples in a hardware block
-        // end of critical data
-		uint16_t m_nbBlocks;          //!< number of hardware blocks in the frame
-		uint32_t m_nbBytes;           //!< total number of bytes in the frame
-		uint32_t m_tv_sec;            //!< seconds of timestamp at start time of frame processing
-		uint32_t m_tv_usec;           //!< microseconds of timestamp at start time of frame processing
-		uint64_t m_crc;               //!< 64 bit CRC of the above
+        uint32_t m_centerFrequency;   //!<  4 center frequency in kHz
+        uint32_t m_sampleRate;        //!<  8 sample rate in Hz
+        uint8_t  m_sampleBytes;       //!<  9 MSB(4): indicators, LSB(4) number of bytes per sample
+        uint8_t  m_sampleBits;        //!< 10 number of effective bits per sample
+        uint8_t  m_nbOriginalBlocks;  //!< 11 number of blocks with original (protected) data
+        uint8_t  m_nbFECBlocks;       //!< 12 number of blocks carrying FEC
+        uint32_t m_tv_sec;            //!< 16 seconds of timestamp at start time of super-frame processing
+        uint32_t m_tv_usec;           //!< 20 microseconds of timestamp at start time of super-frame processing
 
-		bool operator==(const MetaData& rhs)
-		{
-		    return (memcmp((const void *) this, (const void *) &rhs, 20) == 0); // Only the 20 first bytes are relevant (critical)
-		}
+        bool operator==(const MetaDataFEC& rhs)
+        {
+            return (memcmp((const void *) this, (const void *) &rhs, 12) == 0); // Only the 12 first bytes are relevant
+        }
 
-		void init()
-		{
-			memset((void *) this, 0, sizeof(MetaData));
-		}
+        void init()
+        {
+            memset((void *) this, 0, sizeof(MetaDataFEC));
+        }
+	};
 
-		void operator=(const MetaData& rhs)
-		{
-			memcpy((void *) this, (const void *) &rhs, sizeof(MetaData));
-		}
+    struct Header
+    {
+        uint16_t frameIndex;
+        uint8_t  blockIndex;
+        uint8_t  filler;
+    };
+
+    struct Sample
+    {
+        uint16_t i;
+        uint16_t q;
+    };
+
+    static const int samplesPerBlock = (SDRDAEMONFEC_UDPSIZE - sizeof(Header)) / sizeof(Sample);
+
+    struct ProtectedBlock
+    {
+        Sample samples[samplesPerBlock];
+    };
+    struct SuperBlock
+    {
+        Header         header;
+        Sample         samples[samplesPerBlock];
+        ProtectedBlock protectedBlock;
+    };
+#pragma pack(pop)
+
+	SDRdaemonFECBuffer();
+	~SDRdaemonFECBuffer();
+
+	/**
+	 * @return: true if data is available
+	 */
+	bool writeAndRead(uint8_t *array, std::size_t length, uint8_t *data, std::size_t& dataLength);
+
+	const MetaDataFEC& getCurrentMeta() const { return m_currentMeta; }
+
+private:
+	static const int samplesPerBlockZero = samplesPerBlock - (sizeof(MetaDataFEC) / sizeof(Sample));
+	static const int udpSize = SDRDAEMONFEC_UDPSIZE;
+	static const int nbOriginalBlocks = SDRDAEMONFEC_NBORIGINALBLOCKS;
+	static const int nbDecoderSlots = SDRDAEMONFEC_NBDECODERSLOTS;
+
+#pragma pack(push, 1)
+	struct BlockZero
+	{
+	    MetaDataFEC m_metaData;
+	    Sample      m_samples[samplesPerBlockZero];
+	};
+
+	struct DecoderSlot
+	{
+	    BlockZero      m_blockZero;
+	    Sample*        m_samplesPtrs[nbOriginalBlocks - 1];
+	    ProtectedBlock recoveryBuffer[nbOriginalBlocks]; // max size
 	};
 #pragma pack(pop)
 
-	SDRdaemonFECBuffer(std::size_t blockSize);
-	~SDRdaemonFECBuffer();
-	bool writeAndRead(uint8_t *array, std::size_t length, uint8_t *data, std::size_t& dataLength);
-	const MetaData& getCurrentMeta() const { return m_currentMeta; }
+    void printMeta(MetaDataFEC *metaData);
 
-private:
-	bool writeAndReadLZ4(uint8_t *array, std::size_t length, uint8_t *data, std::size_t& dataLength);
-	void updateLZ4Sizes(MetaData *metaData);
-    void printMeta(MetaData *metaData);
-
-	std::size_t m_blockSize; //!< UDP block (payload) size
-	bool m_sync;             //!< Meta data acquired (Stream synchronized)
-	bool m_lz4;              //!< Stream is compressed with LZ4
-	MetaData m_currentMeta;  //!< Stored current meta data
-	CRC64 m_crc64;           //!< CRC64 calculator
-	uint8_t *m_buf;          //!< UDP block buffer
-
-    uint8_t *m_lz4InBuffer;           //!< Buffer for LZ4 compressed input
-    uint32_t m_lz4InCount;            //!< Current position in LZ4 input buffer
-    uint32_t m_lz4InSize;             //!< Size in bytes of the LZ4 input data
-    uint8_t *m_lz4OutBuffer;          //!< Buffer for LZ4 uncompressed output
-    uint32_t m_lz4OutSize;            //!< Size in bytes of the LZ4 output data (original uncomressed data)
-    uint32_t m_nbDecodes;
-    uint32_t m_nbSuccessfulDecodes;
-    uint32_t m_nbCRCOK;
-    uint64_t m_dataCRC;
-
+	MetaDataFEC          m_currentMeta;  //!< Stored current meta data
+	cm256_encoder_params m_paramsCM256;
+	DecoderSlot          m_decoderSlots[nbDecoderSlots];
+	int                  m_decoderSlotHead;
+	int                  m_frameHead;
 };
 
 #endif /* GR_SDRDAEMONFEC_LIB_SDRDAEMONFECBUFFER_H_ */

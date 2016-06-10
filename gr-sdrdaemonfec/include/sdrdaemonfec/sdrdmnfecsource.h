@@ -77,9 +77,6 @@ public:
 
     /*! \brief return sample size in bits */
     virtual int get_sample_bits() = 0;
-
-    /*! \brief return compression ratio (1.0 uncompressed, <1.0 compressed, >1.0 expanded) */
-    virtual float get_compression_ratio() = 0;
 };
 
 } // namespace sdrdaemonfec

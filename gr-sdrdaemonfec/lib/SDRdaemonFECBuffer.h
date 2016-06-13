@@ -26,9 +26,9 @@
 #include <cstddef>
 #include "cm256.h"
 
-#define SDRDAEMONFEC_UDPSIZE 512
-#define SDRDAEMONFEC_NBORIGINALBLOCKS 128
-#define SDRDAEMONFEC_NBDECODERSLOTS 4
+#define SDRDAEMONFEC_UDPSIZE 512            // UDP payload size
+#define SDRDAEMONFEC_NBORIGINALBLOCKS 128   // number of sample blocks per frame excluding FEC blocks
+#define SDRDAEMONFEC_NBDECODERSLOTS 4       // power of two sub multiple of uint16_t size. A too large one is superfluous.
 
 class SDRdaemonFECBuffer
 {
@@ -53,8 +53,15 @@ public:
         void init()
         {
             memset((void *) this, 0, sizeof(MetaDataFEC));
+            m_nbFECBlocks = -1;
         }
 	};
+
+    struct Sample
+    {
+        uint16_t i;
+        uint16_t q;
+    };
 
     struct Header
     {
@@ -63,23 +70,30 @@ public:
         uint8_t  filler;
     };
 
-    struct Sample
-    {
-        uint16_t i;
-        uint16_t q;
-    };
-
     static const int samplesPerBlock = (SDRDAEMONFEC_UDPSIZE - sizeof(Header)) / sizeof(Sample);
+    static const int samplesPerBlockZero = samplesPerBlock - (sizeof(MetaDataFEC) / sizeof(Sample));
 
     struct ProtectedBlock
     {
         Sample samples[samplesPerBlock];
     };
+
     struct SuperBlock
     {
         Header         header;
-        Sample         samples[samplesPerBlock];
         ProtectedBlock protectedBlock;
+    };
+
+    struct ProtectedBlockZero
+    {
+        MetaDataFEC m_metaData;
+        Sample      m_samples[samplesPerBlockZero];
+    };
+
+    struct SuperBlockZero
+    {
+        Header             header;
+        ProtectedBlockZero protectedBlock;
     };
 #pragma pack(pop)
 
@@ -94,31 +108,42 @@ public:
 	const MetaDataFEC& getCurrentMeta() const { return m_currentMeta; }
 
 private:
-	static const int samplesPerBlockZero = samplesPerBlock - (sizeof(MetaDataFEC) / sizeof(Sample));
 	static const int udpSize = SDRDAEMONFEC_UDPSIZE;
 	static const int nbOriginalBlocks = SDRDAEMONFEC_NBORIGINALBLOCKS;
 	static const int nbDecoderSlots = SDRDAEMONFEC_NBDECODERSLOTS;
 
 #pragma pack(push, 1)
-	struct BlockZero
+	struct BufferBlockZero
 	{
-	    MetaDataFEC m_metaData;
-	    Sample      m_samples[samplesPerBlockZero];
+	    Sample m_samples[samplesPerBlockZero];
 	};
 
-	struct DecoderSlot
+	struct BufferFrame
 	{
-	    BlockZero      m_blockZero;
-	    Sample*        m_samplesPtrs[nbOriginalBlocks - 1];
-	    ProtectedBlock recoveryBuffer[nbOriginalBlocks]; // max size
+	    BufferBlockZero m_blockZero;
+	    ProtectedBlock  m_blocks[nbOriginalBlocks - 1];
 	};
+
+    struct DecoderSlot
+    {
+        ProtectedBlockZero   m_blockZero;
+        ProtectedBlock*      m_originalBlockPtrs[nbOriginalBlocks];
+        ProtectedBlock       m_recoveryBlocks[nbOriginalBlocks]; // max size
+        cm256_block          m_cm256DescriptorBlocks[nbOriginalBlocks];
+        int                  m_blockCount; // total number of blocks received for this frame
+        int                  m_recoveryCount; // number of recovery blocks received
+    };
 #pragma pack(pop)
 
     void printMeta(MetaDataFEC *metaData);
+    void initDecoderSlotsAddresses();
+    void initDecode();
+    void initDecodeSlot(int slotIndex);
 
 	MetaDataFEC          m_currentMeta;  //!< Stored current meta data
 	cm256_encoder_params m_paramsCM256;
 	DecoderSlot          m_decoderSlots[nbDecoderSlots];
+	BufferFrame          m_frames[nbDecoderSlots];
 	int                  m_decoderSlotHead;
 	int                  m_frameHead;
 };

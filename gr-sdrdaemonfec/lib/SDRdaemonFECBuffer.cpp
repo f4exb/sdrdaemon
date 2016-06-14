@@ -75,6 +75,13 @@ void SDRdaemonFECBuffer::initDecode()
     }
 }
 
+void SDRdaemonFECBuffer::getSlotDataAndStats(int slotIndex, uint8_t *data, std::size_t& dataLength)
+{
+	dataLength = samplesPerBlockZero*sizeof(Sample) + samplesPerBlock*(nbOriginalBlocks - 1)*sizeof(Sample);
+	memcpy((void *) data, (const void *) &m_frames[slotIndex].m_blockZero, dataLength);
+	// TODO: collect stats
+}
+
 void SDRdaemonFECBuffer::initDecodeSlot(int slotIndex)
 {
     m_decoderSlots[slotIndex].m_blockCount = 0;
@@ -111,7 +118,7 @@ bool SDRdaemonFECBuffer::writeAndRead(uint8_t *array, std::size_t length, uint8_
 				m_decoderSlotHead = frameIndex % nbDecoderSlots; // new decoder slot head
 				decoderIndex = m_decoderSlotHead;
 				m_frameHead = frameIndex;
-				// TODO: copy slot data to output buffer
+				getSlotDataAndStats(decoderIndex, data, dataLength); // copy slot data to output buffer
 				initDecodeSlot(decoderIndex); // re-initialize current slot
     		}
     		else if (-frameDelta > sizeof(uint16_t) - nbDecoderSlots) // old frame not too old
@@ -137,7 +144,7 @@ bool SDRdaemonFECBuffer::writeAndRead(uint8_t *array, std::size_t length, uint8_
 				m_decoderSlotHead = frameIndex % nbDecoderSlots; // new decoder slot head
 				decoderIndex = m_decoderSlotHead;
 				m_frameHead = frameIndex;
-                // TODO: copy slot data to output buffer
+				getSlotDataAndStats(decoderIndex, data, dataLength); // copy slot data to output buffer
 				initDecodeSlot(decoderIndex); // re-initialize current slot
 			}
 			else // loss of sync start over

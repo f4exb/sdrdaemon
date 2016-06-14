@@ -138,6 +138,7 @@ private:
     void printMeta(MetaDataFEC *metaData);
     void initDecoderSlotsAddresses();
     void initDecode();
+    void getSlotDataAndStats(int slotIndex, uint8_t *data, std::size_t& dataLength);
     void initDecodeSlot(int slotIndex);
 
 	MetaDataFEC          m_currentMeta;  //!< Stored current meta data

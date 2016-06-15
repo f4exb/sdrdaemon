@@ -160,6 +160,27 @@ int sdrdmnfec_source_impl::get_sample_bits()
 	return d_sdrdmnbuf.getCurrentMeta().m_sampleBits;
 }
 
+int sdrdmnfec_source_impl::getCurNbBlocks()
+{
+    return d_sdrdmnbuf.getCurNbBlocks();
+}
+
+int sdrdmnfec_source_impl::getCurNbRecovery()
+{
+    return d_sdrdmnbuf.getCurNbRecovery();
+}
+
+float sdrdmnfec_source_impl::getAvgNbBlocks()
+{
+    return d_sdrdmnbuf.getAvgNbBlocks();
+}
+
+float sdrdmnfec_source_impl::getAvgNbRecovery()
+{
+    return d_sdrdmnbuf.getAvgNbRecovery();
+}
+
+
 void sdrdmnfec_source_impl::start_receive()
 {
 	d_socket->async_receive_from(

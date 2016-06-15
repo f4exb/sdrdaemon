@@ -28,6 +28,7 @@
 SDRdaemonFECBuffer::SDRdaemonFECBuffer()
 {
 	m_currentMeta.init();
+	m_outputMeta.init();
 	m_paramsCM256.BlockBytes = sizeof(ProtectedBlock);
 	m_paramsCM256.OriginalCount = nbOriginalBlocks;
 	m_paramsCM256.RecoveryCount = -1;
@@ -75,15 +76,25 @@ void SDRdaemonFECBuffer::initDecode()
     }
 }
 
-void SDRdaemonFECBuffer::getSlotDataAndStats(int slotIndex, uint8_t *data, std::size_t& dataLength)
+void SDRdaemonFECBuffer::getSlotData(int slotIndex, uint8_t *data, std::size_t& dataLength)
 {
 	dataLength = samplesPerBlockZero*sizeof(Sample) + samplesPerBlock*(nbOriginalBlocks - 1)*sizeof(Sample);
 	memcpy((void *) data, (const void *) &m_frames[slotIndex].m_blockZero, dataLength);
-	// TODO: collect stats
+
+	if (m_decoderSlots[slotIndex].m_blockZero.m_metaData.m_nbFECBlocks >= 0) // valid meta
+	{
+	    m_outputMeta = m_decoderSlots[slotIndex].m_blockZero.m_metaData; // store it
+	}
 }
 
 void SDRdaemonFECBuffer::initDecodeSlot(int slotIndex)
 {
+	// collect stats before voiding the slot
+	m_curNbBlocks = m_decoderSlots[slotIndex].m_blockCount;
+	m_curNbRecovery = m_decoderSlots[slotIndex].m_recoveryCount;
+	m_avgNbBlocks(m_curNbBlocks);
+	m_avgNbRecovery(m_curNbRecovery);
+	// void the slot
     m_decoderSlots[slotIndex].m_blockCount = 0;
     m_decoderSlots[slotIndex].m_recoveryCount = 0;
     m_decoderSlots[slotIndex].m_blockZero.m_metaData.init();
@@ -118,7 +129,7 @@ bool SDRdaemonFECBuffer::writeAndRead(uint8_t *array, std::size_t length, uint8_
 				m_decoderSlotHead = frameIndex % nbDecoderSlots; // new decoder slot head
 				decoderIndex = m_decoderSlotHead;
 				m_frameHead = frameIndex;
-				getSlotDataAndStats(decoderIndex, data, dataLength); // copy slot data to output buffer
+				getSlotData(decoderIndex, data, dataLength); // copy slot data to output buffer
 				initDecodeSlot(decoderIndex); // re-initialize current slot
     		}
     		else if (-frameDelta > sizeof(uint16_t) - nbDecoderSlots) // old frame not too old
@@ -144,7 +155,7 @@ bool SDRdaemonFECBuffer::writeAndRead(uint8_t *array, std::size_t length, uint8_
 				m_decoderSlotHead = frameIndex % nbDecoderSlots; // new decoder slot head
 				decoderIndex = m_decoderSlotHead;
 				m_frameHead = frameIndex;
-				getSlotDataAndStats(decoderIndex, data, dataLength); // copy slot data to output buffer
+				getSlotData(decoderIndex, data, dataLength); // copy slot data to output buffer
 				initDecodeSlot(decoderIndex); // re-initialize current slot
 			}
 			else // loss of sync start over

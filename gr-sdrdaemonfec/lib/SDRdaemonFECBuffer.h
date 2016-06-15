@@ -25,6 +25,7 @@
 #include <stdint.h>
 #include <cstddef>
 #include "cm256.h"
+#include "MovingAverage.h"
 
 #define SDRDAEMONFEC_UDPSIZE 512            // UDP payload size
 #define SDRDAEMONFEC_NBORIGINALBLOCKS 128   // number of sample blocks per frame excluding FEC blocks
@@ -104,8 +105,11 @@ public:
 	 * @return: true if data is available
 	 */
 	bool writeAndRead(uint8_t *array, std::size_t length, uint8_t *data, std::size_t& dataLength);
-
-	const MetaDataFEC& getCurrentMeta() const { return m_currentMeta; }
+	const MetaDataFEC& getCurrentMeta() const { return m_outputMeta; }
+	int getCurNbBlocks() const { return m_curNbBlocks; }
+	int getCurNbRecovery() const { return m_curNbRecovery; }
+	float getAvgNbBlocks() const { return m_avgNbBlocks; }
+	float getAvgNbRecovery() const { return m_avgNbRecovery; }
 
 private:
 	static const int udpSize = SDRDAEMONFEC_UDPSIZE;
@@ -138,15 +142,20 @@ private:
     void printMeta(MetaDataFEC *metaData);
     void initDecoderSlotsAddresses();
     void initDecode();
-    void getSlotDataAndStats(int slotIndex, uint8_t *data, std::size_t& dataLength);
+    void getSlotData(int slotIndex, uint8_t *data, std::size_t& dataLength);
     void initDecodeSlot(int slotIndex);
 
-	MetaDataFEC          m_currentMeta;  //!< Stored current meta data
+	MetaDataFEC          m_currentMeta;  //!< Stored current meta data from input
+	MetaDataFEC          m_outputMeta;   //!< Meta data corresponding to output frame
 	cm256_encoder_params m_paramsCM256;
 	DecoderSlot          m_decoderSlots[nbDecoderSlots];
 	BufferFrame          m_frames[nbDecoderSlots];
 	int                  m_decoderSlotHead;
 	int                  m_frameHead;
+	int                  m_curNbBlocks;          //!< (stats) instantaneous number of blocks received
+	int                  m_curNbRecovery;        //!< (stats) instantaneous number of recovery blocks used
+	MovingAverage<int, int, 10> m_avgNbBlocks;   //!< (stats) average number of blocks received
+	MovingAverage<int, int, 10> m_avgNbRecovery; //!< (stats) average number of recovery blocks used
 };
 
 #endif /* GR_SDRDAEMONFEC_LIB_SDRDAEMONFECBUFFER_H_ */

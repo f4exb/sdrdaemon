@@ -77,6 +77,18 @@ public:
 
     /*! \brief return sample size in bits */
     virtual int get_sample_bits() = 0;
+
+    /*! \brief return the instantaneous number of blocks received */
+    virtual int getCurNbBlocks() = 0;
+
+    /*! \brief return the instantaneous number of recovery blocks used */
+    virtual int getCurNbRecovery() = 0;
+
+    /*! \brief return the average number of blocks received */
+    virtual float getAvgNbBlocks() = 0;
+
+    /*! \brief return the average number of recovery blocks used */
+    virtual float getAvgNbRecovery() = 0;
 };
 
 } // namespace sdrdaemonfec

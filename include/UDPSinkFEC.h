@@ -67,27 +67,16 @@ public:
 
 private:
 #pragma pack(push, 1)
-    struct ProtectedBlock
+    struct MetaDataFEC
     {
-        uint8_t m_blockIndex;
-        uint8_t m_data[UDPSINKFEC_UDPSIZE - 4]; //!< data frame designed to make SuperBlock exactly UDPSINKFEC_UDPSIZE bytes
-    };
-    struct SuperBlock
-    {
-        uint16_t       m_frameIndex;
-        uint8_t        m_blockIndex;
-        ProtectedBlock m_protectedBlock;
-    };
-    struct MetaDataFEC // This is contained in the first sub-frame of the first frame in a super-frame
-    {
-		uint32_t m_centerFrequency;   //!<  4 center frequency in kHz
-		uint32_t m_sampleRate;        //!<  8 sample rate in Hz
-		uint8_t  m_sampleBytes;       //!<  9 MSB(4): indicators, LSB(4) number of bytes per sample
-		uint8_t  m_sampleBits;        //!< 10 number of effective bits per sample
-		uint8_t  m_nbOriginalBlocks;  //!< 11 number of blocks with original (protected) data
-		uint8_t  m_nbFECBlocks;       //!< 12 number of blocks carrying FEC
-		uint32_t m_tv_sec;            //!< 16 seconds of timestamp at start time of super-frame processing
-		uint32_t m_tv_usec;           //!< 20 microseconds of timestamp at start time of super-frame processing
+        uint32_t m_centerFrequency;   //!<  4 center frequency in kHz
+        uint32_t m_sampleRate;        //!<  8 sample rate in Hz
+        uint8_t  m_sampleBytes;       //!<  9 MSB(4): indicators, LSB(4) number of bytes per sample
+        uint8_t  m_sampleBits;        //!< 10 number of effective bits per sample
+        uint8_t  m_nbOriginalBlocks;  //!< 11 number of blocks with original (protected) data
+        uint8_t  m_nbFECBlocks;       //!< 12 number of blocks carrying FEC
+        uint32_t m_tv_sec;            //!< 16 seconds of timestamp at start time of super-frame processing
+        uint32_t m_tv_usec;           //!< 20 microseconds of timestamp at start time of super-frame processing
 
         bool operator==(const MetaDataFEC& rhs)
         {
@@ -97,7 +86,47 @@ private:
         void init()
         {
             memset((void *) this, 0, sizeof(MetaDataFEC));
+            m_nbFECBlocks = -1;
         }
+    };
+
+    struct Sample
+    {
+        uint16_t i;
+        uint16_t q;
+    };
+
+    struct Header
+    {
+        uint16_t frameIndex;
+        uint8_t  blockIndex;
+        uint8_t  filler;
+    };
+
+    static const int samplesPerBlock = (UDPSINKFEC_UDPSIZE - sizeof(Header)) / sizeof(IQSample);
+    static const int samplesPerBlockZero = samplesPerBlock - (sizeof(MetaDataFEC) / sizeof(IQSample));
+
+    struct ProtectedBlock
+    {
+        IQSample m_samples[samplesPerBlock];
+    };
+
+    struct SuperBlock
+    {
+        Header         header;
+        ProtectedBlock protectedBlock;
+    };
+
+    struct ProtectedBlockZero
+    {
+        MetaDataFEC m_metaData;
+        IQSample    m_samples[samplesPerBlockZero];
+    };
+
+    struct SuperBlockZero
+    {
+        Header             header;
+        ProtectedBlockZero protectedBlock;
     };
 #pragma pack(pop)
 
@@ -108,10 +137,12 @@ private:
     int m_txBlockIndex;               //!< Current index in blocks to transmit
     uint16_t m_frameCount;   //!< transmission frame count
     int m_sampleIndex;      //!< Current sample index in protected block data
-    int m_nbDataSamples;     //!< Number of data samples in a complete protected block (no meta)
+    int m_nbCurrentBlockCapacity; //!< total number of samples that can fit in the current block
     cm256_encoder_params m_cm256Params; //!< Main interface with CM256 encoder
     cm256_block m_descriptorBlocks[256]; //!< Pointers to data for CM256 encoder
     bool m_cm256Valid;
+    SuperBlockZero m_superBlockZero;
+    SuperBlock m_superBlock;
 
     void transmitUDP();
 };

@@ -27,9 +27,9 @@ UDPSinkFEC::UDPSinkFEC(const std::string& address, unsigned int port) :
 	m_frameCount(0),
 	m_sampleIndex(0)
 {
-    m_nbDataSamples = ((UDPSINKFEC_UDPSIZE - 4) / 4);
     m_cm256Valid = (cm256_init() == 0);
     m_currentMetaFEC.init();
+    m_nbCurrentBlockCapacity = samplesPerBlockZero;
 }
 
 UDPSinkFEC::~UDPSinkFEC()
@@ -37,83 +37,109 @@ UDPSinkFEC::~UDPSinkFEC()
 
 void UDPSinkFEC::write(const IQSampleVector& samples_in)
 {
-	MetaDataFEC metaData;
-	struct timeval tv;
 	IQSampleVector::const_iterator it = samples_in.begin();
 
 	while (it != samples_in.end())
 	{
-		if (m_txBlockIndex == 0) // start of a new transmission frame
-		{
-			gettimeofday(&tv, 0);
+        int inSamplesIndex = it - samples_in.begin();
+        int inRemainingSamples = samples_in.end() - it;
 
-			// create meta data TODO: semaphore
-			metaData.m_centerFrequency = m_centerFrequency;
-			metaData.m_sampleRate = m_sampleRate;
-			metaData.m_sampleBytes = m_sampleBytes;
-			metaData.m_sampleBits = m_sampleBits;
-			metaData.m_nbOriginalBlocks = UDPSINKFEC_NBORIGINALBLOCKS;
-			metaData.m_nbFECBlocks = m_nbBlocksFEC;
-			metaData.m_tv_sec = tv.tv_sec;
-			metaData.m_tv_usec = tv.tv_usec;
+	    if (m_txBlockIndex == 0)
+	    {
+	        if (m_sampleIndex == 0)
+	        {
+	            struct timeval tv;
+	            MetaDataFEC metaData;
 
-			m_txBlocks[m_txBlockIndex].m_frameIndex = m_frameCount;
-			m_txBlocks[m_txBlockIndex].m_blockIndex = 0;
-			m_txBlocks[m_txBlockIndex].m_protectedBlock.m_blockIndex = 0;
-			memcpy((void *) m_txBlocks[m_txBlockIndex].m_protectedBlock.m_data, (const void *) &metaData, sizeof(MetaDataFEC));
+	            gettimeofday(&tv, 0);
 
-			m_sampleIndex = (sizeof(MetaDataFEC) / m_sampleBytes) + 1;
+	            // create meta data TODO: semaphore
+	            metaData.m_centerFrequency = m_centerFrequency;
+	            metaData.m_sampleRate = m_sampleRate;
+	            metaData.m_sampleBytes = m_sampleBytes;
+	            metaData.m_sampleBits = m_sampleBits;
+	            metaData.m_nbOriginalBlocks = UDPSINKFEC_NBORIGINALBLOCKS;
+	            metaData.m_nbFECBlocks = m_nbBlocksFEC;
+	            metaData.m_tv_sec = tv.tv_sec;
+	            metaData.m_tv_usec = tv.tv_usec;
 
-			if (!(metaData == m_currentMetaFEC))
-			{
-		        std::cerr << "UDPSinkFEC::write: meta: "
-		                << "|" << metaData.m_centerFrequency
-		                << ":" << metaData.m_sampleRate
-		                << ":" << (int) (metaData.m_sampleBytes & 0xF)
-		                << ":" << (int) metaData.m_sampleBits
-		                << "|" << (int) metaData.m_nbOriginalBlocks
-		                << ":" << (int) metaData.m_nbFECBlocks
-		                << "|" << metaData.m_tv_sec
-		                << ":" << metaData.m_tv_usec
-		                << "|" << std::endl;
+	            m_superBlockZero.header.frameIndex = m_frameCount;
+	            m_superBlockZero.header.blockIndex = 0;
+	            m_superBlockZero.protectedBlock.m_metaData = metaData;
 
-			    m_currentMetaFEC = metaData;
-			}
-		}
-		else if (m_txBlockIndex == UDPSINKFEC_NBORIGINALBLOCKS) // transmission frame is complete
-		{
-			transmitUDP(); // send the frame
-			m_txBlockIndex = 0;
-			continue;
-		}
+	            if (!(metaData == m_currentMetaFEC))
+	            {
+	                std::cerr << "UDPSinkFEC::write: meta: "
+	                        << "|" << metaData.m_centerFrequency
+	                        << ":" << metaData.m_sampleRate
+	                        << ":" << (int) (metaData.m_sampleBytes & 0xF)
+	                        << ":" << (int) metaData.m_sampleBits
+	                        << "|" << (int) metaData.m_nbOriginalBlocks
+	                        << ":" << (int) metaData.m_nbFECBlocks
+	                        << "|" << metaData.m_tv_sec
+	                        << ":" << metaData.m_tv_usec
+	                        << "|" << std::endl;
 
-		int inSamplesIndex = it - samples_in.begin();
-		int inRemainingSamples = samples_in.end() - it;
+	                m_currentMetaFEC = metaData;
+	            }
+	        }
 
-        if (m_sampleIndex  + inRemainingSamples < m_nbDataSamples) // there is still room in the current super block
-        {
-            // move all remaining samples to super block
-            memcpy((void *) & m_txBlocks[m_txBlockIndex].m_protectedBlock.m_data[m_sampleIndex * m_sampleBytes],
-                    (const void *) &samples_in[inSamplesIndex],
-					inRemainingSamples * m_sampleBytes);
-            it = samples_in.end(); // all input samples are consumed
-            m_sampleIndex += inRemainingSamples;
-        }
-        else
-        {
-            // complete the super block
-            memcpy((void *) & m_txBlocks[m_txBlockIndex].m_protectedBlock.m_data[m_sampleIndex * m_sampleBytes],
-                    (const void *) &samples_in[inSamplesIndex],
-                    (m_nbDataSamples - m_sampleIndex) * m_sampleBytes);
-            // store in transmission frame
-            m_txBlocks[m_txBlockIndex].m_blockIndex++;
-            m_txBlocks[m_txBlockIndex].m_protectedBlock.m_blockIndex++;
-            // advance in original blocks
-            m_sampleIndex = 0;
-            m_txBlockIndex++;
-            // advance samples iterator
-            it += m_nbDataSamples - m_sampleIndex;
-        }
+	        if (m_sampleIndex + inRemainingSamples < samplesPerBlockZero) // there is still room in the current super block
+	        {
+                memcpy((void *) &m_superBlockZero.protectedBlock.m_samples[m_sampleIndex],
+                        (const void *) &samples_in[inSamplesIndex],
+                        (samplesPerBlockZero - inRemainingSamples) * sizeof(IQSample));
+                m_sampleIndex += inRemainingSamples;
+                it = samples_in.end(); // all input samples are consumed
+	        }
+	        else // complete super block and initiate the next
+	        {
+                memcpy((void *) &m_superBlockZero.protectedBlock.m_samples[m_sampleIndex],
+                        (const void *) &samples_in[inSamplesIndex],
+                        (samplesPerBlockZero - m_sampleIndex) * sizeof(IQSample));
+                m_txBlocks[0].header = m_superBlockZero.header;
+                m_txBlocks[0].protectedBlock = *((ProtectedBlock *) &m_superBlockZero.protectedBlock);
+                m_superBlock.header.frameIndex = m_frameCount;
+                m_superBlock.header.blockIndex = 1;
+                m_txBlockIndex = 1;
+                it += samplesPerBlockZero - m_sampleIndex;
+                m_sampleIndex = 0;
+	        }
+	    }
+	    else
+	    {
+            if (m_sampleIndex + inRemainingSamples < samplesPerBlock) // there is still room in the current super block
+            {
+                memcpy((void *) &m_superBlock.protectedBlock.m_samples[m_sampleIndex],
+                        (const void *) &samples_in[inSamplesIndex],
+                        (samplesPerBlock - inRemainingSamples) * sizeof(IQSample));
+                m_sampleIndex += inRemainingSamples;
+                it = samples_in.end(); // all input samples are consumed
+            }
+            else // complete super block and initiate the next if not end of frame
+            {
+                memcpy((void *) &m_superBlock.protectedBlock.m_samples[m_sampleIndex],
+                        (const void *) &samples_in[inSamplesIndex],
+                        (samplesPerBlock - m_sampleIndex) * sizeof(IQSample));
+                m_txBlocks[m_txBlockIndex] =  m_superBlock;
+
+                if (m_txBlockIndex == UDPSINKFEC_NBORIGINALBLOCKS - 1) // frame complete
+                {
+                    transmitUDP();
+                    m_txBlockIndex = 0;
+                    m_frameCount++;
+                }
+                else
+                {
+                    m_txBlockIndex++;
+                    m_superBlock.header.frameIndex = m_frameCount;
+                    m_superBlock.header.blockIndex = m_txBlockIndex;
+                }
+
+                it += samplesPerBlock - m_sampleIndex;
+                m_sampleIndex = 0;
+            }
+	    }
 	}
 }
 
@@ -128,38 +154,43 @@ void UDPSinkFEC::transmitUDP()
 	int nbBlocksFEC = m_nbBlocksFEC; // do it once (atomic value)
 
 	m_cm256Params.BlockBytes = sizeof(ProtectedBlock);
-	m_cm256Params.OriginalCount = UDPSINKFEC_NBORIGINALBLOCKS;
-	m_cm256Params.RecoveryCount = nbBlocksFEC;
+    m_cm256Params.OriginalCount = UDPSINKFEC_NBORIGINALBLOCKS;
+    m_cm256Params.RecoveryCount = nbBlocksFEC;
 
-	// Fill pointers to data
-	for (int i = 0; i < m_cm256Params.OriginalCount + m_cm256Params.RecoveryCount; ++i)
-	{
-		if (i < m_cm256Params.OriginalCount)
-		{
-			m_descriptorBlocks[i].Block = (void *) &(m_txBlocks[i].m_protectedBlock);
-		}
-		else
-		{
-			m_txBlocks[i].m_frameIndex = m_txBlocks[0].m_frameIndex; // same frame
-			m_txBlocks[i].m_blockIndex = i;
-		}
-	}
-
-	// Encode FEC blocks
-	if (cm256_encode(m_cm256Params, m_descriptorBlocks, m_fecBlocks))
-	{
-		std::cerr << "UDPSinkFEC::transmitUDP: CM256 encode failed. No transmission." << std::endl;
-		return;
-	}
-
-	// Merge FEC with data to transmit
-	for (int i = 0; i < nbBlocksFEC; i++)
-	{
-		m_txBlocks[i+m_cm256Params.OriginalCount].m_protectedBlock = m_fecBlocks[i];
-	}
-
-    for (int i = 0; i < m_cm256Params.OriginalCount + m_cm256Params.RecoveryCount; i++)
+    // Fill pointers to data
+    for (int i = 0; i < m_cm256Params.OriginalCount + m_cm256Params.RecoveryCount; ++i)
     {
-        m_socket.SendDataGram((const void *) &m_txBlocks[i], (int) m_udpSize, m_address, m_port);
+        if (i < m_cm256Params.OriginalCount)
+        {
+            m_descriptorBlocks[i].Block = (void *) &(m_txBlocks[i].protectedBlock);
+        }
+        else
+        {
+            m_txBlocks[i].header.frameIndex = m_txBlocks[0].header.frameIndex; // same frame
+            m_txBlocks[i].header.blockIndex = i;
+        }
     }
+
+    // Encode FEC blocks
+    if (cm256_encode(m_cm256Params, m_descriptorBlocks, m_fecBlocks))
+    {
+        std::cerr << "UDPSinkFEC::transmitUDP: CM256 encode failed. No transmission." << std::endl;
+        return;
+    }
+
+    // Merge FEC with data to transmit
+    for (int i = 0; i < nbBlocksFEC; i++)
+    {
+        m_txBlocks[i + m_cm256Params.OriginalCount].protectedBlock = m_fecBlocks[i];
+    }
+
+    // Transmit all blocks
+	for (int i = 0; i < m_cm256Params.OriginalCount + m_cm256Params.RecoveryCount; i++)
+	{
+//	    std::cerr << "UDPSinkFEC::transmitUDP:"
+//	            << " i: " << i
+//	            << " frameIndex: " << (int) m_txBlocks[i].header.frameIndex
+//	            << " blockIndex: " << (int) m_txBlocks[i].header.blockIndex << std::endl;
+	    m_socket.SendDataGram((const void *) &m_txBlocks[i], (int) m_udpSize, m_address, m_port);
+	}
 }

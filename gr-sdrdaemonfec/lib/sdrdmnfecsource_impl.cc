@@ -163,22 +163,22 @@ int sdrdmnfec_source_impl::get_sample_bits()
     return sampleBits == 0 ? 8 : sampleBits;
 }
 
-int sdrdmnfec_source_impl::getCurNbBlocks()
+int sdrdmnfec_source_impl::get_cur_nb_blocks()
 {
     return d_sdrdmnbuf.getCurNbBlocks();
 }
 
-int sdrdmnfec_source_impl::getCurNbRecovery()
+int sdrdmnfec_source_impl::get_cur_nb_recovery()
 {
     return d_sdrdmnbuf.getCurNbRecovery();
 }
 
-float sdrdmnfec_source_impl::getAvgNbBlocks()
+float sdrdmnfec_source_impl::get_avg_nb_blocks()
 {
     return d_sdrdmnbuf.getAvgNbBlocks();
 }
 
-float sdrdmnfec_source_impl::getAvgNbRecovery()
+float sdrdmnfec_source_impl::get_avg_nb_recovery()
 {
     return d_sdrdmnbuf.getAvgNbRecovery();
 }

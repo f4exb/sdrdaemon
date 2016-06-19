@@ -76,10 +76,10 @@ public:
     int get_center_freq_khz();
     int get_sample_rate_hz();
     int get_sample_bits();
-    int getCurNbBlocks();
-    int getCurNbRecovery();
-    float getAvgNbBlocks();
-    float getAvgNbRecovery();
+    int get_cur_nb_blocks();
+    int get_cur_nb_recovery();
+    float get_avg_nb_blocks();
+    float get_avg_nb_recovery();
 
     int work(int noutput_items, gr_vector_const_void_star &input_items, gr_vector_void_star &output_items);
 };

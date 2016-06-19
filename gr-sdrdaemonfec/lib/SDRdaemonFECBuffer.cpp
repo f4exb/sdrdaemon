@@ -177,7 +177,7 @@ bool SDRdaemonFECBuffer::writeAndRead(uint8_t *array, std::size_t length, uint8_
                     (const void *) m_decoderSlots[decoderIndex].m_blockZero.m_samples,
                     samplesPerBlockZero * sizeof(Sample));
         }
-        else if (blockIndex < samplesPerBlock) // normal block
+        else if (blockIndex < nbOriginalBlocks) // normal block
         {
             m_frames[decoderIndex].m_blocks[blockIndex - 1] = superBlock->protectedBlock;
             m_decoderSlots[decoderIndex].m_cm256DescriptorBlocks[blockHead].Block = (void *) &m_frames[decoderIndex].m_blocks[blockIndex - 1];

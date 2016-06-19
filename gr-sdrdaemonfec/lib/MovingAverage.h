@@ -47,8 +47,8 @@ class MovingAverage
         }
     }
 
-    operator double() const { return m_total / std::min(m_num_samples, N); }
-    operator float() const { return m_total / std::min(m_num_samples, N); }
+    operator double() const { return m_num_samples > 0 ? m_total / std::min(m_num_samples, N) : 0.0d; }
+    operator float() const { return m_num_samples > 0 ? m_total / std::min(m_num_samples, N) : 0.0f; }
 
   private:
     T m_samples[N];

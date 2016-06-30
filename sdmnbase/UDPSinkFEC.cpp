@@ -29,7 +29,6 @@ UDPSinkFEC::UDPSinkFEC(const std::string& address, unsigned int port) :
 {
     m_cm256Valid = (cm256_init() == 0);
     m_currentMetaFEC.init();
-    m_nbCurrentBlockCapacity = samplesPerBlockZero;
 }
 
 UDPSinkFEC::~UDPSinkFEC()
@@ -44,102 +43,80 @@ void UDPSinkFEC::write(const IQSampleVector& samples_in)
         int inSamplesIndex = it - samples_in.begin();
         int inRemainingSamples = samples_in.end() - it;
 
-	    if (m_txBlockIndex == 0)
+	    if (m_txBlockIndex == 0) // Tx block index 0 is a block with only meta data
 	    {
-	        if (m_sampleIndex == 0)
-	        {
-	            struct timeval tv;
-	            MetaDataFEC metaData;
+            struct timeval tv;
+            MetaDataFEC metaData;
 
-	            gettimeofday(&tv, 0);
+            gettimeofday(&tv, 0);
 
-	            // create meta data TODO: semaphore
-	            metaData.m_centerFrequency = m_centerFrequency;
-	            metaData.m_sampleRate = m_sampleRate;
-	            metaData.m_sampleBytes = m_sampleBytes;
-	            metaData.m_sampleBits = m_sampleBits;
-	            metaData.m_nbOriginalBlocks = UDPSINKFEC_NBORIGINALBLOCKS;
-	            metaData.m_nbFECBlocks = m_nbBlocksFEC;
-	            metaData.m_tv_sec = tv.tv_sec;
-	            metaData.m_tv_usec = tv.tv_usec;
+            // create meta data TODO: semaphore
+            metaData.m_centerFrequency = m_centerFrequency;
+            metaData.m_sampleRate = m_sampleRate;
+            metaData.m_sampleBytes = m_sampleBytes;
+            metaData.m_sampleBits = m_sampleBits;
+            metaData.m_nbOriginalBlocks = UDPSINKFEC_NBORIGINALBLOCKS;
+            metaData.m_nbFECBlocks = m_nbBlocksFEC;
+            metaData.m_tv_sec = tv.tv_sec;
+            metaData.m_tv_usec = tv.tv_usec;
 
-	            m_superBlockZero.header.frameIndex = m_frameCount;
-	            m_superBlockZero.header.blockIndex = 0;
-	            m_superBlockZero.protectedBlock.m_metaData = metaData;
+            memset((void *) &m_superBlock, 0, UDPSINKFEC_UDPSIZE);
 
-	            if (!(metaData == m_currentMetaFEC))
-	            {
-	                std::cerr << "UDPSinkFEC::write: meta: "
-	                        << "|" << metaData.m_centerFrequency
-	                        << ":" << metaData.m_sampleRate
-	                        << ":" << (int) (metaData.m_sampleBytes & 0xF)
-	                        << ":" << (int) metaData.m_sampleBits
-	                        << "|" << (int) metaData.m_nbOriginalBlocks
-	                        << ":" << (int) metaData.m_nbFECBlocks
-	                        << "|" << metaData.m_tv_sec
-	                        << ":" << metaData.m_tv_usec
-	                        << "|" << std::endl;
+            m_superBlock.header.frameIndex = m_frameCount;
+            m_superBlock.header.blockIndex = 0;
+            memcpy((void *) &m_superBlock.protectedBlock, (const void *) &metaData, sizeof(MetaDataFEC));
 
-	                m_currentMetaFEC = metaData;
-	            }
-	        }
-
-	        if (m_sampleIndex + inRemainingSamples < samplesPerBlockZero) // there is still room in the current super block
-	        {
-                memcpy((void *) &m_superBlockZero.protectedBlock.m_samples[m_sampleIndex],
-                        (const void *) &samples_in[inSamplesIndex],
-                        (samplesPerBlockZero - inRemainingSamples) * sizeof(IQSample));
-                m_sampleIndex += inRemainingSamples;
-                it = samples_in.end(); // all input samples are consumed
-	        }
-	        else // complete super block and initiate the next
-	        {
-                memcpy((void *) &m_superBlockZero.protectedBlock.m_samples[m_sampleIndex],
-                        (const void *) &samples_in[inSamplesIndex],
-                        (samplesPerBlockZero - m_sampleIndex) * sizeof(IQSample));
-                m_txBlocks[0].header = m_superBlockZero.header;
-                m_txBlocks[0].protectedBlock = *((ProtectedBlock *) &m_superBlockZero.protectedBlock);
-                m_superBlock.header.frameIndex = m_frameCount;
-                m_superBlock.header.blockIndex = 1;
-                m_txBlockIndex = 1;
-                it += samplesPerBlockZero - m_sampleIndex;
-                m_sampleIndex = 0;
-	        }
-	    }
-	    else
-	    {
-            if (m_sampleIndex + inRemainingSamples < samplesPerBlock) // there is still room in the current super block
+            if (!(metaData == m_currentMetaFEC))
             {
-                memcpy((void *) &m_superBlock.protectedBlock.m_samples[m_sampleIndex],
-                        (const void *) &samples_in[inSamplesIndex],
-                        (samplesPerBlock - inRemainingSamples) * sizeof(IQSample));
-                m_sampleIndex += inRemainingSamples;
-                it = samples_in.end(); // all input samples are consumed
-            }
-            else // complete super block and initiate the next if not end of frame
-            {
-                memcpy((void *) &m_superBlock.protectedBlock.m_samples[m_sampleIndex],
-                        (const void *) &samples_in[inSamplesIndex],
-                        (samplesPerBlock - m_sampleIndex) * sizeof(IQSample));
-                m_txBlocks[m_txBlockIndex] =  m_superBlock;
+                std::cerr << "UDPSinkFEC::write: meta: "
+                        << "|" << metaData.m_centerFrequency
+                        << ":" << metaData.m_sampleRate
+                        << ":" << (int) (metaData.m_sampleBytes & 0xF)
+                        << ":" << (int) metaData.m_sampleBits
+                        << "|" << (int) metaData.m_nbOriginalBlocks
+                        << ":" << (int) metaData.m_nbFECBlocks
+                        << "|" << metaData.m_tv_sec
+                        << ":" << metaData.m_tv_usec
+                        << "|" << std::endl;
 
-                if (m_txBlockIndex == UDPSINKFEC_NBORIGINALBLOCKS - 1) // frame complete
-                {
-                    transmitUDP();
-                    m_txBlockIndex = 0;
-                    m_frameCount++;
-                }
-                else
-                {
-                    m_txBlockIndex++;
-                    m_superBlock.header.frameIndex = m_frameCount;
-                    m_superBlock.header.blockIndex = m_txBlockIndex;
-                }
-
-                it += samplesPerBlock - m_sampleIndex;
-                m_sampleIndex = 0;
+                m_currentMetaFEC = metaData;
             }
+
+            m_txBlocks[0] = m_superBlock;
+            m_txBlockIndex = 1; // next Tx block with data
 	    }
+
+        if (m_sampleIndex + inRemainingSamples < samplesPerBlock) // there is still room in the current super block
+        {
+            memcpy((void *) &m_superBlock.protectedBlock.m_samples[m_sampleIndex],
+                    (const void *) &samples_in[inSamplesIndex],
+                    (samplesPerBlock - inRemainingSamples) * sizeof(IQSample));
+            m_sampleIndex += inRemainingSamples;
+            it = samples_in.end(); // all input samples are consumed
+        }
+        else // complete super block and initiate the next if not end of frame
+        {
+            memcpy((void *) &m_superBlock.protectedBlock.m_samples[m_sampleIndex],
+                    (const void *) &samples_in[inSamplesIndex],
+                    (samplesPerBlock - m_sampleIndex) * sizeof(IQSample));
+            m_sampleIndex = 0;
+            it += samplesPerBlock - m_sampleIndex;
+
+            m_superBlock.header.frameIndex = m_frameCount;
+            m_superBlock.header.blockIndex = m_txBlockIndex;
+            m_txBlocks[m_txBlockIndex] =  m_superBlock;
+
+            if (m_txBlockIndex == UDPSINKFEC_NBORIGINALBLOCKS - 1) // frame complete
+            {
+                transmitUDP();
+                m_txBlockIndex = 0;
+                m_frameCount++;
+            }
+            else
+            {
+                m_txBlockIndex++;
+            }
+        }
 	}
 }
 
@@ -166,7 +143,7 @@ void UDPSinkFEC::transmitUDP()
         }
         else
         {
-            m_txBlocks[i].header.frameIndex = m_txBlocks[0].header.frameIndex; // same frame
+            m_txBlocks[i].header.frameIndex = m_frameCount;
             m_txBlocks[i].header.blockIndex = i;
         }
     }

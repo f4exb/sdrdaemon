@@ -72,7 +72,6 @@ public:
     };
 
     static const int samplesPerBlock = (SDRDAEMONFEC_UDPSIZE - sizeof(Header)) / sizeof(Sample);
-    static const int samplesPerBlockZero = samplesPerBlock - (sizeof(MetaDataFEC) / sizeof(Sample));
 
     struct ProtectedBlock
     {
@@ -88,14 +87,9 @@ public:
     struct ProtectedBlockZero
     {
         MetaDataFEC m_metaData;
-        Sample      m_samples[samplesPerBlockZero];
+        uint8_t     m_filler[SDRDAEMONFEC_UDPSIZE - sizeof(Header) - sizeof(MetaDataFEC)]; // complete for a 512 byte block
     };
 
-    struct SuperBlockZero
-    {
-        Header             header;
-        ProtectedBlockZero protectedBlock;
-    };
 #pragma pack(pop)
 
 	SDRdaemonFECBuffer();
@@ -115,14 +109,8 @@ private:
 	static const int nbDecoderSlots = SDRDAEMONFEC_NBDECODERSLOTS;
 
 #pragma pack(push, 1)
-	struct BufferBlockZero
-	{
-	    Sample m_samples[samplesPerBlockZero];
-	};
-
 	struct BufferFrame
 	{
-	    BufferBlockZero m_blockZero;
 	    ProtectedBlock  m_blocks[nbOriginalBlocks - 1];
 	};
 #pragma pack(pop)
@@ -136,6 +124,7 @@ private:
         int                  m_blockCount; //!< total number of blocks received for this frame
         int                  m_recoveryCount; //!< number of recovery blocks received
         bool                 m_decoded; //!< true if decoded
+        bool                 m_metaRetrieved;
     };
 
     void getSlotData(int slotIndex, uint8_t *data, std::size_t& dataLength);

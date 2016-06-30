@@ -104,7 +104,6 @@ private:
     };
 
     static const int samplesPerBlock = (UDPSINKFEC_UDPSIZE - sizeof(Header)) / sizeof(IQSample);
-    static const int samplesPerBlockZero = samplesPerBlock - (sizeof(MetaDataFEC) / sizeof(IQSample));
 
     struct ProtectedBlock
     {
@@ -116,33 +115,19 @@ private:
         Header         header;
         ProtectedBlock protectedBlock;
     };
-
-    struct ProtectedBlockZero
-    {
-        MetaDataFEC m_metaData;
-        IQSample    m_samples[samplesPerBlockZero];
-    };
-
-    struct SuperBlockZero
-    {
-        Header             header;
-        ProtectedBlockZero protectedBlock;
-    };
 #pragma pack(pop)
 
-    MetaDataFEC m_currentMetaFEC;
-    std::atomic_int m_nbBlocksFEC;
-    SuperBlock m_txBlocks[256];       //!< UDP blocks to send with original data + FEC
+    MetaDataFEC m_currentMetaFEC;        //!< Meta data for current frame
+    std::atomic_int m_nbBlocksFEC;       //!< Variable number of FEC blocks
+    SuperBlock m_txBlocks[256];          //!< UDP blocks to send with original data + FEC
+    SuperBlock m_superBlock;             //!< current super block being built
     ProtectedBlock m_fecBlocks[256 - UDPSINKFEC_NBORIGINALBLOCKS];  //!< FEC data
-    int m_txBlockIndex;               //!< Current index in blocks to transmit
-    uint16_t m_frameCount;   //!< transmission frame count
-    int m_sampleIndex;      //!< Current sample index in protected block data
-    int m_nbCurrentBlockCapacity; //!< total number of samples that can fit in the current block
-    cm256_encoder_params m_cm256Params; //!< Main interface with CM256 encoder
+    int m_txBlockIndex;                  //!< Current index in blocks to transmit
+    uint16_t m_frameCount;               //!< transmission frame count
+    int m_sampleIndex;                   //!< Current sample index in protected block data
+    cm256_encoder_params m_cm256Params;  //!< Main interface with CM256 encoder
     cm256_block m_descriptorBlocks[256]; //!< Pointers to data for CM256 encoder
     bool m_cm256Valid;
-    SuperBlockZero m_superBlockZero;
-    SuperBlock m_superBlock;
 
     void transmitUDP();
 };

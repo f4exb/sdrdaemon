@@ -19,6 +19,7 @@
 #ifndef INCLUDE_UDPSINKUNCOMPRESSED_H_
 #define INCLUDE_UDPSINKUNCOMPRESSED_H_
 
+#include <atomic>
 #include "UDPSink.h"
 
 class UDPSinkUncompressed : public UDPSink
@@ -27,6 +28,10 @@ public:
 	UDPSinkUncompressed(const std::string& address, unsigned int port, unsigned int udpSize);
 	virtual ~UDPSinkUncompressed();
 	virtual void write(const IQSampleVector& samples_in);
+	virtual void setTxDelay(int txDelay) { m_txDelay = txDelay; }
+
+private:
+	std::atomic_int m_txDelay; //!< Delay in microseconds (usleep) between each sending of an UDP datagram
 };
 
 #endif /* INCLUDE_UDPSINKUNCOMPRESSED_H_ */

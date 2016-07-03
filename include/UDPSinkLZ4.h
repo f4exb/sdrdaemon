@@ -19,6 +19,7 @@
 #ifndef INCLUDE_UDPSINKLZ4_H_
 #define INCLUDE_UDPSINKLZ4_H_
 
+#include <atomic>
 #include <lz4.h>
 #include "UDPSink.h"
 
@@ -29,6 +30,7 @@ public:
 	virtual ~UDPSinkLZ4();
 	uint32_t compressInput();
 	virtual void write(const IQSampleVector& samples_in);
+    virtual void setTxDelay(int txDelay) { m_txDelay = txDelay; }
 
 private:
     void udpSend();
@@ -44,6 +46,8 @@ private:
     uint8_t  *m_inputBuffer;    //!< input data frame buffer
     uint32_t m_maxOutputSize;   //!< Maximum compressed output size
     uint8_t  *m_outputBuffer;   //!< Output compressed data buffer
+
+    std::atomic_int m_txDelay;  //!< Delay in microseconds (usleep) between each sending of an UDP datagram
 };
 
 #endif /* INCLUDE_UDPSINKLZ4_H_ */

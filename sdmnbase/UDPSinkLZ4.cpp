@@ -17,6 +17,7 @@
 ///////////////////////////////////////////////////////////////////////////////////
 
 #include <sys/time.h>
+#include <unistd.h>
 #include <iostream>
 
 #include "UDPSinkLZ4.h"
@@ -114,6 +115,8 @@ void UDPSinkLZ4::udpSend()
 	uint64_t dataCRC = m_crc64.calculate_crc(m_outputBuffer, m_sendMeta.m_nbBytes);
 	//uint64_t dataCRC = 0x0123456789ABCDEFL;
 
+	int txDelay = m_txDelay;
+
 	memcpy((void *) m_buf, (const void *) &m_sendMeta, sizeof(MetaData));
 	memcpy((void *) &m_buf[sizeof(MetaData)], (const void *) &dataCRC, 8);
 	m_socket.SendDataGram((const void *) m_buf, (int) m_udpSize, m_address, m_port);
@@ -121,6 +124,7 @@ void UDPSinkLZ4::udpSend()
 	for (unsigned int i = 0; i < nbCompleteBlocks; i++)
 	{
 		m_socket.SendDataGram((const void *) &m_outputBuffer[i*m_udpSize], (int) m_udpSize, m_address, m_port);
+		usleep(txDelay);
 	}
 
 	if (nbRemainderBytes > 0)

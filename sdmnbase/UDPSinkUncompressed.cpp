@@ -17,6 +17,7 @@
 ///////////////////////////////////////////////////////////////////////////////////
 
 #include <sys/time.h>
+#include <unistd.h>
 #include <iostream>
 
 #include "UDPSinkUncompressed.h"
@@ -37,6 +38,7 @@ void UDPSinkUncompressed::write(const IQSampleVector& samples_in)
     uint16_t samplesPerBlock = m_udpSize / (2 * m_sampleBytes);
     uint32_t nbCompleteBlocks = samples_in.size() / samplesPerBlock;
     uint32_t remainderSamples = samples_in.size() % samplesPerBlock;
+    int txDelay = m_txDelay;
 
     gettimeofday(&tv, 0);
 
@@ -78,6 +80,7 @@ void UDPSinkUncompressed::write(const IQSampleVector& samples_in)
 	for (unsigned int i = 0; i < nbCompleteBlocks; i++)
 	{
 		m_socket.SendDataGram((const void *) &samples_in[i*samplesPerBlock], (int) m_udpSize, m_address, m_port);
+		usleep(txDelay);
 	}
 
 	if (remainderSamples > 0)

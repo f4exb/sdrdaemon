@@ -379,6 +379,7 @@ int main(int argc, char **argv)
     Source  *srcsdr = 0;
     unsigned int outputbuf_samples = 48 * UDPSIZE;
     uint32_t compressedMinSize = 0;
+    unsigned int txDelay = 0;
 
     fprintf(stderr,
             "SDRDaemon - Collect samples from SDR device and send it over the network via UDP\n");
@@ -589,6 +590,14 @@ int main(int argc, char **argv)
         }
 
         udp_output->setCenterFrequency(srcsdr->get_received_frequency());
+
+        unsigned int confTxDelay = srcsdr->get_tx_delay();
+
+        if (confTxDelay != txDelay)
+        {
+            txDelay = confTxDelay;
+            udp_output->setTxDelay(txDelay);
+        }
 
         // Possible downsampling and write to UDP
 

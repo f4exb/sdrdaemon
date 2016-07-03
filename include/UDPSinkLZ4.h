@@ -30,7 +30,7 @@ public:
 	virtual ~UDPSinkLZ4();
 	uint32_t compressInput();
 	virtual void write(const IQSampleVector& samples_in);
-    virtual void setTxDelay(int txDelay) { m_txDelay = txDelay; }
+    virtual void setTxDelay(int txDelay);
 
 private:
     void udpSend();

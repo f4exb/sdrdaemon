@@ -31,6 +31,13 @@ UDPSinkUncompressed::~UDPSinkUncompressed()
 {
 }
 
+void UDPSinkUncompressed::setTxDelay(int txDelay)
+{
+    std::cerr << "UDPSinkUncompressed::setTxDelay: txDelay: " << txDelay << std::endl;
+    m_txDelay = txDelay;
+}
+
+
 void UDPSinkUncompressed::write(const IQSampleVector& samples_in)
 {
 	MetaData *metaData = (MetaData *) m_bufMeta;
@@ -76,6 +83,7 @@ void UDPSinkUncompressed::write(const IQSampleVector& samples_in)
 	}
 
 	m_socket.SendDataGram((const void *) m_bufMeta, (int) m_udpSize, m_address, m_port);
+	usleep(txDelay);
 
 	for (unsigned int i = 0; i < nbCompleteBlocks; i++)
 	{

@@ -28,7 +28,7 @@ public:
 	UDPSinkUncompressed(const std::string& address, unsigned int port, unsigned int udpSize);
 	virtual ~UDPSinkUncompressed();
 	virtual void write(const IQSampleVector& samples_in);
-	virtual void setTxDelay(int txDelay) { m_txDelay = txDelay; }
+	virtual void setTxDelay(int txDelay);
 
 private:
 	std::atomic_int m_txDelay; //!< Delay in microseconds (usleep) between each sending of an UDP datagram

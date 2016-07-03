@@ -46,6 +46,13 @@ UDPSinkLZ4::~UDPSinkLZ4()
 	}
 }
 
+void UDPSinkLZ4::setTxDelay(int txDelay)
+{
+    std::cerr << "UDPSinkLZ4::setTxDelay: txDelay: " << txDelay << std::endl;
+    m_txDelay = txDelay;
+}
+
+
 void UDPSinkLZ4::write(const IQSampleVector& samples_in)
 {
 	MetaData *metaData = (MetaData *) m_bufMeta;
@@ -120,6 +127,7 @@ void UDPSinkLZ4::udpSend()
 	memcpy((void *) m_buf, (const void *) &m_sendMeta, sizeof(MetaData));
 	memcpy((void *) &m_buf[sizeof(MetaData)], (const void *) &dataCRC, 8);
 	m_socket.SendDataGram((const void *) m_buf, (int) m_udpSize, m_address, m_port);
+	usleep(txDelay);
 
 	for (unsigned int i = 0; i < nbCompleteBlocks; i++)
 	{

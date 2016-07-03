@@ -123,19 +123,72 @@ void UDPSinkFEC::write(const IQSampleVector& samples_in)
 
 void UDPSinkFEC::transmitUDP()
 {
-//    for (int i = 0; i < UDPSINKFEC_NBORIGINALBLOCKS; i++)
-//    {
-//        m_socket.SendDataGram((const void *) &m_txBlocks[i], (int) m_udpSize, m_address, m_port);
-//        usleep(200);
-//    }
+    // do it once (atomic value)
+	int nbBlocksFEC = m_nbBlocksFEC;
+	int txDelay = m_txDelay;
 
-    if (!m_cm256Valid)
-    {
-        std::cerr << "UDPSinkFEC::transmitUDP: CM256 library initialization failure. No transmission." << std::endl;
-        return;
-    }
+//    std::cerr << "UDPSinkFEC::transmitUDP:"
+//            << " nbBlocksFEC: " << nbBlocksFEC
+//            << " txDelay: " << txDelay << std::endl;
 
-	int nbBlocksFEC = m_nbBlocksFEC; // do it once (atomic value)
+	if (nbBlocksFEC == 0)
+	{
+	    for (int i = 0; i < UDPSINKFEC_NBORIGINALBLOCKS; i++)
+	    {
+	        m_socket.SendDataGram((const void *) &m_txBlocks[i], (int) m_udpSize, m_address, m_port);
+	        usleep(txDelay);
+	    }
+	}
+	else
+	{
+	    if (!m_cm256Valid)
+	    {
+	        std::cerr << "UDPSinkFEC::transmitUDP: CM256 library initialization failure. No transmission." << std::endl;
+	        return;
+	    }
 
-	std::cerr << "UDPSinkFEC::transmitUDP: nbBlocksFEC: " << nbBlocksFEC << std::endl;
+	    int nbBlocksFEC = m_nbBlocksFEC; // do it once (atomic value)
+
+	    m_cm256Params.BlockBytes = sizeof(ProtectedBlock);
+	    m_cm256Params.OriginalCount = UDPSINKFEC_NBORIGINALBLOCKS;
+	    m_cm256Params.RecoveryCount = nbBlocksFEC;
+
+	    // Fill pointers to data
+	    for (int i = 0; i < m_cm256Params.OriginalCount + m_cm256Params.RecoveryCount; ++i)
+	    {
+	        if (i < m_cm256Params.OriginalCount)
+	        {
+	            m_descriptorBlocks[i].Block = (void *) &(m_txBlocks[i].protectedBlock);
+	        }
+	        else
+	        {
+	            m_txBlocks[i].header.frameIndex = m_frameCount;
+	            m_txBlocks[i].header.blockIndex = i;
+	        }
+	    }
+
+	    // Encode FEC blocks
+	    if (cm256_encode(m_cm256Params, m_descriptorBlocks, m_fecBlocks))
+	    {
+	        std::cerr << "UDPSinkFEC::transmitUDP: CM256 encode failed. No transmission." << std::endl;
+	        return;
+	    }
+
+	    // Merge FEC with data to transmit
+	    for (int i = 0; i < nbBlocksFEC; i++)
+	    {
+	        m_txBlocks[i + m_cm256Params.OriginalCount].protectedBlock = m_fecBlocks[i];
+	    }
+
+	    // Transmit all blocks
+	    for (int i = 0; i < m_cm256Params.OriginalCount + m_cm256Params.RecoveryCount; i++)
+	    {
+	//      std::cerr << "UDPSinkFEC::transmitUDP:"
+	//              << " i: " << i
+	//              << " frameIndex: " << (int) m_txBlocks[i].header.frameIndex
+	//              << " blockIndex: " << (int) m_txBlocks[i].header.blockIndex << std::endl;
+	        m_socket.SendDataGram((const void *) &m_txBlocks[i], (int) m_udpSize, m_address, m_port);
+            usleep(txDelay);
+	    }
+	}
 }

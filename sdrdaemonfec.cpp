@@ -391,8 +391,8 @@ int main(int argc, char **argv)
     unsigned int outputbuf_samples = 48 * UDPSIZE;
     uint32_t compressedMinSize = 0;
     bool useFec = false;
-    unsigned int nbFECBlocks = 1;
-    unsigned int txDelay = 200;
+    unsigned int nbFECBlocks = 0;
+    unsigned int txDelay = 0;
 
     fprintf(stderr,
             "SDRDaemon - Collect samples from SDR device and send it over the network via UDP\n");
@@ -623,7 +623,7 @@ int main(int argc, char **argv)
         if (confTxDelay != txDelay)
         {
             txDelay = confTxDelay;
-            udp_output->setNbBlocksFEC(txDelay);
+            udp_output->setTxDelay(txDelay);
         }
 
         // Possible downsampling and write to UDP

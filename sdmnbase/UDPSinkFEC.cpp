@@ -35,6 +35,12 @@ UDPSinkFEC::UDPSinkFEC(const std::string& address, unsigned int port) :
 UDPSinkFEC::~UDPSinkFEC()
 {}
 
+void UDPSinkFEC::setTxDelay(int txDelay)
+{
+    std::cerr << "UDPSinkFEC::setTxDelay: txDelay: " << txDelay << std::endl;
+    m_txDelay = txDelay;
+}
+
 void UDPSinkFEC::write(const IQSampleVector& samples_in)
 {
 	IQSampleVector::const_iterator it = samples_in.begin();

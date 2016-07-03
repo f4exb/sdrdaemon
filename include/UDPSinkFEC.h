@@ -64,7 +64,7 @@ public:
     virtual ~UDPSinkFEC();
     virtual void write(const IQSampleVector& samples_in);
     virtual void setNbBlocksFEC(int nbBlocksFEC) { m_nbBlocksFEC = nbBlocksFEC; }
-    virtual void setTxDelay(int txDelay) { m_txDelay = txDelay; }
+    virtual void setTxDelay(int txDelay);
 
 private:
 #pragma pack(push, 1)

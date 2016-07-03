@@ -10,7 +10,7 @@
     <category>SDRdaemonFEC</category>	
 	<flags>throttle</flags>
 	<import>import sdrdaemonfec</import>
-	<make>sdrdaemonfec.sdrdmnfec_source($type.size*$vlen, $ipaddr, $port, $psize, $eof)</make>
+	<make>sdrdaemonfec.sdrdmnfec_source($type.size*$vlen, $ipaddr, $port, $psize)</make>
 	<callback>set_mtu($mtu)</callback>
 	<param>
 		<name>Output Type</name>
@@ -59,12 +59,6 @@
 		<key>psize</key>
 		<value>1472</value>
 		<type>int</type>
-	</param>
-	<param>
-	        <name>Null Pkt is EOF</name>
-		<key>eof</key>
-		<value>True</value>
-		<type>bool</type>
 	</param>
 	<param>
 		<name>Vec Length</name>

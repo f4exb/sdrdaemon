@@ -41,23 +41,20 @@ const int sdrdmnfec_source_impl::BUF_SIZE_PAYLOADS = 512;
 sdrdmnfec_source::sptr sdrdmnfec_source::make(std::size_t itemsize,
         const std::string &ipaddr,
         int port,
-        int payload_size,
-        bool eof)
+        int payload_size)
 {
-    return gnuradio::get_initial_sptr(new sdrdmnfec_source_impl(itemsize, ipaddr, port, payload_size, eof));
+    return gnuradio::get_initial_sptr(new sdrdmnfec_source_impl(itemsize, ipaddr, port, payload_size));
 }
 
 sdrdmnfec_source_impl::sdrdmnfec_source_impl(size_t itemsize,
         const std::string &host,
         int port,
-        int payload_size,
-        bool eof) :
+        int payload_size) :
         sync_block("sdrdmn_source",
                 io_signature::make(0, 0, 0),
                 io_signature::make(1, 1, itemsize)),
         d_itemsize(itemsize),
         d_payload_size(payload_size),
-        d_eof(eof),
         d_connected(false),
         d_sdrdmnbuf(),
         d_residual(0),
@@ -205,34 +202,23 @@ void sdrdmnfec_source_impl::handle_read(const boost::system::error_code& error, 
     {
         boost::lock_guard<gr::thread::mutex> lock(d_udp_mutex);
 
-        if (d_eof && (bytes_transferred == 1) && (d_rxbuf[0] == 0x00))
+        // Make sure we never go beyond the boundary of the
+        // residual buffer.  This will just drop the last bit of
+        // data in the buffer if we've run out of room.
+        if ((int) (d_residual + bytes_transferred) >= (BUF_SIZE_PAYLOADS * d_payload_size))
         {
-            // If we are using EOF notification, test for it and don't
-            // add anything to the output.
-            d_residual = WORK_DONE;
-            d_cond_wait.notify_one();
-            return;
+            //GR_LOG_WARN(d_logger, "Too much data; dropping packet.");
         }
         else
         {
-            // Make sure we never go beyond the boundary of the
-            // residual buffer.  This will just drop the last bit of
-            // data in the buffer if we've run out of room.
-            if ((int) (d_residual + bytes_transferred) >= (BUF_SIZE_PAYLOADS * d_payload_size))
-            {
-                //GR_LOG_WARN(d_logger, "Too much data; dropping packet.");
-            }
-            else
-            {
-                // otherwise, copy received data into local buffer for
-                // copying later.
-                std::size_t dataRead;
-                d_sdrdmnbuf.writeAndRead((uint8_t *) d_rxbuf, bytes_transferred, (uint8_t *) d_residbuf + d_residual, dataRead);
-                d_residual += dataRead;
+            // otherwise, copy received data into local buffer for
+            // copying later.
+            std::size_t dataRead;
+            d_sdrdmnbuf.writeAndRead((uint8_t *) d_rxbuf, bytes_transferred, (uint8_t *) d_residbuf + d_residual, dataRead);
+            d_residual += dataRead;
 
-                //memcpy(d_residbuf + d_residual, d_rxbuf, bytes_transferred);
-                //d_residual += bytes_transferred;
-            }
+            //memcpy(d_residbuf + d_residual, d_rxbuf, bytes_transferred);
+            //d_residual += bytes_transferred;
         }
 
         d_cond_wait.notify_one();

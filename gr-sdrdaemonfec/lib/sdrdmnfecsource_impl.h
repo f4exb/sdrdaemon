@@ -37,7 +37,6 @@ class sdrdmnfec_source_impl: public sdrdmnfec_source
 private:
     std::size_t d_itemsize;
     int d_payload_size; // maximum transmission unit (packet length)
-    bool d_eof;          // look for an EOF signal
     bool d_connected;    // are we connected?
     char *d_rxbuf;        // get UDP buffer items
     char *d_residbuf;     // hold buffer between calls
@@ -65,7 +64,7 @@ private:
     void run_io_service() { d_io_service.run(); }
 
 public:
-    sdrdmnfec_source_impl(std::size_t itemsize, const std::string &host, int port,  int payload_size, bool eof);
+    sdrdmnfec_source_impl(std::size_t itemsize, const std::string &host, int port,  int payload_size);
     ~sdrdmnfec_source_impl();
 
     void connect(const std::string &host, int port);

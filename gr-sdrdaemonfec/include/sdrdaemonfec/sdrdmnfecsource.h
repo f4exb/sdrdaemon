@@ -43,11 +43,9 @@ public:
     * interface on the host
     * \param port The port number on which to receive data; use 0 to
     * have the system assign an unused port number
-    * \param payload_size UDP payload size by default set to 1472 =
-    * (1500 MTU - (8 byte UDP header) - (20 byte IP header))
-    * \param eof Interpret zero-length packet as EOF (default: true)
+    * \param payload_size UDP payload size by default set to 512
     */
-    static sptr make(std::size_t itemsize, const std::string &host, int port, int payload_size=1472, bool eof=true);
+    static sptr make(std::size_t itemsize, const std::string &host, int port, int payload_size=512);
 
     /*! \brief Change the connection to a new destination
     *

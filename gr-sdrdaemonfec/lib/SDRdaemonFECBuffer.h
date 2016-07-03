@@ -138,7 +138,7 @@ private:
 	cm256_encoder_params m_paramsCM256;
 	DecoderSlot          m_decoderSlots[nbDecoderSlots];
 	BufferFrame          m_frames[nbDecoderSlots];
-	int                  m_decoderSlotHead;
+	int                  m_decoderIndexHead;
 	int                  m_frameHead;
 	int                  m_curNbBlocks;          //!< (stats) instantaneous number of blocks received
 	int                  m_curNbRecovery;        //!< (stats) instantaneous number of recovery blocks used

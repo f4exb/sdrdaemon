@@ -215,6 +215,9 @@ void sdrdmnfec_source_impl::handle_read(const boost::system::error_code& error, 
             // copying later.
             std::size_t dataRead;
             d_sdrdmnbuf.writeAndRead((uint8_t *) d_rxbuf, bytes_transferred, (uint8_t *) d_residbuf + d_residual, dataRead);
+//            std::cerr << "sdrdmnfec_source_impl::handle_read:"
+//                    << " d_residual: " << d_residual
+//                    << " dataRead: " << dataRead << std::endl;
             d_residual += dataRead;
 
             //memcpy(d_residbuf + d_residual, d_rxbuf, bytes_transferred);

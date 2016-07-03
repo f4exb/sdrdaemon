@@ -101,6 +101,11 @@ public:
         return m_nbFECBlocks;
     }
 
+    unsigned int get_tx_delay() const
+    {
+        return m_txDelay;
+    }
+
     /** Print current parameters specific to device type */
     virtual void print_specific_parms() = 0;
 
@@ -134,6 +139,7 @@ protected:
     uint64_t              m_confFreq;
     unsigned int          m_decim;
     unsigned int          m_nbFECBlocks;
+    unsigned int          m_txDelay;
     int                   m_fcPos;
     DataBuffer<IQSample> *m_buf;
     std::atomic_bool     *m_stop_flag;

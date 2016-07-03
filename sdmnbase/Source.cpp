@@ -34,6 +34,8 @@ bool Source::configure(std::string& configureStr)
     }
     else
     {
+        // configuration for the downsampler
+
         if (m_downsampler)
         {
             if (!m_downsampler->configure(m))
@@ -42,6 +44,8 @@ bool Source::configure(std::string& configureStr)
                 return false;
             }
         }
+
+        // configuration for the UDP sink
 
         if (m.find("fecblk") != m.end())
         {
@@ -52,6 +56,14 @@ bool Source::configure(std::string& configureStr)
                 m_nbFECBlocks = nbFECBlocks;
             }
         }
+
+        if (m.find("txdelay") != m.end())
+        {
+            int txdDelay = atoi(m["txdelay"].c_str());
+            m_txDelay = (txdDelay < 0 ? 0 : txdDelay);
+        }
+
+        // configuration for the source itself
 
         return configure(m);
     }

@@ -64,6 +64,7 @@ public:
     virtual ~UDPSinkFEC();
     virtual void write(const IQSampleVector& samples_in);
     virtual void setNbBlocksFEC(int nbBlocksFEC) { m_nbBlocksFEC = nbBlocksFEC; }
+    virtual void setTxDelay(int txDelay) { m_txDelay = txDelay; }
 
 private:
 #pragma pack(push, 1)
@@ -119,6 +120,7 @@ private:
 
     MetaDataFEC m_currentMetaFEC;        //!< Meta data for current frame
     std::atomic_int m_nbBlocksFEC;       //!< Variable number of FEC blocks
+    std::atomic_int m_txDelay;           //!< Delay in microseconds (usleep) between each sending of an UDP datagram
     SuperBlock m_txBlocks[256];          //!< UDP blocks to send with original data + FEC
     SuperBlock m_superBlock;             //!< current super block being built
     ProtectedBlock m_fecBlocks[256 - UDPSINKFEC_NBORIGINALBLOCKS];  //!< FEC data

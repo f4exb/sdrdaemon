@@ -99,6 +99,7 @@ public:
     void setSampleBits(uint8_t sampleBits) { m_sampleBits = sampleBits; }
 
     virtual void setNbBlocksFEC(int nbBlocksFEC) {};
+    virtual void setTxDelay(int txDelay) {};
 
     /** Return true if the stream is OK, return false if there is an error. */
     operator bool() const

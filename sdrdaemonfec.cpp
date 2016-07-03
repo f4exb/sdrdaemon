@@ -158,6 +158,9 @@ void usage()
             "  -C port        Configuration port (default 9091). The configuration string as described below\n"
             "                 is sent on this port via nanomsg in TCP to control the device\n"
             "\n"
+            "Configuration options for the UDP sender:\n"
+            "  txwait=<int>   Wait this number of microseconds (usleep) between transmission of each UDP packet (default 200)\n"
+            "\n"
             "Configuration options for the decimator:\n"
             "  decim=<int>    log2 of decimation factor (default 0: no decimation)\n"
             "  fcpos=<int>    Center frequency position (default 2: center):\n"
@@ -389,6 +392,7 @@ int main(int argc, char **argv)
     uint32_t compressedMinSize = 0;
     bool useFec = false;
     unsigned int nbFECBlocks = 1;
+    unsigned int txDelay = 200;
 
     fprintf(stderr,
             "SDRDaemon - Collect samples from SDR device and send it over the network via UDP\n");
@@ -612,6 +616,14 @@ int main(int argc, char **argv)
         {
             nbFECBlocks = confNbFECBlocks;
             udp_output->setNbBlocksFEC(nbFECBlocks);
+        }
+
+        unsigned int confTxDelay = srcsdr->get_tx_delay();
+
+        if (confTxDelay != txDelay)
+        {
+            txDelay = confTxDelay;
+            udp_output->setNbBlocksFEC(txDelay);
         }
 
         // Possible downsampling and write to UDP

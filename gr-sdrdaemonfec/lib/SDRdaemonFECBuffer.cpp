@@ -83,6 +83,13 @@ void SDRdaemonFECBuffer::getSlotData(int slotIndex, uint8_t *data, std::size_t& 
     dataLength = (nbOriginalBlocks - 1) * samplesPerBlock * sizeof(Sample);
     memcpy((void *) data, (const void *) &m_frames[slotIndex].m_blocks, dataLength);
 
+    if (!m_decoderSlots[slotIndex].m_decoded)
+    {
+        std::cerr << "SDRdaemonFECBuffer::getSlotData: incomplete frame:"
+                << " m_blockCount: " << m_decoderSlots[slotIndex].m_blockCount
+                << " m_recoveryCount: " << m_decoderSlots[slotIndex].m_recoveryCount << std::endl;
+    }
+
     if (m_decoderSlots[slotIndex].m_blockZero.m_metaData.m_nbFECBlocks >= 0) // valid meta
     {
         m_outputMeta = m_decoderSlots[slotIndex].m_blockZero.m_metaData; // store it
@@ -170,6 +177,7 @@ bool SDRdaemonFECBuffer::writeAndRead(uint8_t *array, std::size_t length, uint8_
     // decoderIndex should now be correctly set
 
     int blockHead = m_decoderSlots[decoderIndex].m_blockCount;
+    int recoveryHead = m_decoderSlots[decoderIndex].m_recoveryCount;
 
     if (blockHead < nbOriginalBlocks) // not enough blocks to decode -> store data
     {
@@ -187,7 +195,8 @@ bool SDRdaemonFECBuffer::writeAndRead(uint8_t *array, std::size_t length, uint8_
         }
         else // redundancy block
         {
-            m_decoderSlots[decoderIndex].m_recoveryBlocks[m_decoderSlots[decoderIndex].m_recoveryCount] = superBlock->protectedBlock;
+            m_decoderSlots[decoderIndex].m_recoveryBlocks[recoveryHead] = superBlock->protectedBlock;
+            m_decoderSlots[decoderIndex].m_cm256DescriptorBlocks[blockHead].Block = (void *) &m_decoderSlots[decoderIndex].m_recoveryBlocks[recoveryHead];
             m_decoderSlots[decoderIndex].m_recoveryCount++;
         }
 

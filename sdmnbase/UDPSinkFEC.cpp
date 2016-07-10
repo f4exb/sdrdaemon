@@ -19,12 +19,15 @@
 #include <sys/time.h>
 #include <unistd.h>
 #include <iostream>
+#include <thread>
 #include "UDPSinkFEC.h"
 
 UDPSinkFEC::UDPSinkFEC(const std::string& address, unsigned int port) :
     UDPSink::UDPSink(address, port, UDPSINKFEC_UDPSIZE),
     m_nbBlocksFEC(1),
+    m_txThread(0),
 	m_txBlockIndex(0),
+	m_txBlocksIndex(0),
 	m_frameCount(0),
 	m_sampleIndex(0)
 {
@@ -44,6 +47,7 @@ void UDPSinkFEC::setTxDelay(int txDelay)
 void UDPSinkFEC::write(const IQSampleVector& samples_in)
 {
 	IQSampleVector::const_iterator it = samples_in.begin();
+	//std::cerr << "UDPSinkFEC::write: samples_in.size() = " << samples_in.size() << std::endl;
 
 	while (it != samples_in.end())
 	{
@@ -89,7 +93,7 @@ void UDPSinkFEC::write(const IQSampleVector& samples_in)
                 m_currentMetaFEC = metaData;
             }
 
-            m_txBlocks[0] = m_superBlock;
+            m_txBlocks[m_txBlocksIndex][0] = m_superBlock;
             m_txBlockIndex = 1; // next Tx block with data
 	    }
 
@@ -111,11 +115,12 @@ void UDPSinkFEC::write(const IQSampleVector& samples_in)
 
             m_superBlock.header.frameIndex = m_frameCount;
             m_superBlock.header.blockIndex = m_txBlockIndex;
-            m_txBlocks[m_txBlockIndex] =  m_superBlock;
+            m_txBlocks[m_txBlocksIndex][m_txBlockIndex] =  m_superBlock;
 
             if (m_txBlockIndex == UDPSINKFEC_NBORIGINALBLOCKS - 1) // frame complete
             {
-                transmitUDP();
+                transmitUDP(m_txBlocksIndex);
+                m_txBlocksIndex = (m_txBlocksIndex + 1) % 4;
                 m_txBlockIndex = 0;
                 m_frameCount++;
             }
@@ -127,7 +132,7 @@ void UDPSinkFEC::write(const IQSampleVector& samples_in)
 	}
 }
 
-void UDPSinkFEC::transmitUDP()
+void UDPSinkFEC::transmitUDP(int txRowIndex)
 {
     // do it once (atomic values)
 	int nbBlocksFEC = m_nbBlocksFEC;
@@ -141,7 +146,7 @@ void UDPSinkFEC::transmitUDP()
 	{
 	    for (int i = 0; i < UDPSINKFEC_NBORIGINALBLOCKS; i++)
 	    {
-	        m_socket.SendDataGram((const void *) &m_txBlocks[i], (int) m_udpSize, m_address, m_port);
+	        m_socket.SendDataGram((const void *) &m_txBlocks[txRowIndex][i], (int) m_udpSize, m_address, m_port);
 	        usleep(txDelay);
 	    }
 	}
@@ -170,16 +175,16 @@ void UDPSinkFEC::transmitUDP()
 	    {
 	        if (i < m_cm256Params.OriginalCount)
 	        {
-	            m_descriptorBlocks[i].Block = (void *) &(m_txBlocks[i].protectedBlock);
+	            m_descriptorBlocks[i].Block = (void *) &(m_txBlocks[txRowIndex][i].protectedBlock);
 	        }
 	        else
 	        {
-	            memset((void *) &m_txBlocks[i].protectedBlock, 0, sizeof(ProtectedBlock));
-	            m_txBlocks[i].header.frameIndex = m_frameCount;
-	            m_txBlocks[i].header.blockIndex = i;
+	            memset((void *) &m_txBlocks[txRowIndex][i].protectedBlock, 0, sizeof(ProtectedBlock));
+	            m_txBlocks[txRowIndex][i].header.frameIndex = m_frameCount;
+	            m_txBlocks[txRowIndex][i].header.blockIndex = i;
 	        }
 
-            m_descriptorBlocks[i].Index = m_txBlocks[i].header.blockIndex;
+            m_descriptorBlocks[i].Index = m_txBlocks[txRowIndex][i].header.blockIndex;
 	    }
 
 	    // Encode FEC blocks
@@ -192,7 +197,7 @@ void UDPSinkFEC::transmitUDP()
 	    // Merge FEC with data to transmit
 	    for (int i = 0; i < m_cm256Params.RecoveryCount; i++)
 	    {
-	        m_txBlocks[i + m_cm256Params.OriginalCount].protectedBlock = m_fecBlocks[i];
+	        m_txBlocks[txRowIndex][i + m_cm256Params.OriginalCount].protectedBlock = m_fecBlocks[i];
 	    }
 
 	    // Transmit all blocks
@@ -212,7 +217,7 @@ void UDPSinkFEC::transmitUDP()
 //
 //            std::cerr << std::endl;
 
-            m_socket.SendDataGram((const void *) &m_txBlocks[i], (int) m_udpSize, m_address, m_port);
+            m_socket.SendDataGram((const void *) &m_txBlocks[txRowIndex][i], (int) m_udpSize, m_address, m_port);
             usleep(txDelay);
 	    }
 	}

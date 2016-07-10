@@ -57,6 +57,11 @@
 #define UDPSINKFEC_UDPSIZE 512
 #define UDPSINKFEC_NBORIGINALBLOCKS 128
 
+namespace std
+{
+    class thread;
+}
+
 class UDPSinkFEC : public UDPSink
 {
 public:
@@ -115,17 +120,19 @@ private:
     MetaDataFEC m_currentMetaFEC;        //!< Meta data for current frame
     std::atomic_int m_nbBlocksFEC;       //!< Variable number of FEC blocks
     std::atomic_int m_txDelay;           //!< Delay in microseconds (usleep) between each sending of an UDP datagram
-    SuperBlock m_txBlocks[256];          //!< UDP blocks to send with original data + FEC
+    SuperBlock m_txBlocks[4][256];       //!< UDP blocks to send with original data + FEC
+    std::thread *m_txThread;             //!< Thread to transmit UDP blocks
     SuperBlock m_superBlock;             //!< current super block being built
     ProtectedBlock m_fecBlocks[256];     //!< FEC data
-    int m_txBlockIndex;                  //!< Current index in blocks to transmit
+    int m_txBlockIndex;                  //!< Current index in blocks to transmit in the Tx row
+    int m_txBlocksIndex;                 //!< Current index of Tx blocks row
     uint16_t m_frameCount;               //!< transmission frame count
     int m_sampleIndex;                   //!< Current sample index in protected block data
     cm256_encoder_params m_cm256Params;  //!< Main interface with CM256 encoder
     cm256_block m_descriptorBlocks[256]; //!< Pointers to data for CM256 encoder
     bool m_cm256Valid;
 
-    void transmitUDP();
+    void transmitUDP(int txRowIndex);
 };
 
 

@@ -123,16 +123,16 @@ private:
     SuperBlock m_txBlocks[4][256];       //!< UDP blocks to send with original data + FEC
     std::thread *m_txThread;             //!< Thread to transmit UDP blocks
     SuperBlock m_superBlock;             //!< current super block being built
-    ProtectedBlock m_fecBlocks[256];     //!< FEC data
+    //ProtectedBlock m_fecBlocks[256];     //!< FEC data
     int m_txBlockIndex;                  //!< Current index in blocks to transmit in the Tx row
     int m_txBlocksIndex;                 //!< Current index of Tx blocks row
     uint16_t m_frameCount;               //!< transmission frame count
     int m_sampleIndex;                   //!< Current sample index in protected block data
-    cm256_encoder_params m_cm256Params;  //!< Main interface with CM256 encoder
-    cm256_block m_descriptorBlocks[256]; //!< Pointers to data for CM256 encoder
+    //cm256_encoder_params m_cm256Params;  //!< Main interface with CM256 encoder
+    //cm256_block m_descriptorBlocks[256]; //!< Pointers to data for CM256 encoder
     bool m_cm256Valid;
 
-    void transmitUDP(int txRowIndex);
+    static void transmitUDP(UDPSinkFEC *udpSinkFEC, SuperBlock *txBlockx, uint16_t frameIndex, int nbBlocksFEC, int txDelay, bool cm256Valid);
 };
 
 

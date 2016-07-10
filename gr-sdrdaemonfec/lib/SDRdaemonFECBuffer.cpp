@@ -126,7 +126,16 @@ bool SDRdaemonFECBuffer::writeAndRead(uint8_t *array, std::size_t length, uint8_
 //    std::cerr << "SDRdaemonFECBuffer::writeAndRead:"
 //            << " frameIndex: " << frameIndex
 //            << " decoderIndex: " << decoderIndex
-//            << " blockIndex: " << blockIndex << std::endl;
+//            << " blockIndex: " << blockIndex
+//            << " i.q:";
+//
+//    for (int i = 0; i < 10; i++)
+//    {
+//        std::cerr << " " << (int) superBlock->protectedBlock.samples[i].i
+//                << "." << (int) superBlock->protectedBlock.samples[i].q;
+//    }
+//
+//    std::cerr << std::endl;
 
     if (m_frameHead == -1) // initial state
     {
@@ -203,19 +212,22 @@ bool SDRdaemonFECBuffer::writeAndRead(uint8_t *array, std::size_t length, uint8_
         m_decoderSlots[decoderIndex].m_cm256DescriptorBlocks[blockHead].Index = blockIndex;
         m_decoderSlots[decoderIndex].m_blockCount++;
     }
-    else if (!m_decoderSlots[decoderIndex].m_decoded) // ready to decode and not decoded yet
+
+    if (m_decoderSlots[decoderIndex].m_blockCount == nbOriginalBlocks) // ready to decode
     {
-        if (m_decoderSlots[decoderIndex].m_metaRetrieved) // block zero has been received
-        {
-            m_paramsCM256.RecoveryCount = m_decoderSlots[decoderIndex].m_blockZero.m_metaData.m_nbFECBlocks;
-        }
-        else
-        {
-            m_paramsCM256.RecoveryCount = m_currentMeta.m_nbFECBlocks; // take last value for number of FEC blocks
-        }
+        m_decoderSlots[decoderIndex].m_decoded = true;
 
         if (m_decoderSlots[decoderIndex].m_recoveryCount > 0) // recovery data used
         {
+            if (m_decoderSlots[decoderIndex].m_metaRetrieved) // block zero has been received
+            {
+                m_paramsCM256.RecoveryCount = m_decoderSlots[decoderIndex].m_blockZero.m_metaData.m_nbFECBlocks;
+            }
+            else
+            {
+                m_paramsCM256.RecoveryCount = m_currentMeta.m_nbFECBlocks; // take last value for number of FEC blocks
+            }
+
             if (cm256_decode(m_paramsCM256, m_decoderSlots[decoderIndex].m_cm256DescriptorBlocks)) // failure to decode
             {
                 std::cerr << "SDRdaemonFECBuffer::writeAndRead: CM256 decode error" << std::endl;
@@ -230,7 +242,17 @@ bool SDRdaemonFECBuffer::writeAndRead(uint8_t *array, std::size_t length, uint8_
                 for (int ir = 0; ir < m_decoderSlots[decoderIndex].m_recoveryCount; ir++) // recover lost blocks
                 {
                     int blockIndex = m_decoderSlots[decoderIndex].m_cm256DescriptorBlocks[nbOriginalBlocks+ir].Index;
-                    std::cerr << "SDRdaemonFECBuffer::writeAndRead: recovered block #" << blockIndex << std::endl;
+                    std::cerr << "SDRdaemonFECBuffer::writeAndRead:"
+                            << " recovered block #" << blockIndex
+                            << " i.q: ";
+
+                    for (int i = 0; i < 10; i++)
+                    {
+                        std::cerr << " " << m_decoderSlots[decoderIndex].m_recoveryBlocks[ir].samples[0].i
+                                << "." << m_decoderSlots[decoderIndex].m_recoveryBlocks[ir].samples[0].q;
+                    }
+
+                    std::cerr << std::endl;
 
                     if (blockIndex == 0)
                     {
@@ -243,8 +265,8 @@ bool SDRdaemonFECBuffer::writeAndRead(uint8_t *array, std::size_t length, uint8_
                         m_frames[decoderIndex].m_blocks[blockIndex - 1] =  m_decoderSlots[decoderIndex].m_recoveryBlocks[ir];
                     }
                 }
-            }
-        }
+            } // success to decode
+        } // recovery data used
 
         if (m_decoderSlots[decoderIndex].m_metaRetrieved) // meta data retrieved
         {
@@ -255,9 +277,7 @@ bool SDRdaemonFECBuffer::writeAndRead(uint8_t *array, std::size_t length, uint8_
 
             m_currentMeta = m_decoderSlots[decoderIndex].m_blockZero.m_metaData; // renew current meta
         }
-
-        m_decoderSlots[decoderIndex].m_decoded = true;
-    }
+    } // decode frame
 
     return dataAvailable;
 }

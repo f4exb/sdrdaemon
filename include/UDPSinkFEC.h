@@ -91,12 +91,6 @@ private:
         }
     };
 
-    struct Sample
-    {
-        uint16_t i;
-        uint16_t q;
-    };
-
     struct Header
     {
         uint16_t frameIndex;
@@ -123,7 +117,7 @@ private:
     std::atomic_int m_txDelay;           //!< Delay in microseconds (usleep) between each sending of an UDP datagram
     SuperBlock m_txBlocks[256];          //!< UDP blocks to send with original data + FEC
     SuperBlock m_superBlock;             //!< current super block being built
-    ProtectedBlock m_fecBlocks[256 - UDPSINKFEC_NBORIGINALBLOCKS];  //!< FEC data
+    ProtectedBlock m_fecBlocks[256];     //!< FEC data
     int m_txBlockIndex;                  //!< Current index in blocks to transmit
     uint16_t m_frameCount;               //!< transmission frame count
     int m_sampleIndex;                   //!< Current sample index in protected block data

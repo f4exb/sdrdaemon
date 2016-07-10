@@ -70,7 +70,7 @@ void UDPSinkFEC::write(const IQSampleVector& samples_in)
             memset((void *) &m_superBlock, 0, UDPSINKFEC_UDPSIZE);
 
             m_superBlock.header.frameIndex = m_frameCount;
-            m_superBlock.header.blockIndex = 0;
+            m_superBlock.header.blockIndex = m_txBlockIndex;
             memcpy((void *) &m_superBlock.protectedBlock, (const void *) &metaData, sizeof(MetaDataFEC));
 
             if (!(metaData == m_currentMetaFEC))
@@ -129,7 +129,7 @@ void UDPSinkFEC::write(const IQSampleVector& samples_in)
 
 void UDPSinkFEC::transmitUDP()
 {
-    // do it once (atomic value)
+    // do it once (atomic values)
 	int nbBlocksFEC = m_nbBlocksFEC;
 	int txDelay = m_txDelay;
 
@@ -153,11 +153,17 @@ void UDPSinkFEC::transmitUDP()
 	        return;
 	    }
 
-	    int nbBlocksFEC = m_nbBlocksFEC; // do it once (atomic value)
+	    if (m_cm256Params.RecoveryCount != nbBlocksFEC)
+	    {
+	        m_cm256Params.BlockBytes = sizeof(ProtectedBlock);
+	        m_cm256Params.OriginalCount = UDPSINKFEC_NBORIGINALBLOCKS;
+	        m_cm256Params.RecoveryCount = nbBlocksFEC;
 
-	    m_cm256Params.BlockBytes = sizeof(ProtectedBlock);
-	    m_cm256Params.OriginalCount = UDPSINKFEC_NBORIGINALBLOCKS;
-	    m_cm256Params.RecoveryCount = nbBlocksFEC;
+	        std::cerr << "UDPSinkFEC::write: CM256 encoding with parameters:"
+	                << " BlockBytes: " << m_cm256Params.BlockBytes
+	                << " OriginalCount: " << m_cm256Params.OriginalCount
+	                << " RecoveryCount: " << m_cm256Params.RecoveryCount << std::endl;
+	    }
 
 	    // Fill pointers to data
 	    for (int i = 0; i < m_cm256Params.OriginalCount + m_cm256Params.RecoveryCount; ++i)
@@ -168,9 +174,12 @@ void UDPSinkFEC::transmitUDP()
 	        }
 	        else
 	        {
+	            memset((void *) &m_txBlocks[i].protectedBlock, 0, sizeof(ProtectedBlock));
 	            m_txBlocks[i].header.frameIndex = m_frameCount;
 	            m_txBlocks[i].header.blockIndex = i;
 	        }
+
+            m_descriptorBlocks[i].Index = m_txBlocks[i].header.blockIndex;
 	    }
 
 	    // Encode FEC blocks
@@ -181,7 +190,7 @@ void UDPSinkFEC::transmitUDP()
 	    }
 
 	    // Merge FEC with data to transmit
-	    for (int i = 0; i < nbBlocksFEC; i++)
+	    for (int i = 0; i < m_cm256Params.RecoveryCount; i++)
 	    {
 	        m_txBlocks[i + m_cm256Params.OriginalCount].protectedBlock = m_fecBlocks[i];
 	    }
@@ -189,11 +198,21 @@ void UDPSinkFEC::transmitUDP()
 	    // Transmit all blocks
 	    for (int i = 0; i < m_cm256Params.OriginalCount + m_cm256Params.RecoveryCount; i++)
 	    {
-	//      std::cerr << "UDPSinkFEC::transmitUDP:"
-	//              << " i: " << i
-	//              << " frameIndex: " << (int) m_txBlocks[i].header.frameIndex
-	//              << " blockIndex: " << (int) m_txBlocks[i].header.blockIndex << std::endl;
-	        m_socket.SendDataGram((const void *) &m_txBlocks[i], (int) m_udpSize, m_address, m_port);
+//            std::cerr << "UDPSinkFEC::transmitUDP:"
+//                  << " i: " << i
+//                  << " frameIndex: " << (int) m_txBlocks[i].header.frameIndex
+//                  << " blockIndex: " << (int) m_txBlocks[i].header.blockIndex
+//                  << " i.q:";
+//
+//            for (int j = 0; j < 10; j++)
+//            {
+//                std::cerr << " " << (int) m_txBlocks[i].protectedBlock.m_samples[j].m_real
+//                        << "." << (int) m_txBlocks[i].protectedBlock.m_samples[j].m_imag;
+//            }
+//
+//            std::cerr << std::endl;
+
+            m_socket.SendDataGram((const void *) &m_txBlocks[i], (int) m_udpSize, m_address, m_port);
             usleep(txDelay);
 	    }
 	}

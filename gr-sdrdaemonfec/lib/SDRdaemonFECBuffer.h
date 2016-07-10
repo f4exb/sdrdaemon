@@ -29,7 +29,7 @@
 
 #define SDRDAEMONFEC_UDPSIZE 512            // UDP payload size
 #define SDRDAEMONFEC_NBORIGINALBLOCKS 128   // number of sample blocks per frame excluding FEC blocks
-#define SDRDAEMONFEC_NBDECODERSLOTS 4       // power of two sub multiple of uint16_t size. A too large one is superfluous.
+#define SDRDAEMONFEC_NBDECODERSLOTS 4       // power of two sub multiple of int16_t size. A too large one is superfluous.
 
 class SDRdaemonFECBuffer
 {
@@ -60,8 +60,8 @@ public:
 
     struct Sample
     {
-        uint16_t i;
-        uint16_t q;
+        int16_t i;
+        int16_t q;
     };
 
     struct Header

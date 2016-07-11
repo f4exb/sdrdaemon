@@ -131,6 +131,7 @@ private:
     //cm256_encoder_params m_cm256Params;  //!< Main interface with CM256 encoder
     //cm256_block m_descriptorBlocks[256]; //!< Pointers to data for CM256 encoder
     bool m_cm256Valid;
+    std::atomic_bool m_udpSent;          //!< True when UDP sending thread has finished (Frame transmission complete)
 
     static void transmitUDP(UDPSinkFEC *udpSinkFEC, SuperBlock *txBlockx, uint16_t frameIndex, int nbBlocksFEC, int txDelay, bool cm256Valid);
 };

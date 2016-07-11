@@ -24,7 +24,7 @@
 
 UDPSinkFEC::UDPSinkFEC(const std::string& address, unsigned int port) :
     UDPSink::UDPSink(address, port, UDPSINKFEC_UDPSIZE),
-    m_nbBlocksFEC(1),
+    m_nbBlocksFEC(0),
     m_txThread(0),
 	m_txBlockIndex(0),
 	m_txBlocksIndex(0),
@@ -33,10 +33,17 @@ UDPSinkFEC::UDPSinkFEC(const std::string& address, unsigned int port) :
 {
     m_cm256Valid = (cm256_init() == 0);
     m_currentMetaFEC.init();
+    m_udpSent.store(true);
 }
 
 UDPSinkFEC::~UDPSinkFEC()
-{}
+{
+	if (m_txThread)
+	{
+		m_txThread->join();
+		delete m_txThread;
+	}
+}
 
 void UDPSinkFEC::setTxDelay(int txDelay)
 {
@@ -127,6 +134,11 @@ void UDPSinkFEC::write(const IQSampleVector& samples_in)
             {
                 if (m_txThread)
                 {
+                	if (!m_udpSent.load())
+                	{
+                		std::cerr << "UDPSinkFEC::write: warning UDP transmission not finished" << std::endl;
+                	}
+
                     m_txThread->join();
                     delete m_txThread;
                 }
@@ -158,6 +170,8 @@ void UDPSinkFEC::transmitUDP(UDPSinkFEC *udpSinkFEC, SuperBlock *txBlockx, uint1
 //    std::cerr << "UDPSinkFEC::transmitUDP:"
 //            << " nbBlocksFEC: " << nbBlocksFEC
 //            << " txDelay: " << txDelay << std::endl;
+
+	udpSinkFEC->m_udpSent.store(false);
 
 	if ((nbBlocksFEC == 0) || !cm256Valid)
 	{
@@ -225,4 +239,6 @@ void UDPSinkFEC::transmitUDP(UDPSinkFEC *udpSinkFEC, SuperBlock *txBlockx, uint1
             usleep(txDelay);
 	    }
 	}
+
+	udpSinkFEC->m_udpSent.store(true);
 }

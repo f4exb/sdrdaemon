@@ -44,6 +44,12 @@ void UDPSinkFEC::setTxDelay(int txDelay)
     m_txDelay = txDelay;
 }
 
+void UDPSinkFEC::setNbBlocksFEC(int nbBlocksFEC)
+{
+    std::cerr << "UDPSinkFEC::setNbBlocksFEC: nbBlocksFEC: " << nbBlocksFEC << std::endl;
+    m_nbBlocksFEC = nbBlocksFEC;
+}
+
 void UDPSinkFEC::write(const IQSampleVector& samples_in)
 {
 	IQSampleVector::const_iterator it = samples_in.begin();

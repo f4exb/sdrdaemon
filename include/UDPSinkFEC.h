@@ -68,7 +68,7 @@ public:
     UDPSinkFEC(const std::string& address, unsigned int port);
     virtual ~UDPSinkFEC();
     virtual void write(const IQSampleVector& samples_in);
-    virtual void setNbBlocksFEC(int nbBlocksFEC) { m_nbBlocksFEC = nbBlocksFEC; }
+    virtual void setNbBlocksFEC(int nbBlocksFEC);
     virtual void setTxDelay(int txDelay);
 
 private:

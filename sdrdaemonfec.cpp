@@ -388,7 +388,7 @@ int main(int argc, char **argv)
     unsigned int dataport = 9090;
     unsigned int cfgport = 9091;
     Source  *srcsdr = 0;
-    unsigned int outputbuf_samples = 48 * UDPSIZE;
+    unsigned int outputbuf_samples = 127 * ((UDPSIZE/4) - 1);  // size of one complete frame (was 48 * UDPSIZE);
     uint32_t compressedMinSize = 0;
     bool useFec = false;
     unsigned int nbFECBlocks = 0;

@@ -191,17 +191,13 @@ void UDPSinkFEC::transmitUDP(UDPSinkFEC *udpSinkFEC, SuperBlock *txBlockx, uint1
 	    // Fill pointers to data
 	    for (int i = 0; i < cm256Params.OriginalCount + cm256Params.RecoveryCount; ++i)
 	    {
-	        if (i < cm256Params.OriginalCount)
-	        {
-	            descriptorBlocks[i].Block = (void *) &(txBlockx[i].protectedBlock);
-	        }
-	        else
-	        {
+	        if (i >= cm256Params.OriginalCount) {
 	            memset((void *) &txBlockx[i].protectedBlock, 0, sizeof(ProtectedBlock));
-	            txBlockx[i].header.frameIndex = frameIndex;
-	            txBlockx[i].header.blockIndex = i;
 	        }
 
+            txBlockx[i].header.frameIndex = frameIndex;
+            txBlockx[i].header.blockIndex = i;
+            descriptorBlocks[i].Block = (void *) &(txBlockx[i].protectedBlock);
             descriptorBlocks[i].Index = txBlockx[i].header.blockIndex;
 	    }
 

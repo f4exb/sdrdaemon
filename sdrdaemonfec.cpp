@@ -41,7 +41,7 @@
 #include "Downsampler.h"
 #include "UDPSinkUncompressed.h"
 #include "UDPSinkLZ4.h"
-#include "UDPSinkFEC.h"
+#include "UDPSinkFEC2.h"
 #include "MovingAverage.h"
 
 #ifdef HAS_RTLSDR
@@ -388,7 +388,7 @@ int main(int argc, char **argv)
     unsigned int dataport = 9090;
     unsigned int cfgport = 9091;
     Source  *srcsdr = 0;
-    unsigned int outputbuf_samples = 127 * ((UDPSIZE/4) - 1);  // size of one complete frame (was 48 * UDPSIZE);
+    unsigned int outputbuf_samples = 48 * UDPSIZE;
     uint32_t compressedMinSize = 0;
     bool useFec = false;
     unsigned int nbFECBlocks = 0;
@@ -494,7 +494,7 @@ int main(int argc, char **argv)
     UDPSink *udp_output_instance;
 
     if (useFec) {
-        udp_output_instance = new UDPSinkFEC(dataaddress, dataport);
+        udp_output_instance = new UDPSinkFEC2(dataaddress, dataport);
     } else if (compressedMinSize) {
         udp_output_instance = new UDPSinkLZ4(dataaddress, dataport, UDPSIZE, compressedMinSize);
     } else {

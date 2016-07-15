@@ -50,8 +50,7 @@ find_package(Threads)
 find_package(PkgConfig)
 find_package(Boost 1.47)
 find_package(LZ4 131)
-#find_package(CM256)
-find_package(FEClib)
+find_package(CM256)
 
 # Find Airspy library.
 pkg_check_modules(PKG_AIRSPY libairspy)
@@ -190,7 +189,7 @@ set(sdmnfecbase_SOURCES
     sdmnbase/IntHalfbandFilter.cpp
     sdmnbase/Source.cpp
     sdmnbase/UDPSink.cpp
-    sdmnbase/UDPSinkFEC2.cpp
+    sdmnbase/UDPSinkFEC.cpp
     sdmnbase/UDPSinkUncompressed.cpp
     sdmnbase/UDPSinkLZ4.cpp
     sdmnbase/UDPSocket.cpp
@@ -205,7 +204,7 @@ set(sdmnfecbase_HEADERS
     include/parsekv.h
     include/Source.h
     include/UDPSink.h
-    include/UDPSinkFEC2.h
+    include/UDPSinkFEC.h
     include/UDPSinkUncompressed.h
     include/UDPSinkLZ4.h
     include/UDPSocket.h
@@ -265,7 +264,7 @@ add_executable(sdrdmnctl
 include_directories(
     ${CMAKE_SOURCE_DIR}/include
     ${LIBNANOMSG_INCLUDE_DIR}
-    ${FECLIB_INCLUDE_DIR}
+    ${CM256_INCLUDE_DIR}
     ${EXTRA_INCLUDES}
 )
 
@@ -395,7 +394,7 @@ target_link_libraries(sdrdaemon
 )
 
 if(USE_SIMD)
-    target_link_libraries(sdmnfecbase ${LZ4_LIBRARIES} ${FECLIB_LIBRARIES})
+    target_link_libraries(sdmnfecbase ${LZ4_LIBRARIES} ${CM256_LIBRARIES})
     
     target_link_libraries(sdrdaemonfec
         sdmnfecbase

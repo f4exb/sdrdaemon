@@ -41,7 +41,7 @@
 #include "Downsampler.h"
 #include "UDPSinkUncompressed.h"
 #include "UDPSinkLZ4.h"
-#include "UDPSinkFEC2.h"
+#include "UDPSinkFEC.h"
 #include "MovingAverage.h"
 
 #ifdef HAS_RTLSDR
@@ -494,7 +494,7 @@ int main(int argc, char **argv)
     UDPSink *udp_output_instance;
 
     if (useFec) {
-        udp_output_instance = new UDPSinkFEC2(dataaddress, dataport);
+        udp_output_instance = new UDPSinkFEC(dataaddress, dataport);
     } else if (compressedMinSize) {
         udp_output_instance = new UDPSinkLZ4(dataaddress, dataport, UDPSIZE, compressedMinSize);
     } else {

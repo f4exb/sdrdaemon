@@ -109,15 +109,19 @@ private:
 	static const int nbDecoderSlots = SDRDAEMONFEC_NBDECODERSLOTS;
 
 #pragma pack(push, 1)
-	struct BufferFrame
+	struct BufferFrame0
 	{
-	    ProtectedBlock  m_blocks[nbOriginalBlocks - 1];
+	    ProtectedBlock  m_blocks[nbOriginalBlocks];
 	};
+    struct BufferFrame
+    {
+        ProtectedBlock  m_blocks[nbOriginalBlocks - 1];
+    };
 #pragma pack(pop)
 
 	struct DecoderSlot
     {
-        ProtectedBlockZero   m_blockZero;
+        BufferFrame0         m_frame; //!< retrieved frames including block0 with meta data
         ProtectedBlock*      m_originalBlockPtrs[nbOriginalBlocks];
         ProtectedBlock       m_recoveryBlocks[nbOriginalBlocks]; // max size
         cm256_block          m_cm256DescriptorBlocks[nbOriginalBlocks];
@@ -129,7 +133,6 @@ private:
 
     void getSlotData(int slotIndex, uint8_t *data, std::size_t& dataLength);
     void printMeta(MetaDataFEC *metaData);
-    void initDecoderSlotsAddresses();
     void initDecodeAllSlots();
     void initDecodeSlot(int slotIndex);
 
@@ -137,7 +140,7 @@ private:
 	MetaDataFEC          m_outputMeta;   //!< Meta data corresponding to output frame
 	cm256_encoder_params m_paramsCM256;
 	DecoderSlot          m_decoderSlots[nbDecoderSlots];
-	BufferFrame          m_frames[nbDecoderSlots];
+    //BufferFrame          m_frames[nbDecoderSlots]; in the most general case you would use it as the samples buffer
 	int                  m_decoderIndexHead;
 	int                  m_frameHead;
 	int                  m_curNbBlocks;          //!< (stats) instantaneous number of blocks received

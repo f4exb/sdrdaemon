@@ -34,6 +34,15 @@ SDRdaemonFECBuffer::SDRdaemonFECBuffer()
     m_paramsCM256.RecoveryCount = -1;
     m_decoderIndexHead = nbDecoderSlots / 2;
     m_frameHead = -1;
+    m_curNbBlocks = 0;
+    m_curNbRecovery = 0;
+
+    if (cm256_init()) {
+        m_cm256_OK = false;
+        std::cerr << "SDRdaemonFECBuffer::SDRdaemonFECBuffer: cannot initialize CM256 library" << std::cerr;
+    } else {
+        m_cm256_OK = true;
+    }
 }
 
 SDRdaemonFECBuffer::~SDRdaemonFECBuffer()
@@ -54,26 +63,14 @@ void SDRdaemonFECBuffer::printMeta(MetaDataFEC *metaData)
             << "|" << std::endl;
 }
 
-void SDRdaemonFECBuffer::initDecodeAllSlots()
-{
-    for (int i = 0; i < nbDecoderSlots; i++)
-    {
-        m_decoderSlots[i].m_blockCount = 0;
-        m_decoderSlots[i].m_recoveryCount = 0;
-        m_decoderSlots[i].m_decoded = false;
-        m_decoderSlots[i].m_metaRetrieved = false;
-        memset((void *) &m_decoderSlots[i].m_frame, 0, sizeof(BufferFrame0));
-    }
-}
-
-void SDRdaemonFECBuffer::getSlotData(int slotIndex, uint8_t *data, std::size_t& dataLength)
+void SDRdaemonFECBuffer::getSlotData(uint8_t *data, std::size_t& dataLength)
 {
     dataLength = (nbOriginalBlocks - 1) * samplesPerBlock * sizeof(Sample);
-    memcpy((void *) data, (const void *) &m_decoderSlots[slotIndex].m_frame.m_blocks[1], dataLength); // skip block 0
+    memcpy((void *) data, (const void *) &m_decoderSlot.m_frame.m_blocks[1], dataLength); // skip block 0
 
-    if (m_decoderSlots[slotIndex].m_metaRetrieved)
+    if (m_decoderSlot.m_metaRetrieved)
     {
-        MetaDataFEC *metaData = (MetaDataFEC *) &m_decoderSlots[slotIndex].m_frame.m_blocks[0];
+        MetaDataFEC *metaData = (MetaDataFEC *) &m_decoderSlot.m_frame.m_blocks[0];
 
         if (!(*metaData == m_outputMeta))
         {
@@ -81,27 +78,27 @@ void SDRdaemonFECBuffer::getSlotData(int slotIndex, uint8_t *data, std::size_t& 
         }
     }
 
-    if (!m_decoderSlots[slotIndex].m_decoded)
+    if (!m_decoderSlot.m_decoded)
     {
         std::cerr << "SDRdaemonFECBuffer::getSlotData: incomplete frame:"
-                << " m_blockCount: " << m_decoderSlots[slotIndex].m_blockCount
-                << " m_recoveryCount: " << m_decoderSlots[slotIndex].m_recoveryCount << std::endl;
+                << " m_blockCount: " << m_decoderSlot.m_blockCount
+                << " m_recoveryCount: " << m_decoderSlot.m_recoveryCount << std::endl;
     }
 }
 
-void SDRdaemonFECBuffer::initDecodeSlot(int slotIndex)
+void SDRdaemonFECBuffer::initDecodeSlot()
 {
     // collect stats before voiding the slot
-    m_curNbBlocks = m_decoderSlots[slotIndex].m_blockCount;
-    m_curNbRecovery = m_decoderSlots[slotIndex].m_recoveryCount;
+    m_curNbBlocks = m_decoderSlot.m_blockCount;
+    m_curNbRecovery = m_decoderSlot.m_recoveryCount;
     m_avgNbBlocks(m_curNbBlocks);
     m_avgNbRecovery(m_curNbRecovery);
     // void the slot
-    m_decoderSlots[slotIndex].m_blockCount = 0;
-    m_decoderSlots[slotIndex].m_recoveryCount = 0;
-    m_decoderSlots[slotIndex].m_decoded = false;
-    m_decoderSlots[slotIndex].m_metaRetrieved = false;
-    memset((void *) &m_decoderSlots[slotIndex].m_frame, 0, sizeof(BufferFrame0));
+    m_decoderSlot.m_blockCount = 0;
+    m_decoderSlot.m_recoveryCount = 0;
+    m_decoderSlot.m_decoded = false;
+    m_decoderSlot.m_metaRetrieved = false;
+    memset((void *) &m_decoderSlot.m_frame, 0, sizeof(BufferFrame0));
 }
 
 bool SDRdaemonFECBuffer::writeAndRead(uint8_t *array, std::size_t length, uint8_t *data, std::size_t& dataLength)
@@ -112,8 +109,6 @@ bool SDRdaemonFECBuffer::writeAndRead(uint8_t *array, std::size_t length, uint8_
     dataLength = 0;
     SuperBlock *superBlock = (SuperBlock *) array;
     int frameIndex = superBlock->header.frameIndex;
-    int decoderIndex = frameIndex % nbDecoderSlots;
-    int blockIndex = superBlock->header.blockIndex;
 
 //    std::cerr << "SDRdaemonFECBuffer::writeAndRead:"
 //            << " frameIndex: " << frameIndex
@@ -129,99 +124,50 @@ bool SDRdaemonFECBuffer::writeAndRead(uint8_t *array, std::size_t length, uint8_
 //
 //    std::cerr << std::endl;
 
-    if (m_frameHead == -1) // initial state
+    if ( m_frameHead != frameIndex)
     {
-        m_decoderIndexHead = decoderIndex; // new decoder slot head
+        getSlotData(data, dataLength); // copy slot data to output buffer
+        dataAvailable = true;
+        initDecodeSlot(); // re-initialize slot
         m_frameHead = frameIndex;
-        initDecodeAllSlots(); // initialize all slots
-    }
-    else
-    {
-        int frameDelta = m_frameHead - frameIndex;
-
-        if (frameDelta < 0)
-        {
-            if (-frameDelta < nbDecoderSlots) // new frame head not too new
-            {
-                m_decoderIndexHead = decoderIndex; // new decoder slot head
-                m_frameHead = frameIndex;
-                getSlotData(decoderIndex, data, dataLength); // copy slot data to output buffer
-                dataAvailable = true;
-                initDecodeSlot(decoderIndex); // re-initialize current slot
-            }
-            else if (-frameDelta <= sizeof(uint16_t) - nbDecoderSlots) // loss of sync start over
-            {
-                m_decoderIndexHead = decoderIndex; // new decoder slot head
-                m_frameHead = frameIndex;
-                initDecodeAllSlots(); // re-initialize all slots
-            }
-        }
-        else
-        {
-            if (frameDelta > sizeof(uint16_t) - nbDecoderSlots) // new frame head not too new
-            {
-                m_decoderIndexHead = decoderIndex; // new decoder slot head
-                m_frameHead = frameIndex;
-                getSlotData(decoderIndex, data, dataLength); // copy slot data to output buffer
-                dataAvailable = true;
-                initDecodeSlot(decoderIndex); // re-initialize current slot
-            }
-            else if (frameDelta >= nbDecoderSlots) // loss of sync start over
-            {
-                m_decoderIndexHead = decoderIndex; // new decoder slot head
-                m_frameHead = frameIndex;
-                initDecodeAllSlots(); // re-initialize all slots
-            }
-        }
     }
 
     // decoderIndex should now be correctly set
 
-    int blockCount = m_decoderSlots[decoderIndex].m_blockCount;
-    int recoveryCount = m_decoderSlots[decoderIndex].m_recoveryCount;
-
-    if (blockCount < nbOriginalBlocks) // not enough blocks to decode -> store data
+    if (m_decoderSlot.m_blockCount < nbOriginalBlocks) // not enough blocks to decode -> store data
     {
+        int blockCount = m_decoderSlot.m_blockCount;
+        int recoveryCount = m_decoderSlot.m_recoveryCount;
+        int blockIndex = superBlock->header.blockIndex;
+        m_decoderSlot.m_cm256DescriptorBlocks[blockCount].Index = blockIndex;
+
         if (blockIndex == 0) // first block with meta
         {
-            m_decoderSlots[decoderIndex].m_metaRetrieved = true;
+            m_decoderSlot.m_metaRetrieved = true;
         }
 
         if (blockIndex < nbOriginalBlocks) // data block
         {
-            m_decoderSlots[decoderIndex].m_frame.m_blocks[blockIndex] = superBlock->protectedBlock;
-            m_decoderSlots[decoderIndex].m_cm256DescriptorBlocks[blockCount].Block = (void *) &m_decoderSlots[decoderIndex].m_frame.m_blocks[blockIndex];
+            m_decoderSlot.m_frame.m_blocks[blockIndex] = superBlock->protectedBlock;
+            m_decoderSlot.m_cm256DescriptorBlocks[blockCount].Block = (void *) &m_decoderSlot.m_frame.m_blocks[blockIndex];
         }
         else // redundancy block
         {
-            m_decoderSlots[decoderIndex].m_recoveryBlocks[recoveryCount] = superBlock->protectedBlock;
-            m_decoderSlots[decoderIndex].m_cm256DescriptorBlocks[blockCount].Block = (void *) &m_decoderSlots[decoderIndex].m_recoveryBlocks[recoveryCount];
-            m_decoderSlots[decoderIndex].m_recoveryCount++;
+            m_decoderSlot.m_recoveryBlocks[recoveryCount] = superBlock->protectedBlock;
+            m_decoderSlot.m_cm256DescriptorBlocks[blockCount].Block = (void *) &m_decoderSlot.m_recoveryBlocks[recoveryCount];
+            m_decoderSlot.m_recoveryCount++;
         }
-
-        m_decoderSlots[decoderIndex].m_cm256DescriptorBlocks[blockCount].Index = blockIndex;
     }
 
-    m_decoderSlots[decoderIndex].m_blockCount++;
+    m_decoderSlot.m_blockCount++;
 
-    if (m_decoderSlots[decoderIndex].m_blockCount == nbOriginalBlocks) // ready to decode
+    if (m_decoderSlot.m_blockCount == nbOriginalBlocks) // ready to decode
     {
-        m_decoderSlots[decoderIndex].m_decoded = true;
+        m_decoderSlot.m_decoded = true;
 
-        if (m_decoderSlots[decoderIndex].m_recoveryCount > 0) // recovery data used
+        if (m_cm256_OK && (m_decoderSlot.m_recoveryCount > 0)) // recovery data used and CM256 decoder available
         {
-//            if (m_decoderSlots[decoderIndex].m_metaRetrieved) // block zero has been received
-//            {
-//                m_paramsCM256.RecoveryCount = m_decoderSlots[decoderIndex].m_blockZero.m_metaData.m_nbFECBlocks;
-//            }
-//            else
-//            {
-//                m_paramsCM256.RecoveryCount = m_currentMeta.m_nbFECBlocks; // take last value for number of FEC blocks
-//            }
-
-            m_paramsCM256.RecoveryCount = m_decoderSlots[decoderIndex].m_recoveryCount;
-            int nbRxOriginalBlocks = nbOriginalBlocks - m_decoderSlots[decoderIndex].m_recoveryCount;
-
+            m_paramsCM256.RecoveryCount = m_decoderSlot.m_recoveryCount;
 //            // debug print
 //            for (int ir = 0; ir < m_decoderSlots[decoderIndex].m_recoveryCount; ir++) // recovery blocks
 //            {
@@ -242,20 +188,23 @@ bool SDRdaemonFECBuffer::writeAndRead(uint8_t *array, std::size_t length, uint8_
 //            }
 //            // end debug print
 
-            if (cm256_decode(m_paramsCM256, m_decoderSlots[decoderIndex].m_cm256DescriptorBlocks)) // failure to decode
+            if (cm256_decode(m_paramsCM256, m_decoderSlot.m_cm256DescriptorBlocks)) // failure to decode
             {
                 std::cerr << "SDRdaemonFECBuffer::writeAndRead: CM256 decode error" << std::endl;
             }
             else // success to decode
             {
-                std::cerr << "SDRdaemonFECBuffer::writeAndRead: CM256 decode success:"
-                        << " nb recovery blocks: " << m_decoderSlots[decoderIndex].m_recoveryCount << std::endl;
+                int nbRxOriginalBlocks = nbOriginalBlocks - m_decoderSlot.m_recoveryCount;
 
-                for (int ir = 0; ir < m_decoderSlots[decoderIndex].m_recoveryCount; ir++) // recover lost blocks
+                std::cerr << "SDRdaemonFECBuffer::writeAndRead: CM256 decode success:"
+                        << " nb recovery blocks: " << m_decoderSlot.m_recoveryCount << std::endl;
+
+                for (int ir = 0; ir < m_decoderSlot.m_recoveryCount; ir++) // recover lost blocks
                 {
-                    int blockIndex = m_decoderSlots[decoderIndex].m_cm256DescriptorBlocks[nbRxOriginalBlocks+ir].Index;
-                    ProtectedBlock *recoveredBlock = (ProtectedBlock *) m_decoderSlots[decoderIndex].m_cm256DescriptorBlocks[nbRxOriginalBlocks+ir].Block;
-                    m_decoderSlots[decoderIndex].m_frame.m_blocks[blockIndex] =  *recoveredBlock;
+                    int recoveryIndex = nbOriginalBlocks - m_decoderSlot.m_recoveryCount + ir;
+                    int blockIndex = m_decoderSlot.m_cm256DescriptorBlocks[recoveryIndex].Index;
+                    ProtectedBlock *recoveredBlock = (ProtectedBlock *) m_decoderSlot.m_cm256DescriptorBlocks[recoveryIndex].Block;
+                    m_decoderSlot.m_frame.m_blocks[blockIndex] =  *recoveredBlock;
 
 //                    if (blockIndex == 0)
 //                    {
@@ -279,9 +228,9 @@ bool SDRdaemonFECBuffer::writeAndRead(uint8_t *array, std::size_t length, uint8_
             } // success to decode
         } // recovery data used
 
-        if (m_decoderSlots[decoderIndex].m_metaRetrieved) // meta data retrieved
+        if (m_decoderSlot.m_metaRetrieved) // meta data retrieved
         {
-            MetaDataFEC *metaData = (MetaDataFEC *) &m_decoderSlots[decoderIndex].m_frame.m_blocks[0];
+            MetaDataFEC *metaData = (MetaDataFEC *) &m_decoderSlot.m_frame.m_blocks[0];
 
             if (!(*metaData == m_currentMeta))
             {

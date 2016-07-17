@@ -131,15 +131,14 @@ private:
         bool                 m_metaRetrieved;
     };
 
-    void getSlotData(int slotIndex, uint8_t *data, std::size_t& dataLength);
+    void getSlotData(uint8_t *data, std::size_t& dataLength);
     void printMeta(MetaDataFEC *metaData);
-    void initDecodeAllSlots();
-    void initDecodeSlot(int slotIndex);
+    void initDecodeSlot();
 
 	MetaDataFEC          m_currentMeta;  //!< Stored current meta data from input
 	MetaDataFEC          m_outputMeta;   //!< Meta data corresponding to output frame
 	cm256_encoder_params m_paramsCM256;
-	DecoderSlot          m_decoderSlots[nbDecoderSlots];
+	DecoderSlot          m_decoderSlot;
     //BufferFrame          m_frames[nbDecoderSlots]; in the most general case you would use it as the samples buffer
 	int                  m_decoderIndexHead;
 	int                  m_frameHead;
@@ -147,6 +146,7 @@ private:
 	int                  m_curNbRecovery;        //!< (stats) instantaneous number of recovery blocks used
 	MovingAverage<int, int, 10> m_avgNbBlocks;   //!< (stats) average number of blocks received
 	MovingAverage<int, int, 10> m_avgNbRecovery; //!< (stats) average number of recovery blocks used
+	bool                 m_cm256_OK;
 };
 
 #endif /* GR_SDRDAEMONFEC_LIB_SDRDAEMONFECBUFFER_H_ */

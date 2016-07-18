@@ -39,7 +39,7 @@ SDRdaemonFECBuffer::SDRdaemonFECBuffer()
 
     if (cm256_init()) {
         m_cm256_OK = false;
-        std::cerr << "SDRdaemonFECBuffer::SDRdaemonFECBuffer: cannot initialize CM256 library" << std::cerr;
+        std::cerr << "SDRdaemonFECBuffer::SDRdaemonFECBuffer: cannot initialize CM256 library" << std::endl;
     } else {
         m_cm256_OK = true;
     }

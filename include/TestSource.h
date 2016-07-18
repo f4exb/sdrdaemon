@@ -39,7 +39,7 @@ public:
     virtual ~TestSource();
 
     /** Return sample size in bits */
-    virtual std::uint32_t get_sample_bits() { return 8; }
+    virtual std::uint32_t get_sample_bits() { return 12; }
 
     /** Return current sample frequency in Hz. */
     virtual std::uint32_t get_sample_rate();
@@ -95,12 +95,12 @@ private:
     static bool get_samples(IQSampleVector *samples);
 
     static void run();
-    static int read_samples(uint8_t *data, int wantSize, int& getSize, float& phasor, int sampleRate, float deltaPhase, float amplitude);
+    static int read_samples(int16_t *data, int wantSize, int& getSize, float& phasor, int sampleRate, float deltaPhase, float amplitude);
 
     float getDeltaPhase(int32_t deltaFrequency, uint32_t sample_rate) const { return 2.0 * M_PI * ((float) deltaFrequency / sample_rate); }
 
     int               m_dev;
-    int               m_block_length;
+    int               m_block_length; //!< number of samples
     std::thread       *m_thread;
     static TestSource *m_this;
     int32_t           m_carrierOffset;

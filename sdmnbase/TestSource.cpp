@@ -338,7 +338,7 @@ bool TestSource::get_samples(IQSampleVector *samples)
         return false;
     }
 
-    std::vector<uint8_t> buf(4 * m_this->m_block_length);
+    std::vector<int16_t> buf(2 * m_this->m_block_length); // one sample for I, one sample for Q
 
     r = read_samples(buf.data(), 4 * m_this->m_block_length, n_read, m_this->m_phase, m_this->m_srate, m_this->m_deltaPhase, m_this->m_amplitude);
 
@@ -354,31 +354,12 @@ bool TestSource::get_samples(IQSampleVector *samples)
         return false;
     }
 
-	if (m_this->m_decim == 0) // no decimation will take place
-	{
-	    samples->resize(m_this->m_block_length);
+    samples->resize(m_this->m_block_length);
 
-		for (int i = 0; i < m_this->m_block_length; i++)
-		{
-			// pack 8 bit samples onto 16 bit samples vector
-			// invert I and Q because of the little Indians
-			int16_t re_0 = buf[4*i] - 128;
-			int16_t im_0 = buf[4*i+1] - 128;
-			int16_t re_1 = buf[4*i+2] - 128;
-			int16_t im_1 = buf[4*i+3] - 128;
-			(*samples)[i] = IQSample((im_0<<8) | (re_0 & 0xFF), (im_1<<8) | (re_1 & 0xFF));
-    	}
-	}
-   	else // as decimation will take place store samples in 16 bit slots
-	{
-	    samples->resize(2 * m_this->m_block_length);
-
-		for (int i = 0; i < m_this->m_block_length; i++)
-		{
-			(*samples)[2*i]   = IQSample(buf[4*i]   - 128, buf[4*i+1] - 128);
-			(*samples)[2*i+1] = IQSample(buf[4*i+2] - 128, buf[4*i+3] - 128);
-		}
-	}
+    for (int i = 0; i < m_this->m_block_length; i++)
+    {
+        (*samples)[i] = IQSample(buf[2*i], buf[2*i+1]);
+    }
 
     return true;
 }
@@ -409,18 +390,18 @@ void TestSource::get_device_names(std::vector<std::string>& devices)
     }
 }
 
-int TestSource::read_samples(uint8_t* data, int iqBlockSize, int& getSize, float& phasor, int sampleRate, float deltaPhase, float amplitude)
+int TestSource::read_samples(int16_t* data, int iqBlockSize, int& getSize, float& phasor, int sampleRate, float deltaPhase, float amplitude)
 {
-	int nbSamples = iqBlockSize / 2; // 8 bit samples
-	float dt = (float) nbSamples / sampleRate;
+	int nbSamples = iqBlockSize / 4; // 16 bit samples
+	float dt = (float) nbSamples / (float) sampleRate;
 	int dtMicroseconds = (int) (dt * 1e6);
 
 	int i = 0;
 
-	for (; i < iqBlockSize; i += 2)
+	for (; i < nbSamples * 2; i += 2)
 	{
-		data[i]   = 128.0f - amplitude * cos(phasor) * 127.0f;
-		data[i+1] = 128.0f - amplitude * sin(phasor) * 127.0f;
+        data[i]   = amplitude * cos(phasor) * 2048.0f;
+        data[i+1] = amplitude * sin(phasor) * 2048.0f;
 
 		//phasor += 2.0 * M_PI * (1 / 20.0);
 		phasor += deltaPhase;
@@ -434,7 +415,7 @@ int TestSource::read_samples(uint8_t* data, int iqBlockSize, int& getSize, float
 
 	usleep(dtMicroseconds);
 
-	getSize = i;
+	getSize = i * 2;
 	return 0;
 }
 

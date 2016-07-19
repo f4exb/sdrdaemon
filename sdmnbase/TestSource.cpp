@@ -247,7 +247,6 @@ bool TestSource::configure(std::uint32_t changeFlags,
 		m_block_length = (block_length < 4096) ? 4096 :
 						 (block_length > 1024 * 1024) ? 1024 * 1024 :
 						 block_length;
-		m_block_length -= m_block_length % 4096;
     }
 
     return true;

@@ -123,8 +123,8 @@ void UDPSinkFEC::write(const IQSampleVector& samples_in)
             memcpy((void *) &m_superBlock.protectedBlock.m_samples[m_sampleIndex],
                     (const void *) &samples_in[inSamplesIndex],
                     (samplesPerBlock - m_sampleIndex) * sizeof(IQSample));
-            m_sampleIndex = 0;
             it += samplesPerBlock - m_sampleIndex;
+            m_sampleIndex = 0;
 
             m_superBlock.header.frameIndex = m_frameCount;
             m_superBlock.header.blockIndex = m_txBlockIndex;

@@ -114,7 +114,7 @@ void UDPSinkFEC::write(const IQSampleVector& samples_in)
         {
             memcpy((void *) &m_superBlock.protectedBlock.m_samples[m_sampleIndex],
                     (const void *) &samples_in[inSamplesIndex],
-                    (samplesPerBlock - inRemainingSamples) * sizeof(IQSample));
+                    inRemainingSamples * sizeof(IQSample));
             m_sampleIndex += inRemainingSamples;
             it = samples_in.end(); // all input samples are consumed
         }

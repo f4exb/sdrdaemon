@@ -38,8 +38,6 @@ SDRdaemon requires:
  - supported hardware
  - A computer or embedded device such as the Raspberry Pi 2 to which you connect the hardware.
  
-To enable the version with FEC (sdrdmnfec executable and libsdrdmnfec) you have to install [my version of CM256](https://github.com/f4exb/cm256). You will then have to specify the include and library paths on the cmake command line. Say if you install cm256 in `/opt/install/cm256` you will have to add `-DCM256_INCLUDE_DIR=/opt/install/cm256/include/cm256 -DCM256_LIBRARIES=/opt/install/cm256/lib/libcm256.so` to the cmake command
-
 For the latest version, see https://github.com/f4exb/SDRdaemon
 
 Branches:
@@ -54,6 +52,10 @@ Branches:
 <h2>Base requirements</h2>
 
   - `sudo apt-get install cmake pkg-config libusb-1.0-0-dev libasound2-dev libboost-all-dev liblz4-dev libnanomsg-dev`
+
+<h2>Forward Erasure Correction (FEC) support</h2>
+
+To enable the version with FEC (sdrdmnfec executable and libsdrdmnfec) you have to install [my version of CM256](https://github.com/f4exb/cm256). You will then have to specify the include and library paths on the cmake command line. Say if you install cm256 in `/opt/install/cm256` you will have to add `-DCM256_INCLUDE_DIR=/opt/install/cm256/include/cm256 -DCM256_LIBRARIES=/opt/install/cm256/lib/libcm256.so` to the cmake commands
 
 <h2>Airspy support</h2>
 
@@ -123,7 +125,7 @@ Compile and install
 
 Typical commands:
 
-  - RTL-SDR: `./sdrdaemon -t rtlsdr -I 192.168.1.3 -D 9090 -C 9091 -c freq=433970000,srate=1000000,ppmp=58,gain=40.2,decim=5,fcpos=2`
+  - RTL-SDR: `./sdrdaemon -t rtlsdr -I 192.168.1.3 -D 9090 -C 9091 -c txdelay=300,freq=433970000,srate=1000000,ppmp=58,gain=40.2,decim=5,fcpos=2`
     - Use RTL-SDR device #0
     - Destination address for the data is: `192.168.1.3`
     - Using UDP port `9090` for the data (it is the default anyway)
@@ -135,7 +137,7 @@ Typical commands:
       - RF gain: _40.2 dB_
       - Decimation: 2^_5_ = 32; thus stream sample rate is 31.25 kHz
       - Position of center frequency: _2_ is centered (decimation around the center)
-  - Airspy: `./sdrdaemon -t airspy -I 192.168.1.3 -D 9090 -c freq=433970000,srate=10000000,ppmn=1.7,lgain=13,mgain=9,vgain=6,decim=5,fcpos=0`
+  - Airspy: `./sdrdaemon -t airspy -I 192.168.1.3 -D 9090 -c txdelay=300,freq=433970000,srate=10000000,ppmn=1.7,lgain=13,mgain=9,vgain=6,decim=5,fcpos=0`
     - Use Airspy device #0
     - Destination address for the data is: `192.168.1.3`
     - Using UDP port `9090` for the data (it is the default anyway)
@@ -149,7 +151,7 @@ Typical commands:
       - VGA gain: _6 dB_
       - Decimation: 2^_5_ = 32; thus stream sample rate is 312.5 kHz
       - Position of center frequency: _0_ is infra-dyne (decimation around -fc/4)
-  - HackRF: `./sdrdaemon -t hackrf -I 192.168.1.3 -D 9090 -c freq=433970000,srate=3200000,lgain=32,vgain=24,bwfilter=1.75,decim=3,fcpos=1`
+  - HackRF: `./sdrdaemon -t hackrf -I 192.168.1.3 -D 9090 -c txdelay=300,freq=433970000,srate=3200000,lgain=32,vgain=24,bwfilter=1.75,decim=3,fcpos=1`
     - Use HackRF device #0
     - Destination address for the data is: `192.168.1.3`
     - Using UDP port `9090` for the data (it is the default anyway)
@@ -161,7 +163,7 @@ Typical commands:
       - VGA gain: _24 dB_
       - Decimation: 2^_3_ = 8; thus stream sample rate is 400 kHz
       - Position of center frequency: _1_ is supra-dyne (decimation around fc/4)
-  - BladeRF: `./sdrdaemon -t bladerf -I 192.168.1.3 -D 9090 -c freq=433900000,srate=3200000,lgain=6,v1gain=6,v2gain=3,decim=3,bw=2500000,fcpos=1`
+  - BladeRF: `./sdrdaemon -t bladerf -I 192.168.1.3 -D 9090 -c txdelay=300,freq=433900000,srate=3200000,lgain=6,v1gain=6,v2gain=3,decim=3,bw=2500000,fcpos=1`
     - Use BladeRF device #0
     - Destination address for the data is: `192.168.1.3`
     - Using UDP port `9090` for the data (it is the default anyway)
@@ -200,6 +202,14 @@ Typical commands:
  - `-P [device]` Play audio via ALSA device (default `default`). Use `aplay -L` to get the list of devices for your system
  - `-T filename` Write pulse-per-second timestamps. Use filename '-' to write to stdout
  - `-z bytes` Compress I/Q data using LZ4 algorithm with a minimum number of `bytes` for each frame. It will default to at least 64kB.
+
+<h2>Common configuration option for UDP transmission</h2>
+
+  - `txdelay=<int>` delay between the transmission of successive UDP blocks in microseconds. This may not result in the exact delay in microseconds as this is in fact the argument to `usleep` function. The system guarantees that at least this delay is respected and in many practical cases it is not possible to have a delay smaller than ~100 microseconds. You may adjust this number depending on the speed of your link. This prevents UDP congestion by mitigating competition between the process sending blocks as fast as possible and the IP link absorbing them. 
+
+<h2>Common configuration option for Forward Erasure Correction when enabled</h2>
+
+  - `fecblk=<int>` value should be between 0 (no FEC) and 127. This is the number of FEC blocks added to the 128 I/Q data blocks sent per frame. See the "Data formats" chapter for details about the frame construction in the FEC case.
 
 <h2>Common configuration options for the decimation</h2>
 
@@ -288,13 +298,84 @@ The nanomsg connection is specified as a paired connection (`NN_PAIR`). The conn
 
 <h1>Data formats</h1>
 
-<h2>Packaging</h2>
+<h2>With FEC</h2>
+
+<h3>Packaging</h3>
+
+The I/Q data is sent in frames of 128 fixed size data blocks including a first block ("block zero") containing only meta data and a variable number of FEC blocks up to 127 FEC blocks. It is possible to use this scheme without FEC in which case no additional FEC blocks are present. All blocks have a fixed size of 512 bytes that represent the UDP payload size. The first 4 bytes are occupied by signalling data consisting of a 2 bytes frame count (wraps around at 65535), a 1 byte block count (0 to 127 (min) or 255 (max)) and a 1 byte filler. The rest is occupied by either the meta data (block zero), actual I/Q samples (127 samples per block resulting in 508 bytes) for data bytes or FEC data. The FEC is calculated on the 128 blocks of 508 bytes of meta data and I/Q samples.
+
+<h3>Meta data block</h3>
+
+The block of "meta" data consists of the following (values expressed in bytes):
+
+<table>
+    <tr>
+        <th>Offset</th>
+        <th>Length</th>
+        <th>Type</th>
+        <th>Content</th>
+    </tr>
+    <tr>
+        <td>0</td>
+        <td>4</td>
+        <td>unsigned integer</td>
+        <td>Center frequency of reception in kHz</td>
+    </tr>
+    <tr>
+        <td>4</td>
+        <td>4</td>
+        <td>unsigned integer</td>
+        <td>Stream sample rate (Samples/second)</td>
+    </tr>
+    <tr>
+        <td>8</td>
+        <td>1</td>
+        <td>unsigned char</td>
+        <td>number of bytes per sample. Practically 1 or 2</td>
+    </tr>
+    <tr>
+        <td>9</td>
+        <td>1</td>
+        <td>unsigned char</td>
+        <td>number of effective bits per sample. Practically 8 to 16</td>
+    </tr>    
+    <tr>
+        <td>10</td>
+        <td>1</td>
+        <td>unsigned char</td>
+        <td>number of (FEC protected) data blocks. Practically 128</td>
+    </tr>    
+    <tr>
+        <td>11</td>
+        <td>1</td>
+        <td>unsigned char</td>
+        <td>number of FEC blocks. Practically 0 to 127</td>
+    </tr>
+    <tr>
+        <td>12</td>
+        <td>4</td>
+        <td>unsigned integer</td>
+        <td>Seconds of Unix timestamp at the beginning of the sending processing</td>
+    </tr>
+    <tr>
+        <td>16</td>
+        <td>4</td>
+        <td>unsigned integer</td>
+        <td>Microseconds of Unix timestamp at the beginning of the sending processing</td>
+    </tr>
+</table>
+
+Total size is 20 bytes. The 488 (!) remaining bytes are reserved for future use.
+
+<h2>Without FEC</h2>
+
+<h3>Packaging</h3>
 
 The block of data retrieved from the hardware device is sliced into blocks of the UDP payload size. This sequence of blocks is called a "frame" in the following. A special block called the "meta" block is sent before a frame. It is used to convey "meta" data about the frame and its data that follows. A CRC on 64 bits is calculated on this "meta" data and appended to it. It serves as a verification and also to recognize the "meta" block from the data blocks thus achieving synchronization. There is effectively a very low probability to mix it up with a data block.
 
 A compressed stream may pack several data blocks retrieved from the hardware in one frame to improve compression efficiency. So the case may arise that a change of meta data occurs from one "hardware" block to the next in the same frame. In this case the frame is split and a new frame is constructed with a starting "meta" block from the block where the meta data has changed. The first part of the original frame being sent immediately over UDP. This ensures that the data frame and its "meta" block are always consistent.
 
-<h2>Meta data block</h2>
+<h3>Meta data block</h3>
 
 The block of "meta" data consists of the following (values expressed in bytes):
 
@@ -393,15 +474,15 @@ The block of "meta" data consists of the following (values expressed in bytes):
 
 Total size is 42 bytes including the 8 bytes CRC.
 
-<h2>I/Q data blocks</h2>
+<h3>I/Q data blocks</h3>
 
 When the stream is uncompressed UDP blocks of the payload size are stuffed with complete I/Q samples leaving a possible unused gap of less than an I/Q sample at the end of the block. The last block is filled only with the remainder samples. The number of maximally filled blocks and remainder samples in the last block is given in the "meta" data. Of course as the data stream is uncompressed these values can also be calculated from the total number of samples and the payload size.
 
 When the stream is compressed UDP blocks are stuffed completely with bytes of the compressed stream. The last block being filled only with the remainder bytes. The number of full blocks and remainder bytes is given in the "meta" block and these values cannot be calculated otherwise.
 
-<h2>Summary diagrams</h2>
+<h3>Summary diagrams</h3>
 
-</h3>Uncompressed stream</h3>
+</h4>Uncompressed stream</h4>
 
 <pre>
 hardware block (2 byte I or Q samples):

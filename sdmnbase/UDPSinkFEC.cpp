@@ -22,6 +22,8 @@
 #include <thread>
 #include "UDPSinkFEC.h"
 
+//#define SDRDAEMON_PUNCTURE 101 // debug: test FEC
+
 UDPSinkFEC::UDPSinkFEC(const std::string& address, unsigned int port) :
     UDPSink::UDPSink(address, port, UDPSINKFEC_UDPSIZE),
     m_nbBlocksFEC(0),
@@ -217,6 +219,11 @@ void UDPSinkFEC::transmitUDP(UDPSinkFEC *udpSinkFEC, SuperBlock *txBlockx, uint1
 	    // Transmit all blocks
 	    for (int i = 0; i < cm256Params.OriginalCount + cm256Params.RecoveryCount; i++)
 	    {
+#ifdef SDRDAEMON_PUNCTURE
+            if (i == SDRDAEMON_PUNCTURE) {
+                continue;
+            }
+#endif
 //            std::cerr << "UDPSinkFEC::transmitUDP:"
 //                  << " i: " << i
 //                  << " frameIndex: " << (int) m_txBlocks[i].header.frameIndex

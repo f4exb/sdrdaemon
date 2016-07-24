@@ -953,7 +953,7 @@
     </param>
     <param>
       <key>port</key>
-      <value>9094</value>
+      <value>9090</value>
     </param>
     <param>
       <key>vlen</key>

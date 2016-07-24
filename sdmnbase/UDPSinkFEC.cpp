@@ -20,6 +20,8 @@
 #include <unistd.h>
 #include <iostream>
 #include <thread>
+#include <boost/crc.hpp>
+#include <boost/cstdint.hpp>
 #include "UDPSinkFEC.h"
 
 //#define SDRDAEMON_PUNCTURE 101 // debug: test FEC
@@ -85,6 +87,11 @@ void UDPSinkFEC::write(const IQSampleVector& samples_in)
             metaData.m_nbFECBlocks = m_nbBlocksFEC;
             metaData.m_tv_sec = tv.tv_sec;
             metaData.m_tv_usec = tv.tv_usec;
+
+            boost::crc_32_type crc32;
+            crc32.process_bytes(&metaData, 20);
+
+            metaData.m_crc32 = crc32.checksum();
 
             memset((void *) &m_superBlock, 0, UDPSINKFEC_UDPSIZE);
 

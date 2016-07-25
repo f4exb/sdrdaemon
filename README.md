@@ -55,7 +55,14 @@ Branches:
 
 <h2>Forward Erasure Correction (FEC) support</h2>
 
-To enable the version with FEC (sdrdmnfec executable and libsdrdmnfec) you have to install [my version of CM256](https://github.com/f4exb/cm256). You will then have to specify the include and library paths on the cmake command line. Say if you install cm256 in `/opt/install/cm256` you will have to add `-DCM256_INCLUDE_DIR=/opt/install/cm256/include/cm256 -DCM256_LIBRARIES=/opt/install/cm256/lib/libcm256.so` to the cmake commands
+To enable the version with FEC (`sdrdaemonfec` binary and libsdrdmnfec) you have to install [
+CM256cc](https://github.com/f4exb/cm256cc). You will then have to specify the include and library paths on the cmake command line. Say if you install cm256cc in `/opt/install/cm256cc` you will have to add `-DCM256_INCLUDE_DIR=/opt/install/cm256cc/include/cm256cc -DCM256_LIBRARIES=/opt/install/cm256cc/lib/libcm256cc.so` to the cmake commands.
+
+The GNUradio source block supporting FEC is located in the `gr-sdrdaemonfec` subdirectory.
+
+The binary `sdrdaemonfec` has the same features than `sdrdaemon` but in addition it supports FEC using the `-f` option. It also recognizes the configuration commmand `fecblk` to specify the number of FEC blocks. When enabling FEC with the `-f` option the frame structure is quite different than when FEC is not enabled. The structure is described in the Data Format section. Even when `fecblk=0` is specified in the commands and hence no FEC blocks are enabled the data structure is the same. 
+
+In FEC enabled format frames and blocks are numbered and even if no FEC blocks are added this can help in reconstructing frames with appropriate timings.
 
 <h2>Airspy support</h2>
 
@@ -137,6 +144,9 @@ Typical commands:
       - RF gain: _40.2 dB_
       - Decimation: 2^_5_ = 32; thus stream sample rate is 31.25 kHz
       - Position of center frequency: _2_ is centered (decimation around the center)
+  - RTL-SDR with FEC enabled:  `./sdrdaemonfec -f -t rtlsdr -I 192.168.1.3 -D 9090 -C 9091 -c txdelay=300,fecblk=8,freq=433970000,srate=1000000,ppmp=58,gain=40.2,decim=5,fcpos=2`. Additional commands from the previous command:
+     - `-f` option to enable FEC 
+     - `fecblk=8`: add 8 FEC blocks to the 128 blocks data frame resulting in a total of 136 blocks per frame. 
   - Airspy: `./sdrdaemon -t airspy -I 192.168.1.3 -D 9090 -c txdelay=300,freq=433970000,srate=10000000,ppmn=1.7,lgain=13,mgain=9,vgain=6,decim=5,fcpos=0`
     - Use Airspy device #0
     - Destination address for the data is: `192.168.1.3`
@@ -195,6 +205,7 @@ Typical commands:
     - `test` for test signal source (always available)
  - `-c config` Comma separated list of configuration options as key=value pairs or just key for switches. Depends on device type (see next paragraphs).
  - `-d devidx` Device index, 'list' to show device list (default 0)
+ - `-f` Activate FEC (sdrdaemonfec only)
  - `-r pcmrate` Audio sample rate in Hz (default 48000 Hz)
  - `-M ` Disable stereo decoding
  - `-R filename` Write audio data as raw S16_LE samples. Use filename `-` to write to stdout
@@ -363,9 +374,15 @@ The block of "meta" data consists of the following (values expressed in bytes):
         <td>unsigned integer</td>
         <td>Microseconds of Unix timestamp at the beginning of the sending processing</td>
     </tr>
+    <tr>
+        <td>20</td>
+        <td>4</td>
+        <td>unsigned integer</td>
+        <td>CRC32 of the above (20 bytes)</td>
+    </tr>
 </table>
 
-Total size is 20 bytes. The 488 (!) remaining bytes are reserved for future use.
+Total size is 24 bytes. The 484 (!) remaining bytes are reserved for future use.
 
 <h2>Without FEC</h2>
 

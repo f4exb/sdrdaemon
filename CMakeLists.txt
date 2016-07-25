@@ -50,7 +50,7 @@ find_package(Threads)
 find_package(PkgConfig)
 find_package(Boost 1.47)
 find_package(LZ4 131)
-find_package(CM256)
+find_package(CM256cc)
 
 # Find Airspy library.
 pkg_check_modules(PKG_AIRSPY libairspy)
@@ -247,7 +247,7 @@ add_executable(sdrdaemon
     sdrdaemon.cpp
 )
 
-if(USE_SIMD)
+if(USE_SIMD AND CM256CC_FOUND)
     add_library(sdmnfecbase STATIC
         ${sdmnfecbase_SOURCES}
     )
@@ -255,7 +255,7 @@ if(USE_SIMD)
     add_executable(sdrdaemonfec
         sdrdaemonfec.cpp
     )
-endif(USE_SIMD)
+endif(USE_SIMD AND CM256CC_FOUND)
 
 add_executable(sdrdmnctl
     sdrdmnctl.cpp
@@ -264,7 +264,7 @@ add_executable(sdrdmnctl
 include_directories(
     ${CMAKE_SOURCE_DIR}/include
     ${LIBNANOMSG_INCLUDE_DIR}
-    ${CM256_INCLUDE_DIR}
+    ${CM256CC_INCLUDE_DIR}
     ${EXTRA_INCLUDES}
 )
 
@@ -393,8 +393,8 @@ target_link_libraries(sdrdaemon
     ${EXTRA_LIBS}
 )
 
-if(USE_SIMD)
-    target_link_libraries(sdmnfecbase ${LZ4_LIBRARIES} ${CM256_LIBRARIES})
+if(USE_SIMD AND CM256CC_FOUND)
+    target_link_libraries(sdmnfecbase ${LZ4_LIBRARIES} ${CM256CC_LIBRARIES})
     
     target_link_libraries(sdrdaemonfec
         sdmnfecbase
@@ -403,7 +403,7 @@ if(USE_SIMD)
         ${CMAKE_THREAD_LIBS_INIT}
         ${EXTRA_LIBS}
     )
-endif(USE_SIMD)
+endif(USE_SIMD AND CM256CC_FOUND)
 
 target_include_directories(sdrdmnctl PUBLIC
     ${LIBNANOMSG_INCLUDE_DIR}
@@ -415,10 +415,10 @@ target_link_libraries(sdrdmnctl
     ${EXTRA_LIBS}
 )
 
-if(USE_SIMD)
+if(USE_SIMD AND CM256CC_FOUND)
     install(TARGETS sdrdaemon sdrdaemonfec sdrdmnctl DESTINATION bin)
     install(TARGETS sdmnbase sdmnfecbase ${DEVICE_TARGETS} sdmntest DESTINATION lib)
-else(USE_SIMD)
+else(USE_SIMD AND CM256CC_FOUND)
     install(TARGETS sdrdaemon sdrdmnctl DESTINATION bin)
     install(TARGETS sdmnbase ${DEVICE_TARGETS} sdmntest DESTINATION lib)
-endif(USE_SIMD)
+endif(USE_SIMD AND CM256CC_FOUND)

@@ -118,6 +118,7 @@ private:
     };
 #pragma pack(pop)
 
+    CM256 m_cm256;                       //!< CM256 library object
     MetaDataFEC m_currentMetaFEC;        //!< Meta data for current frame
     std::atomic_int m_nbBlocksFEC;       //!< Variable number of FEC blocks
     std::atomic_int m_txDelay;           //!< Delay in microseconds (usleep) between each sending of an UDP datagram

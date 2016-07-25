@@ -35,7 +35,7 @@ UDPSinkFEC::UDPSinkFEC(const std::string& address, unsigned int port) :
 	m_frameCount(0),
 	m_sampleIndex(0)
 {
-    m_cm256Valid = (cm256_init() == 0);
+    m_cm256Valid = m_cm256.isInitialized();
     m_currentMetaFEC.init();
     m_udpSent.store(true);
 }
@@ -172,8 +172,8 @@ void UDPSinkFEC::write(const IQSampleVector& samples_in)
 
 void UDPSinkFEC::transmitUDP(UDPSinkFEC *udpSinkFEC, SuperBlock *txBlockx, uint16_t frameIndex, int nbBlocksFEC, int txDelay, bool cm256Valid)
 {
-	cm256_encoder_params cm256Params;  //!< Main interface with CM256 encoder
-	cm256_block descriptorBlocks[256]; //!< Pointers to data for CM256 encoder
+	CM256::cm256_encoder_params cm256Params;  //!< Main interface with CM256 encoder
+	CM256::cm256_block descriptorBlocks[256]; //!< Pointers to data for CM256 encoder
 	ProtectedBlock fecBlocks[256];   //!< FEC data
 
 //    std::cerr << "UDPSinkFEC::transmitUDP:"
@@ -211,7 +211,7 @@ void UDPSinkFEC::transmitUDP(UDPSinkFEC *udpSinkFEC, SuperBlock *txBlockx, uint1
 	    }
 
 	    // Encode FEC blocks
-	    if (cm256_encode(cm256Params, descriptorBlocks, fecBlocks))
+	    if (udpSinkFEC->m_cm256.cm256_encode(cm256Params, descriptorBlocks, fecBlocks))
 	    {
 	        std::cerr << "UDPSinkFEC::transmitUDP: CM256 encode failed. No transmission." << std::endl;
 	        return;

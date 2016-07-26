@@ -187,7 +187,7 @@ Typical commands:
       - VGA2 gain: _3 dB_
       - Decimation: 2^_3_ = 8; thus stream sample rate is 400 kHz
       - Position of center frequency: _1_ is supra-dyne (decimation around fc/4)
-  - Test signal source: `./sdrdaemon -t test -I 10.0.2.2 -D 9090 -c power=40,decim=2,srate=500000,dfp=25000`
+  - Test signal source: `./sdrdaemon -t test -I 192.168.1.3 -D 9090 -c power=40,decim=2,srate=500000,dfp=25000`
     - Destination address for the data is: `192.168.1.3`
     - Using UDP port `9090` for the data (it is the default anyway)
     - Carrier relative power is _-40 dB_

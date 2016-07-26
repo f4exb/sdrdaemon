@@ -244,7 +244,7 @@ Note that these options can be used both as the initial configuration as the arg
   - `srate=<int>` Device sample rate. valid values in the [225001, 300000], [900001, 3200000] ranges. (default `1000000`)
   - `ppmp=<int>` Argument is positive. Positive LO correction in ppm. LO is corrected by this value in ppm
   - `ppmn=<int>` Argument is positive. Negative LO correction in ppm. LO is corrected by minus this value in ppm. If `ppmp` is also specified `ppmp` takes precedence.
-  - `blklen=<int>` Device block length in bytes (default RTL-SDR default i.e. 64k)
+  - `blklen=<int>` Device read buffer length in number of samples (default 64kS)
   - `agc` Activates device AGC (default off)
 
 <h3>HackRF</h3>
@@ -290,6 +290,7 @@ Note that these options can be used both as the initial configuration as the arg
   - `power=<int>` Relative power of CW signaler in negative dB (i.e. 40 is -40 dB) (default `0`).
   - `dfp=<int>` Positive shift frequency of carrier from center frequency in Hz (default `100000` i.e. 100 kHz)
   - `dfn=<int>` Negative shift frequency of carrier from center frequency in Hz (default `100000` i.e. -100 kHz)
+  - `blklen=<int>` Waveform buffer length in number of samples (default 64kS)
 
 <h2>Dynamic remote control</h2>
 

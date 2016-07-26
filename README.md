@@ -56,7 +56,7 @@ Branches:
 <h2>Forward Erasure Correction (FEC) support</h2>
 
 To enable the version with FEC (`sdrdaemonfec` binary and libsdrdmnfec) you have to install [
-CM256cc](https://github.com/f4exb/cm256cc). You will then have to specify the include and library paths on the cmake command line. Say if you install cm256cc in `/opt/install/cm256cc` you will have to add `-DCM256_INCLUDE_DIR=/opt/install/cm256cc/include/cm256cc -DCM256_LIBRARIES=/opt/install/cm256cc/lib/libcm256cc.so` to the cmake commands.
+CM256cc](https://github.com/f4exb/cm256cc). You will then have to specify the include and library paths on the cmake command line. Say if you install cm256cc in `/opt/install/cm256cc` you will have to add `-DCM256CC_INCLUDE_DIR=/opt/install/cm256cc/include/cm256cc -DCM256CC_LIBRARIES=/opt/install/cm256cc/lib/libcm256cc.so` to the cmake commands.
 
 The GNUradio source block supporting FEC is located in the `gr-sdrdaemonfec` subdirectory.
 

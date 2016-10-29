@@ -45,12 +45,12 @@ public:
 	void decimate64_cen(unsigned int& sampleSize, const IQSampleVector& in, IQSampleVector& out);
 
 private:
-	IntHalfbandFilter m_decimator2;  // 1st stages
-	IntHalfbandFilter m_decimator4;  // 2nd stages
-	IntHalfbandFilter m_decimator8;  // 3rd stages
-	IntHalfbandFilter m_decimator16; // 4th stages
-	IntHalfbandFilter m_decimator32; // 5th stages
-	IntHalfbandFilter m_decimator64; // 6th stages
+	IntHalfbandFilter<48> m_decimator2;  // 1st stages
+	IntHalfbandFilter<48> m_decimator4;  // 2nd stages
+	IntHalfbandFilter<48> m_decimator8;  // 3rd stages
+	IntHalfbandFilter<48> m_decimator16; // 4th stages
+	IntHalfbandFilter<48> m_decimator32; // 5th stages
+	IntHalfbandFilter<48> m_decimator64; // 6th stages
 };
 
 #endif /* INCLUDE_DECIMATORS_H_ */

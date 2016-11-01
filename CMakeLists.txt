@@ -203,6 +203,7 @@ set(sdmnfecbase_HEADERS
     include/Downsampler.h
     include/HBFilterTraits.h
     include/IntHalfbandFilter.h
+    include/IntHalfbandFilterDB.h
     include/parsekv.h
     include/Source.h
     include/UDPSink.h

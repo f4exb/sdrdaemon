@@ -20,7 +20,9 @@
 #define INCLUDE_DECIMATORS_H_
 
 #include "SDRDaemon.h"
-#include "IntHalfbandFilter.h"
+#include "IntHalfbandFilterDB.h"
+
+#define DECIMATORS_HB_FILTER_ORDER 48
 
 class Decimators
 {
@@ -45,12 +47,12 @@ public:
 	void decimate64_cen(unsigned int& sampleSize, const IQSampleVector& in, IQSampleVector& out);
 
 private:
-	IntHalfbandFilter<48> m_decimator2;  // 1st stages
-	IntHalfbandFilter<48> m_decimator4;  // 2nd stages
-	IntHalfbandFilter<48> m_decimator8;  // 3rd stages
-	IntHalfbandFilter<48> m_decimator16; // 4th stages
-	IntHalfbandFilter<48> m_decimator32; // 5th stages
-	IntHalfbandFilter<48> m_decimator64; // 6th stages
+	IntHalfbandFilterDB<DECIMATORS_HB_FILTER_ORDER> m_decimator2;  // 1st stages
+	IntHalfbandFilterDB<DECIMATORS_HB_FILTER_ORDER> m_decimator4;  // 2nd stages
+	IntHalfbandFilterDB<DECIMATORS_HB_FILTER_ORDER> m_decimator8;  // 3rd stages
+	IntHalfbandFilterDB<DECIMATORS_HB_FILTER_ORDER> m_decimator16; // 4th stages
+	IntHalfbandFilterDB<DECIMATORS_HB_FILTER_ORDER> m_decimator32; // 5th stages
+	IntHalfbandFilterDB<DECIMATORS_HB_FILTER_ORDER> m_decimator64; // 6th stages
 };
 
 #endif /* INCLUDE_DECIMATORS_H_ */

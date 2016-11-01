@@ -20,51 +20,7 @@
 #define INCLUDE_INTHALFBANDFILTER_H_
 
 #include <cstdint>
-
-/*
- * supported filter orders: 80, 64, 48, 32
- * any usage of another value will be prevented by compilation errors
- */
-template<uint32_t HBFilterOrder>
-struct HBFIRFilterTraits
-{
-};
-
-template<>
-struct HBFIRFilterTraits<32>
-{
-    static const uint32_t hbOrder = 32;
-    static const uint32_t hbShift = 14;
-    static const uint32_t hbMod[32+6];
-    static const int32_t  hbCoeffs[8];
-};
-
-template<>
-struct HBFIRFilterTraits<48>
-{
-    static const uint32_t hbOrder = 48;
-    static const uint32_t hbShift = 14;
-    static const uint32_t hbMod[48+6];
-    static const int32_t  hbCoeffs[12];
-};
-
-template<>
-struct HBFIRFilterTraits<64>
-{
-    static const uint32_t hbOrder = 64;
-    static const uint32_t hbShift = 14;
-    static const uint32_t hbMod[64+6];
-    static const int32_t  hbCoeffs[16];
-};
-
-template<>
-struct HBFIRFilterTraits<80>
-{
-    static const uint32_t hbOrder = 80;
-    static const uint32_t hbShift = 14;
-    static const uint32_t hbMod[80+6];
-    static const int32_t  hbCoeffs[20];
-};
+#include "HBFilterTraits.h"
 
 /** Slimmed out class from SDRangel's IntHalfbandFilter */
 template<uint32_t HBFilterOrder>

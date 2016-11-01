@@ -159,7 +159,7 @@ set(sdmnbase_SOURCES
     sdmnbase/CRC64.cpp
     sdmnbase/Decimators.cpp
     sdmnbase/Downsampler.cpp
-    sdmnbase/IntHalfbandFilter.cpp
+    sdmnbase/HBFilterTraits.cpp
     sdmnbase/Source.cpp
     sdmnbase/UDPSink.cpp
     sdmnbase/UDPSinkUncompressed.cpp
@@ -172,6 +172,7 @@ set(sdmnbase_HEADERS
     include/DataBuffer.h
     include/Decimators.h
     include/Downsampler.h
+    include/HBFilterTraits.h
     include/IntHalfbandFilter.h
     include/parsekv.h
     include/Source.h
@@ -186,7 +187,7 @@ set(sdmnfecbase_SOURCES
     sdmnbase/CRC64.cpp
     sdmnbase/Decimators.cpp
     sdmnbase/Downsampler.cpp
-    sdmnbase/IntHalfbandFilter.cpp
+    sdmnbase/HBFilterTraits.cpp
     sdmnbase/Source.cpp
     sdmnbase/UDPSink.cpp
     sdmnbase/UDPSinkFEC.cpp
@@ -200,6 +201,7 @@ set(sdmnfecbase_HEADERS
     include/DataBuffer.h
     include/Decimators.h
     include/Downsampler.h
+    include/HBFilterTraits.h
     include/IntHalfbandFilter.h
     include/parsekv.h
     include/Source.h

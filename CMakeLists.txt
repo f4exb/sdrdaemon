@@ -17,34 +17,58 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/Modules)
 
 project (sdrdaemon)
 
+##############################################################################
+
 EXECUTE_PROCESS( COMMAND uname -m COMMAND tr -d '\n' OUTPUT_VARIABLE ARCHITECTURE )
 message( STATUS "Architecture: ${ARCHITECTURE}" )
 
-if(${ARCHITECTURE} MATCHES "x86_64|AMD64|x86")
-    SET(USE_SIMD "SSSE3" CACHE STRING "Use SIMD SSSE3 instructions")
-elseif(${ARCHITECTURE} MATCHES "armv7l")
-    SET(USE_SIMD "NEON" CACHE STRING "Use SIMD NEON instructions")
+if (${ARCHITECTURE} MATCHES "x86_64|AMD64|x86")
+    EXECUTE_PROCESS( COMMAND grep flags /proc/cpuinfo OUTPUT_VARIABLE CPU_FLAGS )
+    if (${CPU_FLAGS} MATCHES "avx2")
+        set(HAS_AVX2 ON CACHE BOOL "Architecture has AVX2 SIMD enabled")
+        if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_CLANGXX)
+            set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2" )
+            message(STATUS "Use g++ AVX2 SIMD instructions")
+            add_definitions(-DUSE_AVX2)
+        endif()
+    else()
+        set(HAS_AVX2 OFF CACHE BOOL "Architecture does not have AVX2 SIMD enabled")
+    endif()
+    if (${CPU_FLAGS} MATCHES "sse4_1")
+        set(HAS_SSE4_1 ON CACHE BOOL "Architecture has SSE 4.1 SIMD enabled")
+        if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_CLANGXX)
+            set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.1" )
+            message(STATUS "Use g++ SSE 4.1 SIMD instructions")
+            add_definitions(-DUSE_SSE4_1)
+        endif()
+    else()
+        set(HAS_SSE4_1 OFF CACHE BOOL "Architecture does not have SSE 4.1 SIMD enabled")
+    endif()
+    if (${CPU_FLAGS} MATCHES "ssse3")
+        set(HAS_SSSE3 ON CACHE BOOL "Architecture has SSSE3 SIMD enabled")
+        if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_CLANGXX)
+            set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mssse3" )
+            message(STATUS "Use g++ SSSE3 SIMD instructions")
+            add_definitions(-DUSE_SSSE3)
+        endif()
+    else()
+        set(HAS_SSSE3 OFF CACHE BOOL "Architecture does not have SSSE3 SIMD enabled")
+    endif()
+elseif (${ARCHITECTURE} MATCHES "armv7l")
+    EXECUTE_PROCESS( COMMAND grep Features /proc/cpuinfo OUTPUT_VARIABLE CPU_FLAGS )
+    if (${CPU_FLAGS} MATCHES "neon")
+        set(HAS_NEON ON CACHE BOOL "Architecture has NEON SIMD enabled")
+        if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_CLANGXX)
+            set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mfpu=neon" )
+            message(STATUS "Use g++ NEON SIMD instructions")
+            add_definitions(-DUSE_NEON)
+        endif()
+    else()
+        set(HAS_NEON OFF CACHE BOOL "Architecture does not have NEON SIMD enabled")
+    endif()
 endif()
 
-if(USE_SIMD MATCHES SSSE3)
-    if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_CLANGXX)
-        set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mssse3" )
-        message(STATUS "g++ SSSE3")
-        add_definitions(-DUSE_SIMD)
-    endif()
-elseif(USE_SIMD MATCHES NEON)
-    if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_CLANGXX)
-        set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mfpu=neon" )
-        message(STATUS "g++ NEON")
-        add_definitions(-DUSE_NEON)
-    endif()
-endif()
-
-if(USE_SIMD)
-    message(STATUS "SIMD defined")
-else(USE_SIMD)
-    message(STATUS "SIMD not defined")
-endif(USE_SIMD)
+##############################################################################
 
 find_package(Threads)
 find_package(PkgConfig)
@@ -250,7 +274,8 @@ add_executable(sdrdaemon
     sdrdaemon.cpp
 )
 
-if(USE_SIMD AND CM256CC_FOUND)
+if((HAS_SSSE3 OR HAS_NEON) AND CM256CC_FOUND)
+    message(STATUS "SDRdaemonFEC with SIMD instructions enabled")
     add_library(sdmnfecbase STATIC
         ${sdmnfecbase_SOURCES}
     )
@@ -258,7 +283,7 @@ if(USE_SIMD AND CM256CC_FOUND)
     add_executable(sdrdaemonfec
         sdrdaemonfec.cpp
     )
-endif(USE_SIMD AND CM256CC_FOUND)
+endif()
 
 add_executable(sdrdmnctl
     sdrdmnctl.cpp
@@ -396,7 +421,7 @@ target_link_libraries(sdrdaemon
     ${EXTRA_LIBS}
 )
 
-if(USE_SIMD AND CM256CC_FOUND)
+if((HAS_SSSE3 OR HAS_NEON) AND CM256CC_FOUND)
     target_link_libraries(sdmnfecbase ${LZ4_LIBRARIES} ${CM256CC_LIBRARIES})
     
     target_link_libraries(sdrdaemonfec
@@ -406,7 +431,7 @@ if(USE_SIMD AND CM256CC_FOUND)
         ${CMAKE_THREAD_LIBS_INIT}
         ${EXTRA_LIBS}
     )
-endif(USE_SIMD AND CM256CC_FOUND)
+endif()
 
 target_include_directories(sdrdmnctl PUBLIC
     ${LIBNANOMSG_INCLUDE_DIR}
@@ -418,10 +443,10 @@ target_link_libraries(sdrdmnctl
     ${EXTRA_LIBS}
 )
 
-if(USE_SIMD AND CM256CC_FOUND)
+if((HAS_SSSE3 OR HAS_NEON) AND CM256CC_FOUND)
     install(TARGETS sdrdaemon sdrdaemonfec sdrdmnctl DESTINATION bin)
     install(TARGETS sdmnbase sdmnfecbase ${DEVICE_TARGETS} sdmntest DESTINATION lib)
-else(USE_SIMD AND CM256CC_FOUND)
+else()
     install(TARGETS sdrdaemon sdrdmnctl DESTINATION bin)
     install(TARGETS sdmnbase ${DEVICE_TARGETS} sdmntest DESTINATION lib)
-endif(USE_SIMD AND CM256CC_FOUND)
+endif()

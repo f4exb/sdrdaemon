@@ -230,6 +230,7 @@ set(sdmnfecbase_HEADERS
     include/IntHalfbandFilterDB.h
     include/IntHalfbandFilterEO1.h
     include/IntHalfbandFilterEO2.h
+    include/IntHalfbandFilterEO2i.h
     include/parsekv.h
     include/Source.h
     include/UDPSink.h

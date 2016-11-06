@@ -33,6 +33,7 @@
 #endif
 
 #include "HBFilterTraits.h"
+#include "IntHalfbandFilterEO2i.h"
 
 template<uint32_t HBFilterOrder>
 class IntHalfbandFilterEO2 {
@@ -94,98 +95,24 @@ protected:
 
     void doFIR(int32_t *x, int32_t *y)
     {
-        int a = m_ptrA/2; // tip pointer
-        int b = m_ptrB/2 + 1; // tail pointer
-
         int32_t iAcc = 0;
         int32_t qAcc = 0;
 
-#if defined(USE_SSE4_1)
-//#warning "IntHalfbandFiler SIMD"
-        const __m128i* h = (const __m128i*) HBFIRFilterTraits<HBFilterOrder>::hbCoeffs;
-        __m128i sumI = _mm_setzero_si128();
-        __m128i sumQ = _mm_setzero_si128();
-        __m128i sa, sb;
-
-        for (int i = 0; i < HBFIRFilterTraits<HBFilterOrder>::hbOrder / 16; i++)
-        {
-            if ((m_ptrB % 2) == 0)
-            {
-                sa = _mm_loadu_si128((__m128i*) &(m_evenA[0][a]));
-                sb = _mm_loadu_si128((__m128i*) &(m_evenB[0][b]));
-                sumI = _mm_add_epi32(sumI, _mm_mullo_epi32(_mm_add_epi32(sa, sb), *h));
-
-                sa = _mm_loadu_si128((__m128i*) &(m_evenA[1][a]));
-                sb = _mm_loadu_si128((__m128i*) &(m_evenB[1][b]));
-                sumQ = _mm_add_epi32(sumQ, _mm_mullo_epi32(_mm_add_epi32(sa, sb), *h));
-            }
-            else
-            {
-                sa = _mm_loadu_si128((__m128i*) &(m_oddA[0][a]));
-                sb = _mm_loadu_si128((__m128i*) &(m_oddB[0][b]));
-                sumI = _mm_add_epi32(sumI, _mm_mullo_epi32(_mm_add_epi32(sa, sb), *h));
-
-                sa = _mm_loadu_si128((__m128i*) &(m_oddA[1][a]));
-                sb = _mm_loadu_si128((__m128i*) &(m_oddB[1][b]));
-                sumQ = _mm_add_epi32(sumQ, _mm_mullo_epi32(_mm_add_epi32(sa, sb), *h));
-            }
-
-            a += 4;
-            b += 4;
-            ++h;
-        }
-
-        // horizontal add of four 32 bit partial sums
-
-        sumI = _mm_add_epi32(sumI, _mm_srli_si128(sumI, 8));
-        sumI = _mm_add_epi32(sumI, _mm_srli_si128(sumI, 4));
-        iAcc = _mm_cvtsi128_si32(sumI);
-
-        sumQ = _mm_add_epi32(sumQ, _mm_srli_si128(sumQ, 8));
-        sumQ = _mm_add_epi32(sumQ, _mm_srli_si128(sumQ, 4));
-        qAcc = _mm_cvtsi128_si32(sumQ);
-#elif defined(USE_NEON)
-        int32x4_t sumI = vdupq_n_s32(0);
-        int32x4_t sumQ = vdupq_n_s32(0);
-        int32x4_t sa, sb, sh;
-
-        for (int i = 0; i < HBFIRFilterTraits<HBFilterOrder>::hbOrder / 16; i++)
-        {
-            sh = vld1q_s32(&HBFIRFilterTraits<HBFilterOrder>::hbCoeffs[4*i]);
-
-            if ((m_ptrB % 2) == 0)
-            {
-                sa = vld1q_s32(&(m_evenA[0][a]));
-                sb = vld1q_s32(&(m_evenB[0][b]));
-                sumI = vmlaq_s32(sumI, vaddq_s32(sa, sb), sh);
-
-                sa = vld1q_s32(&(m_evenA[1][a]));
-                sb = vld1q_s32(&(m_evenB[1][b]));
-                sumQ = vmlaq_s32(sumQ, vaddq_s32(sa, sb), sh);
-            }
-            else
-            {
-                sa = vld1q_s32(&(m_oddA[0][a]));
-                sb = vld1q_s32(&(m_oddB[0][b]));
-                sumI = vmlaq_s32(sumI, vaddq_s32(sa, sb), sh);
-
-                sa = vld1q_s32(&(m_oddA[1][a]));
-                sb = vld1q_s32(&(m_oddB[1][b]));
-                sumQ = vmlaq_s32(sumQ, vaddq_s32(sa, sb), sh);
-            }
-
-            a += 4;
-            b += 4;
-        }
-
-        int32x2_t sumI1 = vpadd_s32(vget_high_s32(sumI), vget_low_s32(sumI));
-        int32x2_t sumI2 = vpadd_s32(sumI1, sumI1);
-        iAcc = vget_lane_s32(sumI2, 0);
-
-        int32x2_t sumQ1 = vpadd_s32(vget_high_s32(sumQ), vget_low_s32(sumQ));
-        int32x2_t sumQ2 = vpadd_s32(sumQ1, sumQ1);
-        qAcc = vget_lane_s32(sumQ2, 0);
+#if defined(USE_SSE4_1) || defined(USE_NEON)
+        IntHalfbandFilterEO2Intrisics<HBFilterOrder>::work(
+                m_ptrA,
+                m_ptrB,
+                m_evenA,
+                m_evenB,
+                m_oddA,
+                m_oddB,
+                iAcc,
+                qAcc
+        );
 #else
+        int a = ptrA/2; // tip pointer
+        int b = ptrB/2 + 1; // tail pointer
+
         for (int i = 0; i < HBFIRFilterTraits<HBFilterOrder>::hbOrder / 4; i++)
         {
             if ((m_ptrB % 2) == 0)

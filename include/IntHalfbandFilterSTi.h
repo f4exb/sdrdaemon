@@ -108,7 +108,8 @@ public:
 
         for (int i = 0; i < HBFIRFilterTraits<HBFilterOrder>::hbOrder / 4; i++)
         {
-        	sh = vdupq_n_s32(HBFIRFilterTraits<HBFilterOrder>::hbCoeffs[i]);
+            //sh = vdupq_n_s32(HBFIRFilterTraits<HBFilterOrder>::hbCoeffs[i]);
+            sh = vld1q_s32(&(HBFIRFilterTraits<HBFilterOrder>::hbCoeffsX4[4*i]));
             sa = vld1q_s32(&(samples[a][0]));
             sb = vld1q_s32(&(samples[b][0]));
             sum = vmlaq_s32(sum, vaddq_s32(sa, sb), sh);

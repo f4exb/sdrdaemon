@@ -76,8 +76,7 @@ protected:
             m_iOddAcc = 0;
             m_qOddAcc = 0;
 
-#ifdef USE_SSE4_1
-//            memcpy((void *) m_samplesAligned, (const void *) &(m_samplesDB[ m_ptr + 1][0]), HBFilterOrder*2*sizeof(qint32));
+#if defined(USE_SSE4_1) || defined(USE_NEON)
             IntHalfbandFilterSTIntrinsics<HBFilterOrder>::workNA(
                     m_ptr + 1,
                     m_samplesDB,

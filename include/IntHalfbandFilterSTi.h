@@ -26,6 +26,8 @@
 
 #if defined(USE_SSE4_1)
 #include <smmintrin.h>
+#elif defined(USE_NEON)
+#include <arm_neon.h>
 #endif
 
 #include "HBFilterTraits.h"
@@ -44,36 +46,17 @@ public:
         int b = 0; // tail
         const __m128i* h = (const __m128i*) HBFIRFilterTraits<HBFilterOrder>::hbCoeffs;
         __m128i sum = _mm_setzero_si128();
-        __m128i shh, sa, sb;
+        __m128i sh, sa, sb;
         int32_t sums[4] __attribute__ ((aligned (16)));
 
         for (int i = 0; i < HBFIRFilterTraits<HBFilterOrder>::hbOrder / 16; i++)
         {
-            shh = _mm_shuffle_epi32(*h, _MM_SHUFFLE(0,0,0,0));
+        	sh = _mm_set_epi32(h[i], h[i], h[i], h[i]);
             sa = _mm_load_si128((__m128i*) &(samples[a][0])); // Ei,Eq,Oi,Oq
             sb = _mm_load_si128((__m128i*) &(samples[b][0]));
-            sum = _mm_add_epi32(sum, _mm_mullo_epi32(_mm_add_epi32(sa, sb), shh));
+            sum = _mm_add_epi32(sum, _mm_mullo_epi32(_mm_add_epi32(sa, sb), sh));
             a -= 2;
             b += 2;
-            shh = _mm_shuffle_epi32(*h, _MM_SHUFFLE(1,1,1,1));
-            sa = _mm_load_si128((__m128i*) &(samples[a][0])); // Ei,Eq,Oi,Oq
-            sb = _mm_load_si128((__m128i*) &(samples[b][0]));
-            sum = _mm_add_epi32(sum, _mm_mullo_epi32(_mm_add_epi32(sa, sb), shh));
-            a -= 2;
-            b += 2;
-            shh = _mm_shuffle_epi32(*h, _MM_SHUFFLE(2,2,2,2));
-            sa = _mm_load_si128((__m128i*) &(samples[a][0])); // Ei,Eq,Oi,Oq
-            sb = _mm_load_si128((__m128i*) &(samples[b][0]));
-            sum = _mm_add_epi32(sum, _mm_mullo_epi32(_mm_add_epi32(sa, sb), shh));
-            a -= 2;
-            b += 2;
-            shh = _mm_shuffle_epi32(*h, _MM_SHUFFLE(3,3,3,3));
-            sa = _mm_load_si128((__m128i*) &(samples[a][0])); // Ei,Eq,Oi,Oq
-            sb = _mm_load_si128((__m128i*) &(samples[b][0]));
-            sum = _mm_add_epi32(sum, _mm_mullo_epi32(_mm_add_epi32(sa, sb), shh));
-            a -= 2;
-            b += 2;
-            ++h;
         }
 
         // Extract values from sum vector
@@ -97,40 +80,44 @@ public:
         int b = ptr + 0; // tail
         const __m128i* h = (const __m128i*) HBFIRFilterTraits<HBFilterOrder>::hbCoeffs;
         __m128i sum = _mm_setzero_si128();
-        __m128i shh, sa, sb;
+        __m128i sh, sa, sb;
         int32_t sums[4] __attribute__ ((aligned (16)));
 
-        for (int i = 0; i < HBFIRFilterTraits<HBFilterOrder>::hbOrder / 16; i++)
+        for (int i = 0; i < HBFIRFilterTraits<HBFilterOrder>::hbOrder / 4; i++)
         {
-            shh = _mm_shuffle_epi32(*h, _MM_SHUFFLE(0,0,0,0));
+        	sh = _mm_set_epi32(h[i], h[i], h[i], h[i]);
             sa = _mm_loadu_si128((__m128i*) &(samples[a][0])); // Ei,Eq,Oi,Oq
             sb = _mm_loadu_si128((__m128i*) &(samples[b][0]));
-            sum = _mm_add_epi32(sum, _mm_mullo_epi32(_mm_add_epi32(sa, sb), shh));
+            sum = _mm_add_epi32(sum, _mm_mullo_epi32(_mm_add_epi32(sa, sb), sh));
             a -= 2;
             b += 2;
-            shh = _mm_shuffle_epi32(*h, _MM_SHUFFLE(1,1,1,1));
-            sa = _mm_loadu_si128((__m128i*) &(samples[a][0])); // Ei,Eq,Oi,Oq
-            sb = _mm_loadu_si128((__m128i*) &(samples[b][0]));
-            sum = _mm_add_epi32(sum, _mm_mullo_epi32(_mm_add_epi32(sa, sb), shh));
-            a -= 2;
-            b += 2;
-            shh = _mm_shuffle_epi32(*h, _MM_SHUFFLE(2,2,2,2));
-            sa = _mm_loadu_si128((__m128i*) &(samples[a][0])); // Ei,Eq,Oi,Oq
-            sb = _mm_loadu_si128((__m128i*) &(samples[b][0]));
-            sum = _mm_add_epi32(sum, _mm_mullo_epi32(_mm_add_epi32(sa, sb), shh));
-            a -= 2;
-            b += 2;
-            shh = _mm_shuffle_epi32(*h, _MM_SHUFFLE(3,3,3,3));
-            sa = _mm_loadu_si128((__m128i*) &(samples[a][0])); // Ei,Eq,Oi,Oq
-            sb = _mm_loadu_si128((__m128i*) &(samples[b][0]));
-            sum = _mm_add_epi32(sum, _mm_mullo_epi32(_mm_add_epi32(sa, sb), shh));
-            a -= 2;
-            b += 2;
-            ++h;
         }
 
         // Extract values from sum vector
         _mm_store_si128((__m128i*) sums, sum);
+        iEvenAcc = sums[0];
+        qEvenAcc = sums[1];
+        iOddAcc = sums[2];
+        qOddAcc = sums[3];
+#elif defined(USE_NEON)
+        int a = ptr + HBFIRFilterTraits<HBFilterOrder>::hbOrder - 2; // tip
+        int b = ptr + 0; // tail
+        int32x4_t sum = vdupq_n_s32(0);
+        int32x4_t sa, sb, sh;
+        int32_t sums[4] __attribute__ ((aligned (16)));
+
+        for (int i = 0; i < HBFIRFilterTraits<HBFilterOrder>::hbOrder / 4; i++)
+        {
+        	sh = vdupq_n_s32(HBFIRFilterTraits<HBFilterOrder>::hbCoeffs[i]);
+            sa = vld1q_s32(&(samples[a][0]));
+            sb = vld1q_s32(&(samples[b][0]));
+            sum = vmlaq_s32(sum, vaddq_s32(sa, sb), sh);
+            a -= 2;
+            b += 2;
+        }
+
+        // Extract values from sum vector
+        vst1q_s32(sums, sum);
         iEvenAcc = sums[0];
         qEvenAcc = sums[1];
         iOddAcc = sums[2];

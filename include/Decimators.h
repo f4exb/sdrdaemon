@@ -23,8 +23,6 @@
 
 #if defined(USE_SSE4_1)
 #include "IntHalfbandFilterEO1.h"
-#elif defined(USE_NEON)
-#include "IntHalfbandFilterST.h"
 #else
 #include "IntHalfbandFilterDB.h"
 #endif
@@ -61,13 +59,6 @@ private:
 	IntHalfbandFilterEO1<DECIMATORS_HB_FILTER_ORDER> m_decimator16; // 4th stages
 	IntHalfbandFilterEO1<DECIMATORS_HB_FILTER_ORDER> m_decimator32; // 5th stages
 	IntHalfbandFilterEO1<DECIMATORS_HB_FILTER_ORDER> m_decimator64; // 6th stages
-#elif defined(USE_NEON)
-	IntHalfbandFilterST<DECIMATORS_HB_FILTER_ORDER> m_decimator2;  // 1st stages
-	IntHalfbandFilterST<DECIMATORS_HB_FILTER_ORDER> m_decimator4;  // 2nd stages
-	IntHalfbandFilterST<DECIMATORS_HB_FILTER_ORDER> m_decimator8;  // 3rd stages
-	IntHalfbandFilterST<DECIMATORS_HB_FILTER_ORDER> m_decimator16; // 4th stages
-	IntHalfbandFilterST<DECIMATORS_HB_FILTER_ORDER> m_decimator32; // 5th stages
-	IntHalfbandFilterST<DECIMATORS_HB_FILTER_ORDER> m_decimator64; // 6th stages
 #else
     IntHalfbandFilterDB<DECIMATORS_HB_FILTER_ORDER> m_decimator2;  // 1st stages
     IntHalfbandFilterDB<DECIMATORS_HB_FILTER_ORDER> m_decimator4;  // 2nd stages

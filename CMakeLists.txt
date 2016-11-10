@@ -24,16 +24,16 @@ message( STATUS "Architecture: ${ARCHITECTURE}" )
 
 if (${ARCHITECTURE} MATCHES "x86_64|AMD64|x86")
     EXECUTE_PROCESS( COMMAND grep flags /proc/cpuinfo OUTPUT_VARIABLE CPU_FLAGS )
-    if (${CPU_FLAGS} MATCHES "avx2")
-        set(HAS_AVX2 ON CACHE BOOL "Architecture has AVX2 SIMD enabled")
-        if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_CLANGXX)
-            set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2" )
-            message(STATUS "Use g++ AVX2 SIMD instructions")
-            add_definitions(-DUSE_AVX2)
-        endif()
-    else()
-        set(HAS_AVX2 OFF CACHE BOOL "Architecture does not have AVX2 SIMD enabled")
-    endif()
+#    if (${CPU_FLAGS} MATCHES "avx2")
+#        set(HAS_AVX2 ON CACHE BOOL "Architecture has AVX2 SIMD enabled")
+#        if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_CLANGXX)
+#            set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2" )
+#            message(STATUS "Use g++ AVX2 SIMD instructions")
+#            add_definitions(-DUSE_AVX2)
+#        endif()
+#    else()
+#        set(HAS_AVX2 OFF CACHE BOOL "Architecture does not have AVX2 SIMD enabled")
+#    endif()
     if (${CPU_FLAGS} MATCHES "sse4_1")
         set(HAS_SSE4_1 ON CACHE BOOL "Architecture has SSE 4.1 SIMD enabled")
         if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_CLANGXX)
@@ -229,8 +229,7 @@ set(sdmnfecbase_HEADERS
     include/IntHalfbandFilter.h
     include/IntHalfbandFilterDB.h
     include/IntHalfbandFilterEO1.h
-    include/IntHalfbandFilterEO2.h
-    include/IntHalfbandFilterEO2i.h
+    include/IntHalfbandFilterEO1i.h
     include/IntHalfbandFilterST.h
     include/IntHalfbandFilterSTi.h
     include/parsekv.h

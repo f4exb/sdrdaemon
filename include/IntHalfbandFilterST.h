@@ -103,13 +103,13 @@ protected:
             m_iOddAcc += ((int32_t)m_samplesDB[m_ptr + m_size/2 + 1][0]) << (HBFIRFilterTraits<HBFilterOrder>::hbShift - 1);
             m_qOddAcc += ((int32_t)m_samplesDB[m_ptr + m_size/2 + 1][1]) << (HBFIRFilterTraits<HBFilterOrder>::hbShift - 1);
 
-            *x = m_iEvenAcc >> HBFIRFilterTraits<HBFilterOrder>::hbShift -1;
-            *y = m_qEvenAcc >> HBFIRFilterTraits<HBFilterOrder>::hbShift -1;
+            *x = m_iEvenAcc >> (HBFIRFilterTraits<HBFilterOrder>::hbShift - 1);
+            *y = m_qEvenAcc >> (HBFIRFilterTraits<HBFilterOrder>::hbShift - 1);
         }
         else
         {
-            *x = m_iOddAcc >> HBFIRFilterTraits<HBFilterOrder>::hbShift -1;
-            *y = m_qOddAcc >> HBFIRFilterTraits<HBFilterOrder>::hbShift -1;
+            *x = m_iOddAcc >> (HBFIRFilterTraits<HBFilterOrder>::hbShift - 1);
+            *y = m_qOddAcc >> (HBFIRFilterTraits<HBFilterOrder>::hbShift - 1);
         }
     }
 };

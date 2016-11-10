@@ -27,7 +27,7 @@
 #include "IntHalfbandFilterDB.h"
 #endif
 
-#define DECIMATORS_HB_FILTER_ORDER 48
+#define DECIMATORS_HB_FILTER_ORDER 64
 
 class Decimators
 {

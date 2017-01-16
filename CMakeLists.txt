@@ -246,16 +246,25 @@ set(sdmnfecbase_HEADERS
 if(BUILD_DEBIAN)     ### Debian build #################################################################
 
 add_subdirectory(cm256cc)
+add_subdirectory(libairspy)
+add_subdirectory(libbladerf)
+add_subdirectory(libhackrf)
 add_subdirectory(librtlsdr)
 
 set(sdmndevice_SOURCES
     sdmnbase/TestSource.cpp
     sdmnbase/RtlSdrSource.cpp
+    sdmnbase/AirspySource.cpp
+    sdmnbase/BladeRFSource.cpp
+    sdmnbase/HackRFSource.cpp
 )
 
 set(sdmndevice_HEADERS
     include/TestSource.h
     include/RtlSdrSource.h
+    include/AirspySource.h
+    include/BladeRFSource.h
+    include/HackRFSource.h
 )
 
 set(sdmnbase_SOURCES
@@ -283,6 +292,10 @@ include_directories(
     ${LIBNANOMSG_INCLUDE_DIR}
     ${LZ4_INCLUDE_DIRS}
     ${LIBCM256CCSRC}
+    ${LIBAIRSPYSRC}
+    ${LIBAIRSPYSRC}/libairspy/src
+    ${LIBBLADERFLIBSRC}/include
+    ${LIBHACKRFSRC}
     ${LIBRTLSDRSRC}/include
     ${EXTRA_INCLUDES}
 )
@@ -299,6 +312,9 @@ add_library(sdmnfecbase STATIC
 
 target_link_libraries(sdmnbase 
     cm256cc
+    airspy
+    bladerf
+    hackrf
     rtlsdr
     ${LZ4_LIBRARIES}
     ${LIBNANOMSG_LIBRARIES}
@@ -306,6 +322,9 @@ target_link_libraries(sdmnbase
 
 target_link_libraries(sdmnfecbase 
     cm256cc
+    airspy
+    bladerf
+    hackrf
     rtlsdr
     ${LZ4_LIBRARIES}
     ${LIBNANOMSG_LIBRARIES}

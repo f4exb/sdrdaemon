@@ -10,7 +10,7 @@ Homepage: https://github.com/f4exb/sdrdaemon
 
 Package: sdrdaemon
 Architecture: any
-Depends: libc6, libfftw3-single3, libgcc1, liblz4-1, libnanomsg0, libstdc++6, libusb-1.0-0, ${shlibs:Depends}, ${misc:Depends}
+Depends: libc6, libgcc1, liblz4-1, libnanomsg0, libstdc++6, libusb-1.0-0, ${shlibs:Depends}, ${misc:Depends}
 Description: Utility to send I/Q samples read from a SDR device over the network via UDP
  Utility to send I/Q samples read from a SDR device over the network via UDP. 
  Supported devices: RTL-SDR

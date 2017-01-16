@@ -19,6 +19,21 @@ project (sdrdaemon)
 
 ##############################################################################
 
+if (BUILD_TYPE MATCHES RELEASE)
+    set(CMAKE_BUILD_TYPE "Release")
+elseif (BUILD_TYPE MATCHES RELEASEWITHDBGINFO)
+    set(CMAKE_BUILD_TYPE "ReleaseWithDebugInfo")
+elseif (BUILD_TYPE MATCHES DEBUG)
+    set(CMAKE_BUILD_TYPE "Debug")
+elseif (BUILD_TYPE MATCHES DEBIAN)
+    set(CMAKE_BUILD_TYPE "Release")
+    set(BUILD_DEBIAN TRUE)
+else()
+    set(CMAKE_BUILD_TYPE "Release")
+endif()
+
+##############################################################################
+
 EXECUTE_PROCESS( COMMAND uname -m COMMAND tr -d '\n' OUTPUT_VARIABLE ARCHITECTURE )
 message( STATUS "Architecture: ${ARCHITECTURE}" )
 
@@ -242,6 +257,97 @@ set(sdmnfecbase_HEADERS
     include/util.h
 )
 
+if(BUILD_DEBIAN)     ### Debian build #################################################################
+
+add_subdirectory(cm256cc)
+
+set(sdmnbase_SOURCES
+    ${sdmnbase_SOURCES}
+    sdmnbase/TestSource.cpp
+)    
+
+set(sdmnbase_HEADERS
+    ${sdmnbase_HEADERS}
+    include/TestSource.h
+)
+
+set(sdmnfecbase_SOURCES
+    ${sdmnfecbase_SOURCES}
+    sdmnbase/TestSource.cpp
+)    
+
+set(sdmnfecbase_HEADERS
+    ${sdmnfecbase_HEADERS}
+    include/TestSource.h
+)
+
+include_directories(
+    ${CMAKE_SOURCE_DIR}/include
+    ${LIBNANOMSG_INCLUDE_DIR}
+    ${LZ4_INCLUDE_DIRS}
+    ${LIBCM256CCSRC}
+    ${EXTRA_INCLUDES}
+)
+
+### Libraries
+
+add_library(sdmnbase STATIC
+    ${sdmnbase_SOURCES}
+)
+
+add_library(sdmnfecbase STATIC
+    ${sdmnfecbase_SOURCES}
+)
+
+target_link_libraries(sdmnbase 
+    cm256cc
+    ${LZ4_LIBRARIES}
+    ${LIBNANOMSG_LIBRARIES}
+)
+
+target_link_libraries(sdmnfecbase 
+    cm256cc
+    ${LZ4_LIBRARIES}
+    ${LIBNANOMSG_LIBRARIES}
+)
+
+### Executables
+
+add_executable(sdrdmnctl
+    sdrdmnctl.cpp
+)
+
+add_executable(sdrdaemon
+    sdrdaemon.cpp
+)
+
+add_executable(sdrdaemonfec
+    sdrdaemonfec.cpp
+)
+
+target_link_libraries(sdrdmnctl
+    ${LIBNANOMSG_LIBRARIES}
+    ${CMAKE_THREAD_LIBS_INIT}
+    ${EXTRA_LIBS}
+)
+
+target_link_libraries(sdrdaemon
+    sdmnbase
+    ${CMAKE_THREAD_LIBS_INIT}
+    ${EXTRA_LIBS}
+)
+
+target_link_libraries(sdrdaemonfec
+    sdmnfecbase
+    ${CMAKE_THREAD_LIBS_INIT}
+    ${EXTRA_LIBS}
+)
+
+install(TARGETS sdrdaemon sdrdaemonfec sdrdmnctl DESTINATION bin)
+install(TARGETS sdmnbase sdmnfecbase DESTINATION lib)
+
+else(BUILD_DEBIAN)   ### Normal build #################################################################
+
 # Base sources
 
 set(sdmnbase_SOURCES
@@ -454,3 +560,6 @@ else()
     install(TARGETS sdrdaemon sdrdmnctl DESTINATION bin)
     install(TARGETS sdmnbase ${DEVICE_TARGETS} sdmntest DESTINATION lib)
 endif()
+
+endif(BUILD_DEBIAN)
+

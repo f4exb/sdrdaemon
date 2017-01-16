@@ -1,0 +1,16 @@
+Source: sdrdaemon
+Section: hamradio
+Priority: optional
+Maintainer: Edouard Griffiths, F4EXB <f4exb06@gmail.com>
+Build-Depends: debhelper (>=9)
+Standards-Version: 3.9.6
+Homepage: https://github.com/f4exb/sdrdaemon
+#Vcs-Git: git://anonscm.debian.org/collab-maint/sdrdaemon.git
+#Vcs-Browser: https://anonscm.debian.org/cgit/collab-maint/sdrdaemon.git
+
+Package: sdrdaemon
+Architecture: any
+Depends: libc6, libfftw3-single3, libgcc1, liblz4-1, libnanomsg0, libstdc++6, libusb-1.0-0, ${shlibs:Depends}, ${misc:Depends}
+Description: Utility to send I/Q samples read from a SDR device over the network via UDP
+ Utility to send I/Q samples read from a SDR device over the network via UDP. 
+ Supported devices: RTL-SDR

@@ -1,0 +1,5 @@
+sdrdaemon (2.1.2-1) unstable; urgency=medium
+
+  * Initial release as a Debian package
+
+ -- Edouard Griffiths, F4EXB <f4exb06@gmail.com>  Mon, 16 Jan 2017 23:15:15 +0200

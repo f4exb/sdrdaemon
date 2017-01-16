@@ -90,6 +90,7 @@ find_package(PkgConfig)
 find_package(Boost 1.47)
 find_package(LZ4 131)
 find_package(CM256cc)
+find_package(LibUSB)
 
 # Find Airspy library.
 pkg_check_modules(PKG_AIRSPY libairspy)
@@ -146,21 +147,6 @@ else(LIBRTLSDR_INCLUDE_DIR AND LIBRTLSDR_LIBRARIES)
     set(LIBRTLSDR_FOUND FALSE CACHE INTERNAL "librtlsdr found")
     message(STATUS "librtlsdr not found")
 endif(LIBRTLSDR_INCLUDE_DIR AND LIBRTLSDR_LIBRARIES)
-
-# Find libusb
-pkg_check_modules(PKG_LIBUSB libusb-1.0)
-find_path(LIBUSB_INCLUDE_DIR libusb.h
-          HINT ${PKG_LIBUSB_INCLUDE_DIRS}
-          PATH_SUFFIXES libusb-1.0)
-find_library(LIBUSB_LIBRARY usb-1.0
-          HINT ${PKG_LIBUSB_LIBRARY_DIRS})
-if(LIBUSB_INCLUDE_DIR AND LIBUSB_LIBRARY)
-    set(LIBUSB_FOUND TRUE CACHE INTERNAL "libusb found")
-    message(STATUS "Found libusb: ${LIBUSB_INCLUDE_DIR}, ${LIBUSB_LIBRARY}")
-else(LIBUSB_INCLUDE_DIR AND LIBUSB_LIBRARY)
-    set(LIBRTLSDR_FOUND FALSE CACHE INTERNAL "libusb found")
-    message(STATUS "libusb not found")
-endif(LIBUSB_INCLUDE_DIR AND LIBUSB_LIBRARY)
 
 # Find nanomsg library.
 pkg_check_modules(PKG_LIBNANOMSG libnanomsg)
@@ -260,25 +246,36 @@ set(sdmnfecbase_HEADERS
 if(BUILD_DEBIAN)     ### Debian build #################################################################
 
 add_subdirectory(cm256cc)
+add_subdirectory(librtlsdr)
+
+set(sdmndevice_SOURCES
+    sdmnbase/TestSource.cpp
+    sdmnbase/RtlSdrSource.cpp
+)
+
+set(sdmndevice_HEADERS
+    include/TestSource.h
+    include/RtlSdrSource.h
+)
 
 set(sdmnbase_SOURCES
     ${sdmnbase_SOURCES}
-    sdmnbase/TestSource.cpp
+    ${sdmndevice_SOURCES}
 )    
 
 set(sdmnbase_HEADERS
     ${sdmnbase_HEADERS}
-    include/TestSource.h
+    ${sdmndevice_HEADERS}
 )
 
 set(sdmnfecbase_SOURCES
     ${sdmnfecbase_SOURCES}
-    sdmnbase/TestSource.cpp
+    ${sdmndevice_SOURCES}
 )    
 
 set(sdmnfecbase_HEADERS
     ${sdmnfecbase_HEADERS}
-    include/TestSource.h
+    ${sdmndevice_HEADERS}
 )
 
 include_directories(
@@ -286,6 +283,7 @@ include_directories(
     ${LIBNANOMSG_INCLUDE_DIR}
     ${LZ4_INCLUDE_DIRS}
     ${LIBCM256CCSRC}
+    ${LIBRTLSDRSRC}/include
     ${EXTRA_INCLUDES}
 )
 
@@ -301,15 +299,19 @@ add_library(sdmnfecbase STATIC
 
 target_link_libraries(sdmnbase 
     cm256cc
+    rtlsdr
     ${LZ4_LIBRARIES}
     ${LIBNANOMSG_LIBRARIES}
 )
 
 target_link_libraries(sdmnfecbase 
     cm256cc
+    rtlsdr
     ${LZ4_LIBRARIES}
     ${LIBNANOMSG_LIBRARIES}
 )
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DHAS_RTLSDR")
 
 ### Executables
 

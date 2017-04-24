@@ -41,8 +41,10 @@ public:
     Source() : m_confFreq(0),
 	    m_decim(0),
 	    m_nbFECBlocks(1),
+        m_txDelay(0),
 		m_fcPos(2),
 		m_buf(0),
+        m_stop_flag(0),
 		m_downsampler(0)
     {
         m_nnReceiver = nn_socket(AF_SP, NN_PAIR);

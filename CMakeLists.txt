@@ -563,10 +563,10 @@ target_link_libraries(sdrdmnctl
 
 if((HAS_SSSE3 OR HAS_NEON) AND CM256CC_FOUND)
     install(TARGETS sdrdaemon sdrdaemonfec sdrdmnctl DESTINATION bin)
-    install(TARGETS sdmnbase sdmnfecbase ${DEVICE_TARGETS} sdmntest DESTINATION lib)
+    install(TARGETS sdmnbase sdmnfecbase ${DEVICE_TARGETS} sdmntest DESTINATION lib${LIB_SUFFIX})
 else()
     install(TARGETS sdrdaemon sdrdmnctl DESTINATION bin)
-    install(TARGETS sdmnbase ${DEVICE_TARGETS} sdmntest DESTINATION lib)
+    install(TARGETS sdmnbase ${DEVICE_TARGETS} sdmntest DESTINATION lib${LIB_SUFFIX})
 endif()
 
 endif(BUILD_DEBIAN)

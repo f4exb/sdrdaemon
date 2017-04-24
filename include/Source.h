@@ -71,7 +71,7 @@ public:
     	os << "tcp://*:" << ctlPort;
 
         int rc = nn_bind(m_nnReceiver, os.str().c_str());
-        assert(rc >= 0);
+        if (rc < 0) abort();
     }
 
     /**

@@ -91,6 +91,7 @@ find_package(Boost 1.47)
 find_package(LZ4 131)
 find_package(CM256cc)
 find_package(LibUSB)
+find_package(LibNANOMSG)
 
 # Find Airspy library.
 pkg_check_modules(PKG_AIRSPY libairspy)
@@ -147,20 +148,6 @@ else(LIBRTLSDR_INCLUDE_DIR AND LIBRTLSDR_LIBRARIES)
     set(LIBRTLSDR_FOUND FALSE CACHE INTERNAL "librtlsdr found")
     message(STATUS "librtlsdr not found")
 endif(LIBRTLSDR_INCLUDE_DIR AND LIBRTLSDR_LIBRARIES)
-
-# Find nanomsg library.
-pkg_check_modules(PKG_LIBNANOMSG libnanomsg)
-find_path(LIBNANOMSG_INCLUDE_DIR nanomsg/nn.h
-          HINT ${PKG_LIBNANOMSG_INCLUDE_DIRS})
-find_library(LIBNANOMSG_LIBRARIES libnanomsg.so
-          HINT ${PKG_LIBNANOMSG_LIBRARIES_DIRS})
-if(LIBNANOMSG_INCLUDE_DIR AND LIBNANOMSG_LIBRARIES)
-    set(LIBNANOMSG_FOUND TRUE CACHE INTERNAL "libnanomsg found")
-    message(STATUS "Found libnanomsg: ${LIBNANOMSG_INCLUDE_DIR}, ${LIBNANOMSG_LIBRARIES}")
-else(LIBNANOMSG_INCLUDE_DIR AND LIBNANOMSG_LIBRARIES)
-    set(LIBNANOMSG_FOUND FALSE CACHE INTERNAL "libnanomsg found")
-    message(FATAL_ERROR "libnanomsg is not found and is required. CMake will exit")
-endif(LIBNANOMSG_INCLUDE_DIR AND LIBNANOMSG_LIBRARIES)
 
 set(LIBAIRSPY_INCLUDE_DIRS ${LIBAIRSPY_INCLUDE_DIR} ${LIBUSB_INCLUDE_DIR} ${LIBNANOMSG_INCLUDE_DIR})
 set(LIBAIRSPY_LIBRARIES    ${LIBAIRSPY_LIBRARIES} ${LIBUSB_LIBRARY} ${LIBNANOMSG_LIBRARIES})

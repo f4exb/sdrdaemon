@@ -1,3 +1,11 @@
+sdrdaemon (2.1.3-1) unstable; urgency=medium
+
+  * Fixed errors in cmake when no cm256cc package is available
+  * Fixed cmake file to have a library suffix
+  * Fixed wrong usage of assert: not working for release builds
+    
+ -- Edouard Griffiths, F4EXB <f4exb06@gmail.com>  Wed, 26 Apr 2017 23:14:18 +0100
+
 sdrdaemon (2.1.2-1) unstable; urgency=medium
 
   * Initial release as a Debian package

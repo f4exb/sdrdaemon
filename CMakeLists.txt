@@ -410,9 +410,14 @@ add_executable(sdrdmnctl
 include_directories(
     ${CMAKE_SOURCE_DIR}/include
     ${LIBNANOMSG_INCLUDE_DIR}
-    ${CM256CC_INCLUDE_DIR}
     ${EXTRA_INCLUDES}
 )
+
+if (CM256CC_FOUND)
+include_directories(
+    ${CM256CC_INCLUDE_DIR}
+)
+endif()
 
 set(DEVICE_LIBRARIES "")
 set(DEVICE_TARGETS "")

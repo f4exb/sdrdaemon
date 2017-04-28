@@ -1,0 +1,58 @@
+#!/bin/sh
+                                                                                                                                                                                                                                                               
+### BEGIN INIT INFO
+# Provides:        sdrdaemonfec
+# Required-Start:  $network $syslog
+# Required-Stop:   $network $syslog
+# Default-Start:   2 3 4 5
+# Default-Stop:    0 1 6
+# Short-Description: SDRdaemonFEC daemon control
+### END INIT INFO
+
+# Do 'sudo systemctl daemon-reload' to implement and after each change to this file
+
+. /lib/lsb/init-functions
+
+JQ=$(which jq)
+DAEMON=/opt/sdrdaemon/bin/sdrdaemonfec
+PIDFILE=/var/run/sdrdaemonfec.pid
+CONF_FILE=/var/lib/sdrdaemon/sdrdaemonfec.conf
+
+test -x $DAEMON || exit 5
+test -x $JQ || exit 5
+test -f ${CONF_FILE} || exit 5
+
+if [ -e ${CONF_FILE} ]; then
+    type=$(jq -r '.type' ${CONF_FILE})
+    ip=$(jq -r '.ip' ${CONF_FILE})
+    dport=$(jq -r '.dport' ${CONF_FILE})
+    cport=$(jq -r '.cport' ${CONF_FILE})
+    cmd=$(jq -r '.cmd' ${CONF_FILE})
+    SDRDAEMONFEC_OPTS="-f -t ${type} -D ${dport} -C ${cport} -I ${ip} -c ${cmd}"
+fi
+
+case $1 in
+    start)
+        log_daemon_msg "Starting SDRdaemonFEC service" "sdrdaemonfec"
+        start-stop-daemon --start --background --no-close --oknodo --pidfile $PIDFILE --startas $DAEMON -- $SDRDAEMONFEC_OPTS
+        status=$?
+        echo $(pgrep -f $DAEMON) > $PIDFILE
+        log_end_msg $status
+        ;;
+    stop)
+        log_daemon_msg "Stopping SDRdaemonFEC service" "sdrdaemonfec"
+        start-stop-daemon --stop --oknodo --signal 15 --pidfile $PIDFILE
+        status=$?
+        log_end_msg $status
+        ;;
+    restart|force-reload)
+        $0 stop && sleep 2 && $0 start
+        ;;
+    status)
+        status_of_proc $DAEMON "SDRdaemonFEC service"
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|restart|force-reload|status}"
+        exit2
+        ;;
+esac

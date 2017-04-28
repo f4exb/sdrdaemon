@@ -308,6 +308,10 @@ The complete list of options is:
 
 The nanomsg connection is specified as a paired connection (`NN_PAIR`). The connection can be managed by any program at the convenience of the user as long as the connection type is respected.
 
+<h2>Running as a service</h2>
+
+Have a look at the `service` subdirectory.
+
 <h1>Data formats</h1>
 
 <h2>With FEC</h2>

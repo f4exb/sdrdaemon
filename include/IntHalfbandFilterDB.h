@@ -48,6 +48,28 @@ public:
         m_ptr = (m_ptr + 1) % m_size;
 	}
 
+    void myInterpolate(int32_t *x1, int32_t *y1, int32_t *x2, int32_t *y2)
+    {
+        // insert sample into ring double buffer
+        m_samples[m_ptr][0] = *x1;
+        m_samples[m_ptr][1] = *y1;
+        m_samples[m_ptr + HBFIRFilterTraits<HBFilterOrder>::hbOrder/2][0] = *x1;
+        m_samples[m_ptr + HBFIRFilterTraits<HBFilterOrder>::hbOrder/2][1] = *y1;
+
+        // advance pointer
+        if (m_ptr < (HBFIRFilterTraits<HBFilterOrder>::hbOrder/2) - 1) {
+            m_ptr++;
+        } else {
+            m_ptr = 0;
+        }
+
+        // first output sample calculated with the middle peak
+        *x1 = m_samples[m_ptr + (HBFIRFilterTraits<HBFilterOrder>::hbOrder/4) - 1][0];
+        *y1 = m_samples[m_ptr + (HBFIRFilterTraits<HBFilterOrder>::hbOrder/4) - 1][1];
+
+        // second sample calculated with the filter
+        doInterpolateFIR(x2, y2);
+    }
 protected:
 	int32_t m_samples[2*(HBFIRFilterTraits<HBFilterOrder>::hbOrder - 1)][2]; // double buffer technique
 	int16_t m_ptr;
@@ -83,6 +105,27 @@ protected:
 		*x = iAcc >> (HBFIRFilterTraits<HBFilterOrder>::hbShift -1); // HB_SHIFT incorrect do not loose the gained bit
 		*y = qAcc >> (HBFIRFilterTraits<HBFilterOrder>::hbShift -1);
 	}
+
+    void doInterpolateFIR(int32_t *x, int32_t *y)
+    {
+        int a = m_ptr;
+        int b = m_ptr + (HBFIRFilterTraits<HBFilterOrder>::hbOrder / 2) - 1;
+
+        // go through samples in buffer
+        int32_t iAcc = 0;
+        int32_t qAcc = 0;
+
+        for (int i = 0; i < HBFIRFilterTraits<HBFilterOrder>::hbOrder / 4; i++)
+        {
+            iAcc += (m_samples[a][0] + m_samples[b][0]) * HBFIRFilterTraits<HBFilterOrder>::hbCoeffs[i];
+            qAcc += (m_samples[a][1] + m_samples[b][1]) * HBFIRFilterTraits<HBFilterOrder>::hbCoeffs[i];
+            a++;
+            b--;
+        }
+
+        *x = iAcc >> (HBFIRFilterTraits<HBFilterOrder>::hbShift -1);
+        *y = qAcc >> (HBFIRFilterTraits<HBFilterOrder>::hbShift -1);
+    }
 };
 
 template<uint32_t HBFilterOrder>

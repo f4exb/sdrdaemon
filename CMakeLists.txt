@@ -230,6 +230,39 @@ set(sdmnfecbase_HEADERS
     include/util.h
 )
 
+set(sdmntxbase_SOURCES
+    sdmnbase/CRC64.cpp
+    sdmnbase/HBFilterTraits.cpp
+    sdmnbase/Interpolators.cpp
+    sdmnbase/Sink.cpp
+    sdmnbase/UDPSink.cpp
+    sdmnbase/UDPSinkFEC.cpp
+    sdmnbase/UDPSinkUncompressed.cpp
+    sdmnbase/UDPSocket.cpp
+    sdmnbase/Upsampler.cpp
+)
+
+set(sdmntxbase_HEADERS
+    include/CRC64.h
+    include/DataBuffer.h
+    include/HBFilterTraits.h
+    include/IntHalfbandFilter.h
+    include/IntHalfbandFilterDB.h
+    include/IntHalfbandFilterEO1.h
+    include/IntHalfbandFilterEO1i.h
+    include/IntHalfbandFilterST.h
+    include/IntHalfbandFilterSTi.h
+    include/Interpolators.h
+    include/parsekv.h
+    include/Sink.h
+    include/UDPSink.h
+    include/UDPSinkFEC.h
+    include/UDPSinkUncompressed.h
+    include/UDPSocket.h
+    include/Upsampler.h
+    include/util.h
+)
+
 if(BUILD_DEBIAN)     ### Debian build #################################################################
 
 add_subdirectory(cm256cc)
@@ -368,6 +401,11 @@ set(sdmnfecbase_SOURCES
     ${sdmnfecbase_HEADERS}
 )
 
+set(sdmntxbase_SOURCES
+    ${sdmntxbase_SOURCES}
+    ${sdmntxbase_HEADERS}
+)
+
 # Test sources
 
 set(sdmntest_SOURCES
@@ -396,6 +434,11 @@ if((HAS_SSSE3 OR HAS_NEON) AND CM256CC_FOUND)
     message(STATUS "SDRdaemonFEC with SIMD instructions enabled")
     add_library(sdmnfecbase STATIC
         ${sdmnfecbase_SOURCES}
+    )
+
+    message(STATUS "SDRdaemonTx with SIMD instructions enabled")
+    add_library(sdmntxbase STATIC
+        ${sdmntxbase_SOURCES}
     )
 
     add_executable(sdrdaemonfec
@@ -476,10 +519,12 @@ endif(LIBUSB_FOUND AND LIBBLADERF_FOUND)
 
 if(LIBUSB_FOUND AND LIBHACKRF_FOUND)
     set(sdmnhackrf_SOURCES
+        sdmnbase/HackRFSink.cpp
         sdmnbase/HackRFSource.cpp
     )
 
     set(sdmnhackrf_HEADERS
+        include/HackRFSink.h
         include/HackRFSource.h
     )
 
@@ -554,6 +599,8 @@ if((HAS_SSSE3 OR HAS_NEON) AND CM256CC_FOUND)
         ${CMAKE_THREAD_LIBS_INIT}
         ${EXTRA_LIBS}
     )
+    
+    target_link_libraries(sdmntxbase ${CM256CC_LIBRARIES})
 endif()
 
 target_include_directories(sdrdmnctl PUBLIC
@@ -568,7 +615,7 @@ target_link_libraries(sdrdmnctl
 
 if((HAS_SSSE3 OR HAS_NEON) AND CM256CC_FOUND)
     install(TARGETS sdrdaemon sdrdaemonfec sdrdmnctl DESTINATION bin)
-    install(TARGETS sdmnbase sdmnfecbase ${DEVICE_TARGETS} sdmntest DESTINATION lib${LIB_SUFFIX})
+    install(TARGETS sdmnbase sdmnfecbase sdmntxbase ${DEVICE_TARGETS} sdmntest DESTINATION lib${LIB_SUFFIX})
 else()
     install(TARGETS sdrdaemon sdrdmnctl DESTINATION bin)
     install(TARGETS sdmnbase ${DEVICE_TARGETS} sdmntest DESTINATION lib${LIB_SUFFIX})

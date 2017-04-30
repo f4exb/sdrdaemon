@@ -23,12 +23,22 @@
 // uses Q1.14 format internally, input and output are S16
 
 /*
- * supported filter orders: 96, 80, 64, 48, 32
+ * supported filter orders: 96, 80, 64, 48, 32, 16
  * any usage of another value will be prevented by compilation errors
  */
 template<uint32_t HBFilterOrder>
 struct HBFIRFilterTraits
 {
+};
+
+template<>
+struct HBFIRFilterTraits<16>
+{
+    static const int32_t hbOrder = 16;
+    static const int32_t hbShift = 14;
+    static const int16_t hbMod[16+6];
+    static const int32_t hbCoeffs[4];
+    static const int32_t hbCoeffsX4[16];
 };
 
 template<>

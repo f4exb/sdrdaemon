@@ -234,10 +234,8 @@ set(sdmntxbase_SOURCES
     sdmnbase/CRC64.cpp
     sdmnbase/HBFilterTraits.cpp
     sdmnbase/Interpolators.cpp
+    sdmnbase/SDRdaemonFECBuffer.cpp
     sdmnbase/Sink.cpp
-    sdmnbase/UDPSink.cpp
-    sdmnbase/UDPSinkFEC.cpp
-    sdmnbase/UDPSinkUncompressed.cpp
     sdmnbase/UDPSocket.cpp
     sdmnbase/Upsampler.cpp
 )
@@ -254,10 +252,8 @@ set(sdmntxbase_HEADERS
     include/IntHalfbandFilterSTi.h
     include/Interpolators.h
     include/parsekv.h
+    include/SDRdaemonFECBuffer.h
     include/Sink.h
-    include/UDPSink.h
-    include/UDPSinkFEC.h
-    include/UDPSinkUncompressed.h
     include/UDPSocket.h
     include/Upsampler.h
     include/util.h

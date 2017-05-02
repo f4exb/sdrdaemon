@@ -80,7 +80,7 @@ public:
     /**
      * Read IQ samples from UDP port.
      */
-	virtual void read(const IQSampleVector& samples_out) = 0;
+	virtual void read(IQSampleVector& samples_out) = 0;
 
     /** Return the last error, or return an empty string if there is no error. */
     std::string error()
@@ -91,15 +91,15 @@ public:
     }
 
     /** Set center frequency given in Hz */
-    void setCenterFrequency(uint64_t centerFrequency) { m_centerFrequency = centerFrequency / 1000; }
+    uint64_t getCenterFrequency() const { return m_centerFrequency; }
 
     /** Set sample rate given in Hz */
-    void setSampleRate(uint32_t sampleRate) { m_sampleRate = sampleRate; }
+    uint32_t getSampleRate() const { return m_sampleRate; }
 
-    void setSampleBytes(uint8_t sampleBytes) { m_sampleBytes = (sampleBytes & 0x0F) + (m_sampleBytes & 0xF0); }
-    void setSampleBits(uint8_t sampleBits) { m_sampleBits = sampleBits; }
+    uint8_t getSampleBytes() const { return m_sampleBytes; }
+    uint8_t getSampleBits() { return m_sampleBits; }
 
-    virtual void setNbBlocksFEC(int nbBlocksFEC) {};
+    virtual int getNbBlocksFEC() const { return 0; };
 
     /** Return true if the stream is OK, return false if there is an error. */
     operator bool() const
@@ -108,10 +108,10 @@ public:
     }
 
 protected:
-    std::string  m_address; //!< UDP foreign address
-	unsigned int m_port;    //!< UDP foreign port
-	unsigned int m_udpSize; //!< Size of UDP block in number of samples
-    std::string  m_error;
+    std::string    m_address; //!< UDP foreign address
+	unsigned short m_port;    //!< UDP foreign port
+	unsigned int   m_udpSize; //!< Size of UDP block in number of samples
+    std::string    m_error;
 
     uint32_t     m_centerFrequency;   //!< center frequency in kHz
     uint32_t     m_sampleRate;        //!< sample rate in Hz

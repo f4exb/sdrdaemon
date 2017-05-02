@@ -42,7 +42,6 @@
 #include "UDPSinkUncompressed.h"
 #include "UDPSinkLZ4.h"
 #include "UDPSinkFEC.h"
-#include "MovingAverage.h"
 
 #ifdef HAS_RTLSDR
     #include "RtlSdrSource.h"

@@ -41,11 +41,8 @@
 
 #include "util.h"
 #include "DataBuffer.h"
-#include "Downsampler.h"
-#include "UDPSinkUncompressed.h"
-#include "UDPSinkLZ4.h"
-#include "UDPSinkFEC.h"
-#include "MovingAverage.h"
+#include "Upsampler.h"
+#include "UDPSourceFEC.h"
 
 #ifdef HAS_HACKRF
     #include "HackRFSink.h"
@@ -69,38 +66,33 @@ void adjust_gain(SampleVector& samples, double gain)
 }
 
 /**
- * Get data from output buffer and write to output stream.
+ * Get data from input UDP stream and write to input buffer.
  *
  * This code runs in a separate thread.
  */
-void write_output_data(UDPSink *output,
+void read_input_data(UDPSource *input,
         DataBuffer<IQSample> *buf,
-        std::size_t buf_minfill)
+        std::size_t buf_maxfill)
 {
+    IQSampleVector samples;
+
     while (!stop_flag.load())
     {
-        if (buf->queued_samples() == 0)
+        // Get samples from UDP
+        input->read(samples);
+
+        if (!(*input))
         {
-            // The buffer is empty. Perhaps the output stream is consuming
-            // samples faster than we can produce them. Wait until the buffer
-            // is back at its nominal level to make sure this does not happen
-            // too often.
-            buf->wait_buffer_fill(buf_minfill);
+            fprintf(stderr, "ERROR: Input: %s\n", input->error().c_str());
         }
 
-        if (buf->pull_end_reached())
+        if (buf->queued_samples() < buf_maxfill)
         {
-            // Reached end of stream.
-            break;
+            buf->push(move(samples));
         }
-
-        // Get samples from buffer and write to output.
-        IQSampleVector samples = buf->pull();
-        output->write(samples);
-
-        if (!(*output))
+        else
         {
-            fprintf(stderr, "ERROR: Output: %s\n", output->error().c_str());
+            fprintf(stderr, "Device queing up. Dropping samples");
         }
     }
 }
@@ -135,7 +127,7 @@ void usage()
             "  -c config      Startup configuration. Comma separated key=value configuration pairs\n"
             "                 or just key for switches. See below for valid values\n"
             "  -d devidx      Device index, 'list' to show device list (default 0)\n"
-            "  -b blocks      Set buffer size in number of UDP blocks (default: 480 512 samples blocks)\n"
+            "  -b             Non buffered UDP reads\n"
             "  -I address     IP address. Samples are sent to this address (default: 127.0.0.1)\n"
             "  -D port        Data port. Samples are sent on this UDP port (default 9090)\n"
             "  -C port        Configuration port (default 9091). The configuration string as described below\n"
@@ -191,7 +183,7 @@ bool parse_int(const char *s, int& v, bool allow_unit=false)
 }
 
 
-static bool get_device(std::vector<std::string> &devnames, std::string& devtype, Source **srcsdr, int devidx)
+static bool get_device(std::vector<std::string> &devnames, std::string& devtype, Sink **sinksdr, int devidx)
 {
     bool deviceDefined = false;
 #ifdef HAS_HACKRF
@@ -234,7 +226,7 @@ static bool get_device(std::vector<std::string> &devnames, std::string& devtype,
     if (strcasecmp(devtype.c_str(), "hackrf") == 0)
     {
         // Open HackRF device.
-        *srcsdr = new HackRFSource(devidx);
+        *sinksdr = new HackRFSource(devidx);
     }
 #endif
 
@@ -252,30 +244,30 @@ int main(int argc, char **argv)
     std::string dataaddress("127.0.0.1");
     unsigned int dataport = 9090;
     unsigned int cfgport = 9091;
-    Source  *srcsdr = 0;
-    unsigned int outputbuf_samples = 48 * UDPSIZE;
+    Sink  *sinksdr = 0;
+    bool buffered_reads = true;
     uint32_t compressedMinSize = 0;
     bool useFec = false;
     unsigned int nbFECBlocks = 0;
     unsigned int txDelay = 0;
 
     fprintf(stderr,
-            "SDRDaemon - Collect samples from SDR device and send it over the network via UDP\n");
+            "SDRDaemonTx - Collect samples from network via UDP and send it to SDR device\n");
 
     const struct option longopts[] = {
         { "devtype",    2, NULL, 't' },
         { "config",     2, NULL, 'c' },
         { "dev",        1, NULL, 'd' },
-        { "buffer",     1, NULL, 'b' },
+        { "buffered",   0, NULL, 'b' },
         { "daddress",   2, NULL, 'I' },
         { "dport",      1, NULL, 'D' },
         { "cport",      1, NULL, 'C' },
-//        { "fec",        0, NULL, 'f' },
+//        { "fec",        0, NULL, 'f' }, // always use FEC for Tx
         { NULL,         0, NULL, 0 } };
 
     int c, longindex, value;
     while ((c = getopt_long(argc, argv,
-            "t:c:d:b:I:D:C:z:",
+            "t:c:d:bI:D:C:z:",
             longopts, &longindex)) >= 0)
     {
         switch (c)
@@ -291,11 +283,7 @@ int main(int argc, char **argv)
                     devidx = -1;
                 break;
             case 'b':
-                if (!parse_int(optarg, value) || (value < 0)) {
-                    badarg("-b");
-                } else {
-                    outputbuf_samples = value;
-                }
+                buffered_reads = false;
                 break;
             case 'I':
                 dataaddress.assign(optarg);
@@ -354,34 +342,26 @@ int main(int argc, char **argv)
         fprintf(stderr, "WARNING: can not install SIGTERM handler (%s)\n", strerror(errno));
     }
 
-    // Prepare output writer.
-    UDPSink *udp_output_instance;
+    // Prepare reader.
+    UDPSource *udp_input_instance;
+    udp_input_instance = new UDPSourceFEC(dataaddress, dataport);
+    std::unique_ptr<UDPSource> udp_input(udp_input_instance);
 
-    if (useFec) {
-        udp_output_instance = new UDPSinkFEC(dataaddress, dataport);
-    } else if (compressedMinSize) {
-        udp_output_instance = new UDPSinkLZ4(dataaddress, dataport, UDPSIZE, compressedMinSize);
-    } else {
-        udp_output_instance = new UDPSinkUncompressed(dataaddress, dataport, UDPSIZE);
-    }
-
-    std::unique_ptr<UDPSink> udp_output(udp_output_instance);
-
-    if (!(*udp_output))
+    if (!(*udp_input))
     {
-        fprintf(stderr, "ERROR: UDP Output: %s\n", udp_output->error().c_str());
+        fprintf(stderr, "ERROR: UDP Input: %s\n", udp_input->error().c_str());
         exit(1);
     }
 
-    if (!get_device(devnames, devtype_str, &srcsdr, devidx))
+    if (!get_device(devnames, devtype_str, &sinksdr, devidx))
     {
         exit(1);
     }
 
-    if (!(*srcsdr))
+    if (!(*sinksdr))
     {
-        fprintf(stderr, "ERROR source: %s\n", srcsdr->error().c_str());
-        delete srcsdr;
+        fprintf(stderr, "ERROR sink: %s\n", sinksdr->error().c_str());
+        delete sinksdr;
         exit(1);
     }
 
@@ -389,16 +369,16 @@ int main(int argc, char **argv)
 
     // Configure device and start streaming.
 
-    srcsdr->setConfigurationPort(cfgport);
+    sinksdr->setConfigurationPort(cfgport);
 
-    // Prepare downsampler.
-    Downsampler dn;
-    srcsdr->associateDownsampler(&dn);
+    // Prepare upsampler.
+    Upsampler up;
+    sinksdr->associateUpsampler(&up);
 
-    if (!srcsdr->configure(config_str))
+    if (!sinksdr->configure(config_str))
     {
-        fprintf(stderr, "ERROR: source configuration: %s\n", srcsdr->error().c_str());
-        delete srcsdr;
+        fprintf(stderr, "ERROR: sink configuration: %s\n", sinksdr->error().c_str());
+        delete sinksdr;
         exit(1);
     }
 
@@ -410,129 +390,97 @@ int main(int argc, char **argv)
         exit(1);
     }*/
 
-    double freq = srcsdr->get_received_frequency();
+    double freq = sinksdr->get_transmit_frequency();
     fprintf(stderr, "tuned for:         %.6f MHz\n", freq * 1.0e-6);
 
-    double tuner_freq = srcsdr->get_frequency();
+    double tuner_freq = sinksdr->get_frequency();
     fprintf(stderr, "device tuned for:  %.6f MHz\n", tuner_freq * 1.0e-6);
 
-    double ifrate = srcsdr->get_sample_rate();
+    double ifrate = sinksdr->get_sample_rate();
     fprintf(stderr, "IF sample rate:    %.0f Hz\n", ifrate);
 
-    srcsdr->print_specific_parms();
+    sinksdr->print_specific_parms();
 
     // Create source data queue.
-    DataBuffer<IQSample> source_buffer;
+    DataBuffer<IQSample> sink_buffer;
 
     // ownership will be transferred to thread therefore the unique_ptr with move is convenient
     // if the pointer is to be shared with the main thread use shared_ptr (and no move) instead
-    std::unique_ptr<Source> up_srcsdr(srcsdr);
+    std::unique_ptr<Source> sinksdr_uptr(sinksdr);
 
-    // Start reading from device in separate thread.
+    // Start writing to device in separate thread.
     //std::thread source_thread(read_source_data, std::move(up_srcsdr), &source_buffer);
-    up_srcsdr->start(&source_buffer, &stop_flag);
+    sinksdr_uptr->start(&sink_buffer, &stop_flag);
 
-    if (!up_srcsdr)
+    if (!sinksdr_uptr)
     {
-        fprintf(stderr, "ERROR: source: %s\n", up_srcsdr->error().c_str());
+        fprintf(stderr, "ERROR: sink: %s\n", sinksdr_uptr->error().c_str());
         exit(1);
     }
 
-    // If buffering enabled, start background output thread.
-    DataBuffer<IQSample> output_buffer;
-    std::thread output_thread;
+    // If buffering enabled, start background input thread.
+    DataBuffer<IQSample> input_buffer;
+    std::thread input_thread;
 
-    if (outputbuf_samples > 0)
+    if (buffered_reads)
     {
-        output_thread = std::thread(write_output_data,
-                               udp_output.get(),
-                               &output_buffer,
-                               outputbuf_samples);
+        input_thread = std::thread(read_input_data,
+                               udp_input.get(),
+                               &input_buffer,
+                               20 * ifrate);
     }
 
-    IQSampleVector outsamples;
-    bool inbuf_length_warning = false;
+    IQSampleVector insamples, outsamples;
+    bool sink_buf_overflow_warning = false;
+    bool sink_buf_underflow_warning = false;
 
     // Main loop.
     for (unsigned int block = 0; !stop_flag.load(); block++)
     {
-
-        // Check for overflow of source buffer.
-        if (!inbuf_length_warning && source_buffer.queued_samples() > 10 * ifrate)
+        // Check for overflow of sink buffer.
+        if (!sink_buf_overflow_warning && sink_buffer.queued_samples() > 10 * ifrate)
         {
-            fprintf(stderr, "\nWARNING: Input buffer is growing (system too slow)\n");
-            inbuf_length_warning = true;
+            fprintf(stderr, "\nWARNING: Sink buffer is growing (system too fast)\n");
+            sink_buf_overflow_warning = true;
         }
 
-        // Pull next block from source buffer.
-        IQSampleVector iqsamples = source_buffer.pull();
-
-        if (iqsamples.empty())
+        if (sink_buf_overflow_warning && sink_buffer.queued_samples() < 6 * ifrate)
         {
-            break;
+            sink_buf_overflow_warning = false;
         }
 
-        udp_output->setCenterFrequency(srcsdr->get_received_frequency());
-
-        unsigned int confNbFECBlocks = srcsdr->get_nb_fec_blocks();
-
-        if (confNbFECBlocks != nbFECBlocks)
+        // Check for underflow of sink buffer.
+        if (!sink_buf_underflow_warning && sink_buffer.queued_samples() < 2 * ifrate)
         {
-            nbFECBlocks = confNbFECBlocks;
-            udp_output->setNbBlocksFEC(nbFECBlocks);
+            fprintf(stderr, "\nWARNING: Sink buffer is depleting (system too slow)\n");
+            sink_buf_underflow_warning = true;
         }
 
-        unsigned int confTxDelay = srcsdr->get_tx_delay();
-
-        if (confTxDelay != txDelay)
+        if (sink_buf_underflow_warning && sink_buffer.queued_samples() > 6 * ifrate)
         {
-            txDelay = confTxDelay;
-            udp_output->setTxDelay(txDelay);
+            sink_buf_underflow_warning = false;
         }
 
-        // Possible downsampling and write to UDP
-
-        if (dn.getLog2Decimation() == 0)
+        if (buffered_reads)
         {
-            udp_output->setSampleBits(srcsdr->get_sample_bits());
-            udp_output->setSampleBytes((srcsdr->get_sample_bits()-1)/8 + 1);
-            udp_output->setSampleRate(srcsdr->get_sample_rate());
-
-            if (outputbuf_samples > 0)
-            {
-                // Buffered write.
-                output_buffer.push(move(iqsamples));
-            }
-            else
-            {
-                // Direct write.
-                udp_output->write(iqsamples);
-            }
+            input_buffer.pull(insamples);
         }
         else
         {
-            unsigned int sampleSize = srcsdr->get_sample_bits();
-            dn.process(sampleSize, iqsamples, outsamples);
+            udp_input->read(insamples);
+        }
 
-            udp_output->setSampleBits(sampleSize);
-            udp_output->setSampleBytes((sampleSize -1)/8 + 1);
-            udp_output->setSampleRate(srcsdr->get_sample_rate() / (1<<dn.getLog2Decimation()));
-
-            // Throw away first block. It is noisy because IF filters
-            // are still starting up.
-            if (block > 0)
+        if (insamples.size() > 0)
+        {
+            if (up.getLog2Interpolation() == 0)
             {
-                // Write samples to output.
-                if (outputbuf_samples > 0)
-                {
-                    // Buffered write.
-                    output_buffer.push(move(outsamples));
-                }
-                else
-                {
-                    // Direct write.
-                    udp_output->write(outsamples);
-                }
+                sink_buffer.push(move(insamples));
+            }
+            else
+            {
+                unsigned int sampleSize = sinksdr->get_sample_bits();
+                up.process(sampleSize, insamples, outsamples);
+                sink_buffer.push(move(outsamples));
             }
         }
     }
@@ -541,12 +489,12 @@ int main(int argc, char **argv)
 
     // Join background threads.
     //source_thread.join();
-    up_srcsdr->stop();
+    sinksdr_uptr->stop();
 
-    if (outputbuf_samples > 0)
+    if (buffered_reads)
     {
-        output_buffer.push_end();
-        output_thread.join();
+        input_buffer.push_end();
+        input_thread.join();
     }
 
     // No cleanup needed; everything handled by destructors

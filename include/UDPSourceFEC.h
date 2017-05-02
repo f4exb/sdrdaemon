@@ -68,8 +68,8 @@ class UDPSourceFEC : public UDPSource
 public:
     UDPSourceFEC(const std::string& address, unsigned int port);
     virtual ~UDPSourceFEC();
-    virtual void read(const IQSampleVector& samples_in);
-    virtual void setNbBlocksFEC(int nbBlocksFEC);
+    virtual void read(IQSampleVector& samples_in);
+    virtual int getNbBlocksFEC() const { return m_nbBlocksFEC.load(); }
 
 private:
 #pragma pack(push, 1)
@@ -134,7 +134,7 @@ private:
     bool m_cm256Valid;
     std::atomic_bool m_udpReceived;      //!< True when UDP receiving thread has finished (Frame reception complete)
 
-    static void receiveUDP(UDPSinkFEC *udpSinkFEC, SuperBlock *rxBlockx, uint16_t frameIndex, int nbBlocksFEC, bool cm256Valid);
+    static int receiveUDP(UDPSourceFEC *udpSourceFEC, SuperBlock *superBlock);
 };
 
 

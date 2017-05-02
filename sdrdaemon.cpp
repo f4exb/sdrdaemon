@@ -35,7 +35,6 @@
 #include "Downsampler.h"
 #include "UDPSinkUncompressed.h"
 #include "UDPSinkLZ4.h"
-#include "MovingAverage.h"
 
 #ifdef HAS_RTLSDR
     #include "RtlSdrSource.h"

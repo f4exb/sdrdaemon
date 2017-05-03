@@ -54,6 +54,7 @@
 #include <string>
 #include "cm256.h"
 #include "UDPSource.h"
+#include "SDRdaemonFECBuffer.h"
 
 #define UDPSOURCEFEC_UDPSIZE 512
 #define UDPSOURCEFEC_NBORIGINALBLOCKS 128
@@ -118,6 +119,7 @@ private:
     };
 #pragma pack(pop)
 
+    SDRdaemonFECBuffer m_sdmnFECBuffer;  //!< FEC handling buffer
     CM256 m_cm256;                       //!< CM256 library object
     MetaDataFEC m_currentMetaFEC;        //!< Meta data for current frame
     std::atomic_int m_nbBlocksFEC;       //!< Variable number of FEC blocks

@@ -95,6 +95,14 @@ public:
 	SDRdaemonFECBuffer();
 	~SDRdaemonFECBuffer();
 
+	/**
+	 * Write a superblock to buffer and read a complete data block
+	 * \param  array      pointer the input superblock
+	 * \param  length     length of superblock
+	 * \param  data       pointer to the output data block
+	 * \param  dataLength reference to the output data length. This length is 0
+	 * \return true if an output data block is available else false
+	 */
 	bool writeAndRead(uint8_t *array, std::size_t length, uint8_t *data, std::size_t& dataLength);
 	const MetaDataFEC& getCurrentMeta() const { return m_currentMeta; }
     const MetaDataFEC& getOutputMeta() const { return m_outputMeta; }

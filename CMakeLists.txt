@@ -237,6 +237,8 @@ set(sdmntxbase_SOURCES
     sdmnbase/SDRdaemonFECBuffer.cpp
     sdmnbase/Sink.cpp
     sdmnbase/UDPSocket.cpp
+    sdmnbase/UDPSource.cpp
+    sdmnbase/UDPSourceFEC.cpp
     sdmnbase/Upsampler.cpp
 )
 
@@ -255,6 +257,8 @@ set(sdmntxbase_HEADERS
     include/SDRdaemonFECBuffer.h
     include/Sink.h
     include/UDPSocket.h
+    include/UDPSource.h
+    include/UDPSourceFEC.h
     include/Upsampler.h
     include/util.h
 )
@@ -273,6 +277,7 @@ set(sdmndevice_SOURCES
     sdmnbase/AirspySource.cpp
     sdmnbase/BladeRFSource.cpp
     sdmnbase/HackRFSource.cpp
+    sdmnbase/HackRFSink.cpp
 )
 
 set(sdmndevice_HEADERS
@@ -281,6 +286,7 @@ set(sdmndevice_HEADERS
     include/AirspySource.h
     include/BladeRFSource.h
     include/HackRFSource.h
+    include/HackRFSink.h
 )
 
 set(sdmnbase_SOURCES
@@ -362,6 +368,10 @@ add_executable(sdrdaemonfec
     sdrdaemonfec.cpp
 )
 
+add_executable(sdrdaemonfec
+    sdrdaemontx.cpp
+)
+
 target_link_libraries(sdrdmnctl
     ${LIBNANOMSG_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
@@ -380,8 +390,14 @@ target_link_libraries(sdrdaemonfec
     ${EXTRA_LIBS}
 )
 
-install(TARGETS sdrdaemon sdrdaemonfec sdrdmnctl DESTINATION bin)
-install(TARGETS sdmnbase sdmnfecbase DESTINATION lib)
+target_link_libraries(sdrdaemontx
+    sdmntxbase
+    ${CMAKE_THREAD_LIBS_INIT}
+    ${EXTRA_LIBS}
+)
+
+install(TARGETS sdrdaemon sdrdaemonfec sdrdaemontx sdrdmnctl DESTINATION bin)
+install(TARGETS sdmnbase sdmnfecbase sdmntxbase DESTINATION lib)
 
 else(BUILD_DEBIAN)   ### Normal build #################################################################
 
@@ -439,6 +455,10 @@ if((HAS_SSSE3 OR HAS_NEON) AND CM256CC_FOUND)
 
     add_executable(sdrdaemonfec
         sdrdaemonfec.cpp
+    )
+
+    add_executable(sdrdaemontx
+        sdrdaemontx.cpp
     )
 endif()
 
@@ -595,8 +615,17 @@ if((HAS_SSSE3 OR HAS_NEON) AND CM256CC_FOUND)
         ${CMAKE_THREAD_LIBS_INIT}
         ${EXTRA_LIBS}
     )
-    
+
     target_link_libraries(sdmntxbase ${CM256CC_LIBRARIES})
+    
+    
+    
+    target_link_libraries(sdrdaemontx
+        sdmntxbase
+        ${DEVICE_LIBRARIES}
+        ${CMAKE_THREAD_LIBS_INIT}
+        ${EXTRA_LIBS}
+    )    
 endif()
 
 target_include_directories(sdrdmnctl PUBLIC
@@ -610,7 +639,7 @@ target_link_libraries(sdrdmnctl
 )
 
 if((HAS_SSSE3 OR HAS_NEON) AND CM256CC_FOUND)
-    install(TARGETS sdrdaemon sdrdaemonfec sdrdmnctl DESTINATION bin)
+    install(TARGETS sdrdaemon sdrdaemonfec sdrdaemontx sdrdmnctl DESTINATION bin)
     install(TARGETS sdmnbase sdmnfecbase sdmntxbase ${DEVICE_TARGETS} sdmntest DESTINATION lib${LIB_SUFFIX})
 else()
     install(TARGETS sdrdaemon sdrdmnctl DESTINATION bin)

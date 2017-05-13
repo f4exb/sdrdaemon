@@ -55,12 +55,12 @@ void UDPSourceFEC::read(IQSampleVector& samples_out)
     SuperBlock *superBlock;
     bool dataAvailable = false;
     uint8_t *data;
-    int dataLength
+    std::size_t dataLength;
 
     while (!dataAvailable)
     {
         receiveUDP(this, superBlock);
-        m_sdmnFECBuffer.writeAndRead(superBlock, sizeof(SuperBlock), data, dataLength);
+        m_sdmnFECBuffer.writeAndRead((uint8_t*) superBlock, sizeof(SuperBlock), data, dataLength);
     }
 
     samples_out.resize(dataLength/4);

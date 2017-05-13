@@ -127,17 +127,14 @@ void usage()
             "  -c config      Startup configuration. Comma separated key=value configuration pairs\n"
             "                 or just key for switches. See below for valid values\n"
             "  -d devidx      Device index, 'list' to show device list (default 0)\n"
-            "  -b             Non buffered UDP reads\n"
+            "  -b             Buffered UDP reads\n"
             "  -I address     IP address. Samples are sent to this address (default: 127.0.0.1)\n"
             "  -D port        Data port. Samples are sent on this UDP port (default 9090)\n"
             "  -C port        Configuration port (default 9091). The configuration string as described below\n"
             "                 is sent on this port via nanomsg in TCP to control the device\n"
             "\n"
             "Configuration options for the interpolator:\n"
-            "  decim=<int>    log2 of decimation factor (default 0: no decimation)\n"
-            "\n"
-            "Configuration options for the Forward Erasure Correction:\n"
-            "  fecblk=<int>   Number of additional FEC blocks (1..128, default 32)\n"
+            "  interp=<int>   log2 of interpolation factor (default 0: no interpolation)\n"
             "\n"
 #ifdef HAS_HACKRF
             "Configuration options for HackRF devices\n"
@@ -226,7 +223,7 @@ static bool get_device(std::vector<std::string> &devnames, std::string& devtype,
     if (strcasecmp(devtype.c_str(), "hackrf") == 0)
     {
         // Open HackRF device.
-        *sinksdr = new HackRFSource(devidx);
+        *sinksdr = new HackRFSink(devidx);
     }
 #endif
 
@@ -245,11 +242,7 @@ int main(int argc, char **argv)
     unsigned int dataport = 9090;
     unsigned int cfgport = 9091;
     Sink  *sinksdr = 0;
-    bool buffered_reads = true;
-    uint32_t compressedMinSize = 0;
-    bool useFec = false;
-    unsigned int nbFECBlocks = 0;
-    unsigned int txDelay = 0;
+    bool buffered_reads = false;
 
     fprintf(stderr,
             "SDRDaemonTx - Collect samples from network via UDP and send it to SDR device\n");
@@ -262,12 +255,11 @@ int main(int argc, char **argv)
         { "daddress",   2, NULL, 'I' },
         { "dport",      1, NULL, 'D' },
         { "cport",      1, NULL, 'C' },
-//        { "fec",        0, NULL, 'f' }, // always use FEC for Tx
         { NULL,         0, NULL, 0 } };
 
     int c, longindex, value;
     while ((c = getopt_long(argc, argv,
-            "t:c:d:bI:D:C:z:",
+            "t:c:d:bI:D:C:",
             longopts, &longindex)) >= 0)
     {
         switch (c)
@@ -283,7 +275,7 @@ int main(int argc, char **argv)
                     devidx = -1;
                 break;
             case 'b':
-                buffered_reads = false;
+                buffered_reads = true;
                 break;
             case 'I':
                 dataaddress.assign(optarg);
@@ -302,16 +294,6 @@ int main(int argc, char **argv)
                     cfgport = value;
                 }
                 break;
-            case 'z':
-                if (!parse_int(optarg, value) || (value < 0)) {
-                    badarg("-z");
-                } else {
-                    compressedMinSize = value;
-                }
-                break;
-//            case 'f':
-//                useFec = true;
-//                break;
             default:
                 usage();
                 fprintf(stderr, "ERROR: Invalid command line options\n");
@@ -406,7 +388,7 @@ int main(int argc, char **argv)
 
     // ownership will be transferred to thread therefore the unique_ptr with move is convenient
     // if the pointer is to be shared with the main thread use shared_ptr (and no move) instead
-    std::unique_ptr<Source> sinksdr_uptr(sinksdr);
+    std::unique_ptr<Sink> sinksdr_uptr(sinksdr);
 
     // Start writing to device in separate thread.
     //std::thread source_thread(read_source_data, std::move(up_srcsdr), &source_buffer);

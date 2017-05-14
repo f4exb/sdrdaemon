@@ -52,7 +52,6 @@
 #include <atomic>
 #include <vector>
 #include <string>
-#include "cm256.h"
 #include "UDPSource.h"
 #include "SDRdaemonFECBuffer.h"
 
@@ -120,7 +119,6 @@ private:
 #pragma pack(pop)
 
     SDRdaemonFECBuffer m_sdmnFECBuffer;  //!< FEC handling buffer
-    CM256 m_cm256;                       //!< CM256 library object
     MetaDataFEC m_currentMetaFEC;        //!< Meta data for current frame
     std::atomic_int m_nbBlocksFEC;       //!< Variable number of FEC blocks
     SuperBlock m_rxBlocks[4][256];       //!< UDP blocks received with original data + FEC
@@ -131,9 +129,6 @@ private:
     int m_rxBlocksIndex;                 //!< Current index of Tx blocks row
     uint16_t m_frameCount;               //!< transmission frame count
     int m_sampleIndex;                   //!< Current sample index in protected block data
-    //cm256_encoder_params m_cm256Params;  //!< Main interface with CM256 encoder
-    //cm256_block m_descriptorBlocks[256]; //!< Pointers to data for CM256 encoder
-    bool m_cm256Valid;
     std::atomic_bool m_udpReceived;      //!< True when UDP receiving thread has finished (Frame reception complete)
 
     static int receiveUDP(UDPSourceFEC *udpSourceFEC, SuperBlock *superBlock);

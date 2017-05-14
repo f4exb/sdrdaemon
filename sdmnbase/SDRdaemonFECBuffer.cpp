@@ -40,6 +40,7 @@ SDRdaemonFECBuffer::SDRdaemonFECBuffer()
     if (m_cm256.isInitialized())
     {
         m_cm256_OK = true;
+        std::cerr << "SDRdaemonFECBuffer::SDRdaemonFECBuffer: CM256 library initialized" << std::endl;
     }
     else
     {

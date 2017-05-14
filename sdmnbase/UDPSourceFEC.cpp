@@ -36,7 +36,6 @@ UDPSourceFEC::UDPSourceFEC(const std::string& address, unsigned int port) :
 	m_frameCount(0),
 	m_sampleIndex(0)
 {
-    m_cm256Valid = m_cm256.isInitialized();
     m_currentMetaFEC.init();
     m_udpReceived.store(true);
 }

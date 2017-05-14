@@ -37,11 +37,14 @@ SDRdaemonFECBuffer::SDRdaemonFECBuffer()
     m_curNbBlocks = 0;
     m_curNbRecovery = 0;
 
-    if (m_cm256.isInitialized()) {
+    if (m_cm256.isInitialized())
+    {
+        m_cm256_OK = true;
+    }
+    else
+    {
         m_cm256_OK = false;
         std::cerr << "SDRdaemonFECBuffer::SDRdaemonFECBuffer: cannot initialize CM256 library" << std::endl;
-    } else {
-        m_cm256_OK = true;
     }
 }
 

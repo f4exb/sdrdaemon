@@ -96,7 +96,7 @@ HackRFSink::~HackRFSink()
     }
 
     hackrf_error rc = (hackrf_error) hackrf_exit();
-    std::cerr << "HackRFSource::~HackRFSource: HackRF library exit: " << rc << ": " << hackrf_error_name(rc) << std::endl;
+    std::cerr << "HackRFSink::~HackRFSink: HackRF library exit: " << rc << ": " << hackrf_error_name(rc) << std::endl;
 
     m_this = 0;
 }
@@ -112,7 +112,7 @@ void HackRFSink::get_device_names(std::vector<std::string>& devices)
 
     if (rc != HACKRF_SUCCESS)
     {
-        std::cerr << "HackRFSource::get_device_names: Failed to open HackRF library: " << rc << ": " << hackrf_error_name(rc) << std::endl;
+        std::cerr << "HackRFSink::get_device_names: Failed to open HackRF library: " << rc << ": " << hackrf_error_name(rc) << std::endl;
         return;
     }
 
@@ -126,18 +126,18 @@ void HackRFSink::get_device_names(std::vector<std::string>& devices)
 
         if (rc == HACKRF_SUCCESS)
         {
-            std::cerr << "HackRFSource::get_device_names: try to get device " << i << " serial number" << std::endl;
+            std::cerr << "HackRFSink::get_device_names: try to get device " << i << " serial number" << std::endl;
             rc = (hackrf_error) hackrf_board_partid_serialno_read(hackrf_ptr, &read_partid_serialno);
 
             if (rc != HACKRF_SUCCESS)
             {
-                std::cerr << "HackRFSource::get_device_names: failed to get device " << i << " serial number: " << rc << ": " << hackrf_error_name(rc) << std::endl;
+                std::cerr << "HackRFSink::get_device_names: failed to get device " << i << " serial number: " << rc << ": " << hackrf_error_name(rc) << std::endl;
                 hackrf_close(hackrf_ptr);
                 continue;
             }
             else
             {
-                std::cerr << "HackRFSource::get_device_names: device " << i << " OK" << std::endl;
+                std::cerr << "HackRFSink::get_device_names: device " << i << " OK" << std::endl;
                 hackrf_close(hackrf_ptr);
             }
 
@@ -150,13 +150,13 @@ void HackRFSink::get_device_names(std::vector<std::string>& devices)
         }
         else
         {
-            std::cerr << "HackRFSource::get_device_names: failed to open device " << i << std::endl;
+            std::cerr << "HackRFSink::get_device_names: failed to open device " << i << std::endl;
         }
     }
 
     hackrf_device_list_free(hackrf_devices);
     rc = (hackrf_error) hackrf_exit();
-    std::cerr << "HackRFSource::get_device_names: HackRF library exit: " << rc << ": " << hackrf_error_name(rc) << std::endl;
+    std::cerr << "HackRFSink::get_device_names: HackRF library exit: " << rc << ": " << hackrf_error_name(rc) << std::endl;
 }
 
 std::uint32_t HackRFSink::get_sample_rate()
@@ -303,7 +303,7 @@ bool HackRFSink::configure(parsekv::pairs_type& m)
 
 	if (m.find("srate") != m.end())
 	{
-		std::cerr << "HackRFSource::configure: srate: " << m["srate"] << std::endl;
+		std::cerr << "HackRFSink::configure: srate: " << m["srate"] << std::endl;
 		sampleRate = atoi(m["srate"].c_str());
 
 		if ((sampleRate < 1000000) || (sampleRate > 20000000))
@@ -317,7 +317,7 @@ bool HackRFSink::configure(parsekv::pairs_type& m)
 
 	if (m.find("freq") != m.end())
 	{
-		std::cerr << "HackRFSource::configure: freq: " << m["freq"] << std::endl;
+		std::cerr << "HackRFSink::configure: freq: " << m["freq"] << std::endl;
 		frequency = strtoll(m["freq"].c_str(), 0, 10);
 
 		if ((frequency < 1000000) || (frequency > 6000000000))
@@ -331,7 +331,7 @@ bool HackRFSink::configure(parsekv::pairs_type& m)
 
 	if (m.find("vgain") != m.end())
 	{
-		std::cerr << "HackRFSource::configure: vgain: " << m["vgain"] << std::endl;
+		std::cerr << "HackRFSink::configure: vgain: " << m["vgain"] << std::endl;
 		vgaGain = atoi(m["vgain"].c_str());
 
 		if (strcasecmp(m["vgain"].c_str(), "list") == 0)
@@ -351,7 +351,7 @@ bool HackRFSink::configure(parsekv::pairs_type& m)
 
 	if (m.find("bwfilter") != m.end())
 	{
-		std::cerr << "HackRFSource::configure: bwfilter: " << m["bwfilter"] << std::endl;
+		std::cerr << "HackRFSink::configure: bwfilter: " << m["bwfilter"] << std::endl;
 		bandwidth = atoi(m["bwfilter"].c_str());
 
 		if (strcasecmp(m["bwfilter"].c_str(), "list") == 0)
@@ -392,21 +392,21 @@ bool HackRFSink::configure(parsekv::pairs_type& m)
 
 	if (m.find("extamp") != m.end())
 	{
-		std::cerr << "HackRFSource::configure: extamp" << std::endl;
+		std::cerr << "HackRFSink::configure: extamp" << std::endl;
 		extAmp = true;
         changeFlags |= 0x20;
 	}
 
 	if (m.find("antbias") != m.end())
 	{
-		std::cerr << "HackRFSource::configure: antbias" << std::endl;
+		std::cerr << "HackRFSink::configure: antbias" << std::endl;
 		antBias = true;
         changeFlags |= 0x10;
 	}
 
     if (m.find("ppmp") != m.end())
 	{
-		std::cerr << "HackRFSource::configure: ppmp: " << m["ppmp"] << std::endl;
+		std::cerr << "HackRFSink::configure: ppmp: " << m["ppmp"] << std::endl;
 		errno = 0;
 		char * e;
 		ppm = std::strtod(m["ppmp"].c_str(), &e);
@@ -419,7 +419,7 @@ bool HackRFSink::configure(parsekv::pairs_type& m)
 	}
     else if (m.find("ppmn") != m.end())
 	{
-		std::cerr << "HackRFSource::configure: ppmn: " << m["ppmn"] << std::endl;
+		std::cerr << "HackRFSink::configure: ppmn: " << m["ppmn"] << std::endl;
 		errno = 0;
 		char * e;
 		ppm = std::strtod(m["ppmn"].c_str(), &e);
@@ -433,7 +433,7 @@ bool HackRFSink::configure(parsekv::pairs_type& m)
 
 	if (m.find("interp") != m.end())
 	{
-		std::cerr << "HackRFSource::configure: interp: " << m["interp"] << std::endl;
+		std::cerr << "HackRFSink::configure: interp: " << m["interp"] << std::endl;
 		int log2Interp = atoi(m["interp"].c_str());
 
 		if ((log2Interp < 0) || (log2Interp > 6))

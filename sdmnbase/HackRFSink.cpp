@@ -202,27 +202,30 @@ bool HackRFSink::configure(uint32_t changeFlags,
         if (rc != HACKRF_SUCCESS)
         {
             std::ostringstream err_ostr;
-            err_ostr << "HackRFSink::configure: could not set center frequency to " << m_frequency << " Hz";
-            m_error = err_ostr.str();
-            return false;
-        }
-    }
-
-    if (changeFlags & 0x2)
-    {
-        m_sampleRate = sample_rate;
-
-        rc = (hackrf_error) hackrf_set_sample_rate_manual(m_dev, m_sampleRate, 1);
-
-        if (rc != HACKRF_SUCCESS)
-        {
-            std::ostringstream err_ostr;
-            err_ostr << "HackRFSink::configure: could not set center sample rate to " << m_sampleRate << " Hz";
+            err_ostr << "HackRFSink::configure(flags): could not set center frequency to " << m_frequency << " Hz";
             m_error = err_ostr.str();
             return false;
         }
         else
         {
+            std::cerr << "HackRFSink::configure(flags): set center frequency to " << m_frequency << " Hz" << std::endl;
+        }
+    }
+
+    if (changeFlags & 0x2)
+    {
+        rc = (hackrf_error) hackrf_set_sample_rate_manual(m_dev, sample_rate, 1);
+
+        if (rc != HACKRF_SUCCESS)
+        {
+            std::ostringstream err_ostr;
+            err_ostr << "HackRFSink::configure(flags): could not set sample rate to " << sample_rate << " Hz";
+            m_error = err_ostr.str();
+            return false;
+        }
+        else
+        {
+            std::cerr << "HackRFSink::configure(flags): set sample rate to " << sample_rate << " Hz" << std::endl;
             m_sampleRate = sample_rate;
         }
     }
@@ -236,9 +239,13 @@ bool HackRFSink::configure(uint32_t changeFlags,
         if (rc != HACKRF_SUCCESS)
         {
             std::ostringstream err_ostr;
-            err_ostr << "HackRFSink::configure: could not set VGA gain to " << m_vgaGain << " dB";
+            err_ostr << "HackRFSink::configure(flags): could not set VGA gain to " << m_vgaGain << " dB";
             m_error = err_ostr.str();
             return false;
+        }
+        else
+        {
+            std::cerr << "HackRFSink::configure(flags): set VGA gain to " << m_vgaGain << " dB" << std::endl;
         }
     }
 
@@ -251,9 +258,13 @@ bool HackRFSink::configure(uint32_t changeFlags,
         if (rc != HACKRF_SUCCESS)
         {
             std::ostringstream err_ostr;
-            err_ostr << "HackRFSink::configure: could not set bias antenna to " << m_biasAnt;
+            err_ostr << "HackRFSink::configure(flags): could not set bias antenna to " << m_biasAnt;
             m_error = err_ostr.str();
             return false;
+        }
+        else
+        {
+            std::cerr << "HackRFSink::configure(flags): set bias antenna to " << m_biasAnt << std::endl;
         }
     }
 
@@ -266,9 +277,13 @@ bool HackRFSink::configure(uint32_t changeFlags,
         if (rc != HACKRF_SUCCESS)
         {
             std::ostringstream err_ostr;
-            err_ostr << "HackRFSink::configure: could not set extra amplifier to " << m_extAmp;
+            err_ostr << "HackRFSink::configure(flags): could not set extra amplifier to " << m_extAmp;
             m_error = err_ostr.str();
             return false;
+        }
+        else
+        {
+            std::cerr << "HackRFSink::configure(flags): set exra amplifier to " << m_extAmp << std::endl;
         }
     }
 
@@ -281,9 +296,13 @@ bool HackRFSink::configure(uint32_t changeFlags,
         if (rc != HACKRF_SUCCESS)
         {
             std::ostringstream err_ostr;
-            err_ostr << "HackRFSink::configure: could not set bandwidth to " << hackRFBandwidth << " Hz (" << m_bandwidth << " Hz requested)";
+            err_ostr << "HackRFSink::configure(flags): could not set bandwidth to " << hackRFBandwidth << " Hz (" << m_bandwidth << " Hz requested)";
             m_error = err_ostr.str();
             return false;
+        }
+        else
+        {
+            std::cerr << "HackRFSink::configure(flags): set bandwidth to " << hackRFBandwidth << " Hz (" << m_bandwidth << " Hz requested)" << std::endl;
         }
     }
 
@@ -306,13 +325,14 @@ bool HackRFSink::configure(parsekv::pairs_type& m)
 		std::cerr << "HackRFSink::configure: srate: " << m["srate"] << std::endl;
 		sampleRate = atoi(m["srate"].c_str());
 
-		if ((sampleRate < 1000000) || (sampleRate > 20000000))
+		if ((sampleRate < 2400000) || (sampleRate > 20000000))
 		{
-			m_error = "Invalid sample rate";
-			return false;
+		    std::cerr << "HackRFSink::configure: Invalid sample rate " << sampleRate << " skipping" << std::endl;
 		}
-
-        changeFlags |= 0x2;
+		else
+		{
+	        changeFlags |= 0x2;
+		}
 	}
 
 	if (m.find("freq") != m.end())
@@ -322,11 +342,12 @@ bool HackRFSink::configure(parsekv::pairs_type& m)
 
 		if ((frequency < 1000000) || (frequency > 6000000000))
 		{
-			m_error = "Invalid frequency";
-			return false;
+            std::cerr << "HackRFSink::configure: Invalid frequency " << frequency << " skipping" << std::endl;
 		}
-
-        changeFlags |= 0x1;
+		else
+		{
+	        changeFlags |= 0x1;
+		}
 	}
 
 	if (m.find("vgain") != m.end())
@@ -336,17 +357,16 @@ bool HackRFSink::configure(parsekv::pairs_type& m)
 
 		if (strcasecmp(m["vgain"].c_str(), "list") == 0)
 		{
-			m_error = "Available VGA gains (dB): " + m_vgainsStr;
-			return false;
+		    std::cerr << "HackRFSink::configure: Available VGA gains (dB): " << m_vgainsStr << std::endl;
 		}
-
-		if (find(m_vgains.begin(), m_vgains.end(), vgaGain) == m_vgains.end())
+		else if (find(m_vgains.begin(), m_vgains.end(), vgaGain) == m_vgains.end())
 		{
-			m_error = "VGA gain not supported. Available gains (dB): " + m_vgainsStr;
-			return false;
+		    std::cerr << "HackRFSink::configure: VGA gain not supported. Available gains (dB): " << m_vgainsStr << std::endl;
 		}
-
-        changeFlags |= 0x8;
+		else
+		{
+	        changeFlags |= 0x8;
+		}
 	}
 
 	if (m.find("bwfilter") != m.end())
@@ -356,38 +376,40 @@ bool HackRFSink::configure(parsekv::pairs_type& m)
 
 		if (strcasecmp(m["bwfilter"].c_str(), "list") == 0)
 		{
-			m_error = "Available filter bandwidths (MHz): " + m_bwfiltStr;
-			return false;
-		}
-
-		double tmpbwd;
-
-		if (!parse_dbl(m["bwfilter"].c_str(), tmpbwd))
-		{
-			m_error = "Invalid filter bandwidth";
-			return false;
+		    std::cerr << "HackRFSink::configure: Available filter bandwidths (MHz): " << m_bwfiltStr << std::endl;
 		}
 		else
 		{
-			long int tmpbwi = lrint(tmpbwd * 1000000);
+	        double tmpbwd;
 
-			if (tmpbwi <= INT_MIN || tmpbwi >= INT_MAX) {
-				m_error = "Invalid filter bandwidth";
-				return false;
-			}
-			else
-			{
-				bandwidth = tmpbwi;
+	        if (!parse_dbl(m["bwfilter"].c_str(), tmpbwd))
+	        {
+	            std::cerr << "HackRFSink::configure: Invalid filter bandwidth" << std::endl;
+	        }
+	        else
+	        {
+	            long int tmpbwi = lrint(tmpbwd * 1000000);
 
-				if (find(m_bwfilt.begin(), m_bwfilt.end(), bandwidth) == m_bwfilt.end())
-				{
-					m_error = "Filter bandwidth not supported. Available bandwidths (MHz): " + m_bwfiltStr;
-					return false;
-				}
-			}
+	            if (tmpbwi <= INT_MIN || tmpbwi >= INT_MAX)
+	            {
+	                std::cerr << "HackRFSink::configure: Invalid filter bandwidth" << std::endl;
+	            }
+	            else
+	            {
+	                bandwidth = tmpbwi;
+
+	                if (find(m_bwfilt.begin(), m_bwfilt.end(), bandwidth) == m_bwfilt.end())
+	                {
+	                    std::cerr << "HackRFSink::configure: Filter bandwidth not supported. Available bandwidths (MHz): " << m_bwfiltStr << std::endl;
+	                }
+	                else
+	                {
+	                    changeFlags |= 0x40;
+
+	                }
+	            }
+	        }
 		}
-
-        changeFlags |= 0x40;
 	}
 
 	if (m.find("extamp") != m.end())
@@ -438,8 +460,7 @@ bool HackRFSink::configure(parsekv::pairs_type& m)
 
 		if ((log2Interp < 0) || (log2Interp > 6))
 		{
-			m_error = "Invalid log2 interpolation factor";
-			return false;
+		    std::cerr << "HackRFSink::configure: Invalid log2 interpolation factor" << std::endl;
 		}
 		else
 		{
@@ -454,7 +475,7 @@ bool HackRFSink::configure(parsekv::pairs_type& m)
 	tuner_freq = frequency;
 	tuner_freq += tuner_freq * m_ppm * 1e-6;
 
-return configure(changeFlags, sampleRate, tuner_freq, extAmp, antBias, vgaGain, bandwidth);
+    return configure(changeFlags, sampleRate, tuner_freq, extAmp, antBias, vgaGain, bandwidth);
 }
 
 bool HackRFSink::start(DataBuffer<IQSample> *buf, std::atomic_bool *stop_flag)
@@ -483,37 +504,65 @@ void HackRFSink::run(hackrf_device* dev, std::atomic_bool *stop_flag)
     std::cerr << "HackRFSink::run" << std::endl;
     void *msgBuf = 0;
 
-    hackrf_error rc = (hackrf_error) hackrf_start_tx(dev, tx_callback, 0);
-
-    if (rc == HACKRF_SUCCESS)
+    while (!stop_flag->load())
     {
-        while (!stop_flag->load() && (hackrf_is_streaming(dev) == HACKRF_TRUE))
+        sleep(1);
+
+        int len = nn_recv(m_this->m_nnReceiver, &msgBuf, NN_MSG, NN_DONTWAIT);
+
+        if ((len > 0) && msgBuf)
         {
-            sleep(1);
-
-            int len = nn_recv(m_this->m_nnReceiver, &msgBuf, NN_MSG, NN_DONTWAIT);
-
-            if ((len > 0) && msgBuf)
-            {
-                std::string msg((char *) msgBuf, len);
-                std::cerr << "HackRFSink::run: received message: " << msg << std::endl;
-                m_this->Sink::configure(msg);
-                nn_freemsg(msgBuf);
-                msgBuf = 0;
+            std::string msg((char *) msgBuf, len);
+            std::cerr << "HackRFSink::run: received message: " << msg << std::endl;
+            bool success = m_this->Sink::configure(msg);
+            nn_freemsg(msgBuf);
+            msgBuf = 0;
+            if (!success) {
+                std::cerr << "HackRFSink::run: config error: " << m_this->Sink::error() << std::endl;
             }
         }
-
-        rc = (hackrf_error) hackrf_stop_tx(dev);
-
-        if (rc != HACKRF_SUCCESS)
-        {
-            std::cerr << "HackRFSink::run: Cannot stop HackRF Tx: " << rc << ": " << hackrf_error_name(rc) << std::endl;
-        }
     }
-    else
-    {
-        std::cerr << "HackRFSink::run: Cannot start HackRF Tx: " << rc << ": " << hackrf_error_name(rc) << std::endl;
-    }
+
+    std::cerr << "HackRFSink::run: finished" << std::endl;
+
+//    hackrf_error rc = (hackrf_error) hackrf_start_tx(dev, tx_callback, 0);
+//
+//    if (rc == HACKRF_SUCCESS)
+//    {
+//        while (!stop_flag->load() && (hackrf_is_streaming(dev) == HACKRF_TRUE))
+//        {
+//            sleep(1);
+//
+//            int len = nn_recv(m_this->m_nnReceiver, &msgBuf, NN_MSG, NN_DONTWAIT);
+//
+//            if ((len > 0) && msgBuf)
+//            {
+//                std::string msg((char *) msgBuf, len);
+//                std::cerr << "HackRFSink::run: received message: " << msg << std::endl;
+//                bool success = m_this->Sink::configure(msg);
+//                nn_freemsg(msgBuf);
+//                msgBuf = 0;
+//                if (!success) {
+//                    std::cerr << "HackRFSink::run: config error: " << m_this->Sink::error() << std::endl;
+//                }
+//            }
+//
+//            std::cerr << "HackRFSink::run..." << std::endl;
+//        }
+//
+//        std::cerr << "HackRFSink::run: finished" << std::endl;
+//
+//        rc = (hackrf_error) hackrf_stop_tx(dev);
+//
+//        if (rc != HACKRF_SUCCESS)
+//        {
+//            std::cerr << "HackRFSink::run: Cannot stop HackRF Tx: " << rc << ": " << hackrf_error_name(rc) << std::endl;
+//        }
+//    }
+//    else
+//    {
+//        std::cerr << "HackRFSink::run: Cannot start HackRF Tx: " << rc << ": " << hackrf_error_name(rc) << std::endl;
+//    }
 }
 
 bool HackRFSink::stop()

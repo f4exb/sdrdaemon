@@ -217,7 +217,7 @@ static bool get_device(std::vector<std::string> &devnames, std::string& devtype,
         return false;
     }
 
-    fprintf(stderr, "using device %d: %s\n", devidx, devnames[devidx].c_str());
+    fprintf(stderr, "sdrdaemontx: using device %d: %s\n", devidx, devnames[devidx].c_str());
 
 #ifdef HAS_HACKRF
     if (strcasecmp(devtype.c_str(), "hackrf") == 0)

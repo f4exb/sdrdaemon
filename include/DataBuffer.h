@@ -113,6 +113,12 @@ public:
             m_cond.wait(lock);
     }
 
+    /** Test if the buffer has enough samples */
+    bool test_buffer_fill(std::size_t minfill)
+    {
+        return (m_qlen >= minfill) || m_end_marked;
+    }
+
 private:
     std::size_t              m_qlen;
     bool                     m_end_marked;

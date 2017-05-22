@@ -504,65 +504,65 @@ void HackRFSink::run(hackrf_device* dev, std::atomic_bool *stop_flag)
     std::cerr << "HackRFSink::run" << std::endl;
     void *msgBuf = 0;
 
-    while (!stop_flag->load())
+//    while (!stop_flag->load())
+//    {
+//        sleep(1);
+//
+//        int len = nn_recv(m_this->m_nnReceiver, &msgBuf, NN_MSG, NN_DONTWAIT);
+//
+//        if ((len > 0) && msgBuf)
+//        {
+//            std::string msg((char *) msgBuf, len);
+//            std::cerr << "HackRFSink::run: received message: " << msg << std::endl;
+//            bool success = m_this->Sink::configure(msg);
+//            nn_freemsg(msgBuf);
+//            msgBuf = 0;
+//            if (!success) {
+//                std::cerr << "HackRFSink::run: config error: " << m_this->Sink::error() << std::endl;
+//            }
+//        }
+//    }
+//
+//    std::cerr << "HackRFSink::run: finished" << std::endl;
+
+    hackrf_error rc = (hackrf_error) hackrf_start_tx(dev, tx_callback, 0);
+
+    if (rc == HACKRF_SUCCESS)
     {
-        sleep(1);
-
-        int len = nn_recv(m_this->m_nnReceiver, &msgBuf, NN_MSG, NN_DONTWAIT);
-
-        if ((len > 0) && msgBuf)
+        while (!stop_flag->load() && (hackrf_is_streaming(dev) == HACKRF_TRUE))
         {
-            std::string msg((char *) msgBuf, len);
-            std::cerr << "HackRFSink::run: received message: " << msg << std::endl;
-            bool success = m_this->Sink::configure(msg);
-            nn_freemsg(msgBuf);
-            msgBuf = 0;
-            if (!success) {
-                std::cerr << "HackRFSink::run: config error: " << m_this->Sink::error() << std::endl;
+            sleep(1);
+
+            int len = nn_recv(m_this->m_nnReceiver, &msgBuf, NN_MSG, NN_DONTWAIT);
+
+            if ((len > 0) && msgBuf)
+            {
+                std::string msg((char *) msgBuf, len);
+                std::cerr << "HackRFSink::run: received message: " << msg << std::endl;
+                bool success = m_this->Sink::configure(msg);
+                nn_freemsg(msgBuf);
+                msgBuf = 0;
+                if (!success) {
+                    std::cerr << "HackRFSink::run: config error: " << m_this->Sink::error() << std::endl;
+                }
             }
+
+            //std::cerr << "HackRFSink::run..." << std::endl;
+        }
+
+        std::cerr << "HackRFSink::run: finished" << std::endl;
+
+        rc = (hackrf_error) hackrf_stop_tx(dev);
+
+        if (rc != HACKRF_SUCCESS)
+        {
+            std::cerr << "HackRFSink::run: Cannot stop HackRF Tx: " << rc << ": " << hackrf_error_name(rc) << std::endl;
         }
     }
-
-    std::cerr << "HackRFSink::run: finished" << std::endl;
-
-//    hackrf_error rc = (hackrf_error) hackrf_start_tx(dev, tx_callback, 0);
-//
-//    if (rc == HACKRF_SUCCESS)
-//    {
-//        while (!stop_flag->load() && (hackrf_is_streaming(dev) == HACKRF_TRUE))
-//        {
-//            sleep(1);
-//
-//            int len = nn_recv(m_this->m_nnReceiver, &msgBuf, NN_MSG, NN_DONTWAIT);
-//
-//            if ((len > 0) && msgBuf)
-//            {
-//                std::string msg((char *) msgBuf, len);
-//                std::cerr << "HackRFSink::run: received message: " << msg << std::endl;
-//                bool success = m_this->Sink::configure(msg);
-//                nn_freemsg(msgBuf);
-//                msgBuf = 0;
-//                if (!success) {
-//                    std::cerr << "HackRFSink::run: config error: " << m_this->Sink::error() << std::endl;
-//                }
-//            }
-//
-//            std::cerr << "HackRFSink::run..." << std::endl;
-//        }
-//
-//        std::cerr << "HackRFSink::run: finished" << std::endl;
-//
-//        rc = (hackrf_error) hackrf_stop_tx(dev);
-//
-//        if (rc != HACKRF_SUCCESS)
-//        {
-//            std::cerr << "HackRFSink::run: Cannot stop HackRF Tx: " << rc << ": " << hackrf_error_name(rc) << std::endl;
-//        }
-//    }
-//    else
-//    {
-//        std::cerr << "HackRFSink::run: Cannot start HackRF Tx: " << rc << ": " << hackrf_error_name(rc) << std::endl;
-//    }
+    else
+    {
+        std::cerr << "HackRFSink::run: Cannot start HackRF Tx: " << rc << ": " << hackrf_error_name(rc) << std::endl;
+    }
 }
 
 bool HackRFSink::stop()
@@ -588,12 +588,22 @@ int HackRFSink::tx_callback(hackrf_transfer* transfer)
 
 void HackRFSink::callback(char* buf, int len)
 {
-    m_buf->wait_buffer_fill(len/4);
-    IQSampleVector iqsamples = m_buf->pull();
-
-    for (int i = 0; i < len/4; i++)
+    if (m_buf->test_buffer_fill(len/4))
     {
-        buf[2*i]     = iqsamples[i].real() >> 8;
-        buf[2*i+1]   = iqsamples[i].imag() >> 8;
+        IQSampleVector iqsamples = m_buf->pull();
+
+        for (int i = 0; i < len/4; i++)
+        {
+            buf[2*i]     = iqsamples[i].real() >> 8;
+            buf[2*i+1]   = iqsamples[i].imag() >> 8;
+        }
+    }
+    else
+    {
+        for (int i = 0; i < len/4; i++)
+        {
+            buf[2*i]     = 1;
+            buf[2*i+1]   = 0;
+        }
     }
 }

@@ -56,6 +56,8 @@ void UDPSourceFEC::read(IQSampleVector& samples_out)
     uint8_t *data = 0;
     std::size_t dataLength;
 
+    fprintf(stderr, "UDPSourceFEC::read\n");
+
     while (!dataAvailable)
     {
         int received = receiveUDP(this, &superBlock);
@@ -75,5 +77,8 @@ void UDPSourceFEC::read(IQSampleVector& samples_out)
 
 int UDPSourceFEC::receiveUDP(UDPSourceFEC *udpSourceFEC, SuperBlock *superBlock)
 {
-    return udpSourceFEC->m_socket.RecvDataGram((void *) superBlock, (int) udpSourceFEC->m_udpSize, udpSourceFEC->m_address, udpSourceFEC->m_port);
+    fprintf(stderr, "UDPSourceFEC::receiveUDP at %s:%u\n", udpSourceFEC->m_address.c_str(), udpSourceFEC->m_port);
+    int nbRead = udpSourceFEC->m_socket.RecvDataGram((void *) superBlock, (int) udpSourceFEC->m_udpSize, udpSourceFEC->m_address, udpSourceFEC->m_port);
+    fprintf(stderr, "UDPSourceFEC::receiveUDP: received %d bytes\n", nbRead);
+    return nbRead;
 }

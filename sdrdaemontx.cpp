@@ -244,8 +244,7 @@ int main(int argc, char **argv)
     Sink  *sinksdr = 0;
     bool buffered_reads = false;
 
-    fprintf(stderr,
-            "SDRDaemonTx - Collect samples from network via UDP and send it to SDR device\n");
+    fprintf(stderr, "SDRDaemonTx - Collect samples from network via UDP and send it to SDR device\n");
 
     const struct option longopts[] = {
         { "devtype",    2, NULL, 't' },

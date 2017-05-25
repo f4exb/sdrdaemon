@@ -90,12 +90,6 @@ public:
         return ret;
     }
 
-    /** Set center frequency given in Hz */
-    uint64_t getCenterFrequency() const { return m_centerFrequency; }
-
-    /** Set sample rate given in Hz */
-    uint32_t getSampleRate() const { return m_sampleRate; }
-
     uint8_t getSampleBytes() const { return m_sampleBytes; }
     uint8_t getSampleBits() { return m_sampleBits; }
 
@@ -113,8 +107,6 @@ protected:
 	unsigned int   m_udpSize; //!< Size of UDP block in number of samples
     std::string    m_error;
 
-    uint32_t     m_centerFrequency;   //!< center frequency in kHz
-    uint32_t     m_sampleRate;        //!< sample rate in Hz
     uint8_t      m_sampleBytes;       //!< number of bytes per sample
     uint8_t      m_sampleBits;        //!< number of effective bits per sample
     uint32_t     m_nbSamples;         //!< total number of samples sent int the last frame

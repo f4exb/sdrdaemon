@@ -64,12 +64,12 @@ CSocket::CSocket( int sockDesc )
 
 CSocket::CSocket( const CSocket &sock )
 {
-
+    m_sockDesc = sock.m_sockDesc;
 }
 
 void CSocket::operator=( const CSocket &sock )
 {
-
+    m_sockDesc = sock.m_sockDesc;
 }
 
 std::string CSocket::GetLocalAddress() throw(CSocketException)

@@ -62,7 +62,7 @@ void UDPSourceFEC::read(IQSampleVector& samples_out)
 
         if (received == sizeof(SuperBlock))
         {
-            dataAvailable = m_sdmnFECBuffer.writeAndRead((uint8_t*) &superBlock, sizeof(SuperBlock), data, dataLength);
+            dataAvailable = m_sdmnFECBuffer.writeAndRead((uint8_t*) &superBlock, data, dataLength);
         }
     }
 

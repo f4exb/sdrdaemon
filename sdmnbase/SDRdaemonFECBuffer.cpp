@@ -105,10 +105,8 @@ void SDRdaemonFECBuffer::initDecodeSlot()
     memset((void *) &m_decoderSlot.m_frame, 0, sizeof(BufferFrame0));
 }
 
-bool SDRdaemonFECBuffer::writeAndRead(uint8_t *array, std::size_t length, uint8_t *data, std::size_t& dataLength)
+bool SDRdaemonFECBuffer::writeAndRead(uint8_t *array, uint8_t *data, std::size_t& dataLength)
 {
-    assert(length == udpSize);
-
     bool dataAvailable = false;
     dataLength = 0;
     SuperBlock *superBlock = (SuperBlock *) array;

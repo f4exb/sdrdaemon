@@ -91,7 +91,7 @@ bool TestSource::configure(parsekv::pairs_type& m)
 		std::cerr << "TestSource::configure(m): freq: " << m["freq"] << std::endl;
 		frequency = atoi(m["freq"].c_str());
 
-		if ((frequency < 10000) || (frequency > 9999999000))
+		if (frequency < 10000)
 		{
 			m_error = "Invalid frequency";
 			return false;

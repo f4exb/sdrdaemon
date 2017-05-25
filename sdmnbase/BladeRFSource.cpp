@@ -186,7 +186,7 @@ bool BladeRFSource::configure(parsekv::pairs_type& m)
 {
     uint32_t sample_rate = m_sampleRate;
     uint32_t frequency = m_confFreq;
-    uint32_t bandwidth = m_bandwidth;
+    int bandwidth = m_bandwidth;
     int lnaGainIndex = m_lnaGain; // 3 dB
     int vga1Gain = m_vga1Gain;
     int vga2Gain = m_vga2Gain;
@@ -209,7 +209,7 @@ bool BladeRFSource::configure(parsekv::pairs_type& m)
         if (m_fcPos != 2)
         {
             changeFlags |= 0x2; // need to adjust actual center frequency if not centered
-        }        
+        }
 	}
 
 	if (m.find("freq") != m.end())

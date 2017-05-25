@@ -103,7 +103,7 @@ public:
 	 * \param  dataLength reference to the output data length. This length is 0
 	 * \return true if an output data block is available else false
 	 */
-	bool writeAndRead(uint8_t *array, std::size_t length, uint8_t *data, std::size_t& dataLength);
+	bool writeAndRead(uint8_t *array, uint8_t *data, std::size_t& dataLength);
 	const MetaDataFEC& getCurrentMeta() const { return m_currentMeta; }
     const MetaDataFEC& getOutputMeta() const { return m_outputMeta; }
 	int getCurNbBlocks() const { return m_curNbBlocks; }

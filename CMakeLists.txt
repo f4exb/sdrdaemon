@@ -165,7 +165,7 @@ set(LIBTEST_INCLUDE_DIRS ${LIBNANOMSG_INCLUDE_DIR})
 set(LIBTEST_LIBRARIES    ${LIBNANOMSG_LIBRARIES})
 
 # Compiler flags.
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -std=c++11 -O2 -ffast-math -ftree-vectorize ${EXTRA_FLAGS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -std=c++11 -O3 -ffast-math -ftree-vectorize ${EXTRA_FLAGS}")
 
 set(sdmnbase_SOURCES
     sdmnbase/CRC64.cpp

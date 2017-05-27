@@ -1,5 +1,5 @@
 .cproject
 .project
 .settings/
-build/
+build*/
 test/

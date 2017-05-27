@@ -41,7 +41,7 @@ bool Sink::configure(std::string& configureStr)
         {
             if (!m_upsampler->configure(m))
             {
-                fprintf(stderr, "Sink::configure:: ERROR: downsampler configuration: %s\n", m_upsampler->error().c_str());
+                fprintf(stderr, "Sink::configure:: ERROR: upsampler configuration: %s\n", m_upsampler->error().c_str());
                 return false;
             }
         }

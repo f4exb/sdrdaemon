@@ -235,7 +235,7 @@ set(sdmntxbase_SOURCES
     sdmnbase/HBFilterTraits.cpp
     sdmnbase/Interpolators.cpp
     sdmnbase/SDRdaemonFECBuffer.cpp
-    sdmnbase/Sink.cpp
+    sdmnbase/DeviceSink.cpp
     sdmnbase/UDPSocket.cpp
     sdmnbase/UDPSource.cpp
     sdmnbase/UDPSourceFEC.cpp
@@ -255,7 +255,7 @@ set(sdmntxbase_HEADERS
     include/Interpolators.h
     include/parsekv.h
     include/SDRdaemonFECBuffer.h
-    include/Sink.h
+    include/DeviceSink.h
     include/UDPSocket.h
     include/UDPSource.h
     include/UDPSourceFEC.h

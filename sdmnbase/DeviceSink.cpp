@@ -17,12 +17,13 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.          //
 ///////////////////////////////////////////////////////////////////////////////////
 
-#include "Sink.h"
+#include "DeviceSink.h"
+
 #include "Upsampler.h"
 
 #include <iostream>
 
-bool Sink::configure(std::string& configureStr)
+bool DeviceSink::configure(std::string& configureStr)
 {
     namespace qi = boost::spirit::qi;
     parsekv::key_value_sequence<std::string::iterator> p;

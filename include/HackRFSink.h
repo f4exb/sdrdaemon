@@ -17,17 +17,17 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.          //
 ///////////////////////////////////////////////////////////////////////////////////
 
-#ifndef INCLUDE_HACKRFSINK_H_
-#define INCLUDE_HACKRFSINK_H_
+#ifndef INCLUDE_HACKRFDEVICESINK_H_
+#define INCLUDE_HACKRFDEVICESINK_H_
 
 #include <cstdint>
 #include <string>
 #include <vector>
 #include "libhackrf/hackrf.h"
 
-#include "Sink.h"
+#include "DeviceSink.h"
 
-class HackRFSink : public Sink
+class HackRFSink : public DeviceSink
 {
 public:
 
@@ -108,4 +108,4 @@ private:
     std::string m_bwfiltStr;
 };
 
-#endif /* INCLUDE_HACKRFSINK_H_ */
+#endif /* INCLUDE_HACKRFDEVICESINK_H_ */

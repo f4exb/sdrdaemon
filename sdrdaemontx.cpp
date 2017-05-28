@@ -180,7 +180,7 @@ bool parse_int(const char *s, int& v, bool allow_unit=false)
 }
 
 
-static bool get_device(std::vector<std::string> &devnames, std::string& devtype, Sink **sinksdr, int devidx)
+static bool get_device(std::vector<std::string> &devnames, std::string& devtype, DeviceSink **sinksdr, int devidx)
 {
     bool deviceDefined = false;
 #ifdef HAS_HACKRF
@@ -241,7 +241,7 @@ int main(int argc, char **argv)
     std::string dataaddress("127.0.0.1");
     unsigned int dataport = 9090;
     unsigned int cfgport = 9091;
-    Sink  *sinksdr = 0;
+    DeviceSink  *sinksdr = 0;
     bool buffered_reads = false;
 
     fprintf(stderr, "SDRDaemonTx - Collect samples from network via UDP and send it to SDR device\n");
@@ -388,7 +388,7 @@ int main(int argc, char **argv)
 
     // ownership will be transferred to thread therefore the unique_ptr with move is convenient
     // if the pointer is to be shared with the main thread use shared_ptr (and no move) instead
-    std::unique_ptr<Sink> sinksdr_uptr(sinksdr);
+    std::unique_ptr<DeviceSink> sinksdr_uptr(sinksdr);
 
     // Start writing to device in separate thread.
     //std::thread source_thread(read_source_data, std::move(up_srcsdr), &source_buffer);

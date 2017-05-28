@@ -17,8 +17,8 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.          //
 ///////////////////////////////////////////////////////////////////////////////////
 
-#ifndef INCLUDE_SINK_H_
-#define INCLUDE_SINK_H_
+#ifndef INCLUDE_DEVICESINK_H_
+#define INCLUDE_DEVICESINK_H_
 
 #include <string>
 #include <atomic>
@@ -36,10 +36,10 @@
 
 class Upsampler;
 
-class Sink
+class DeviceSink
 {
 public:
-    Sink() : m_confFreq(0),
+    DeviceSink() : m_confFreq(0),
 	    m_interp(0),
 	    m_nbFECBlocks(1),
 		m_buf(0),
@@ -50,7 +50,7 @@ public:
         assert(m_nnReceiver != -1);
     }
 
-    virtual ~Sink() {}
+    virtual ~DeviceSink() {}
 
     /** Associate with a Downsampler. The Downsampler will be configured
      *  dynamically from the source
@@ -145,4 +145,4 @@ protected:
     virtual bool configure(parsekv::pairs_type& m) = 0;
 };
 
-#endif /* INCLUDE_SINK_H_ */
+#endif /* INCLUDE_DEVICESINK_H_ */

@@ -93,8 +93,6 @@ public:
     uint8_t getSampleBytes() const { return m_sampleBytes; }
     uint8_t getSampleBits() { return m_sampleBits; }
 
-    virtual int getNbBlocksFEC() const { return 0; };
-
     /** Return true if the stream is OK, return false if there is an error. */
     operator bool() const
     {

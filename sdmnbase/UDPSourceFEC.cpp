@@ -67,11 +67,14 @@ void UDPSourceFEC::read(IQSampleVector& samples_out)
         }
     }
 
+    // Each complete read returns a complete frame of 127*127 samples (127 data blocks of 128 samples less the 1 sample header)
+    // that is 127*127*4 = 64516 bytes
+
     if (dataLength > 0)
     {
         samples_out.resize(dataLength/4);
         memcpy(&samples_out[0], data, dataLength);
-        fprintf(stderr, "UDPSourceFEC::read %lu bytes\n", dataLength);
+        //fprintf(stderr, "UDPSourceFEC::read %lu bytes\n", dataLength); // always 64516 bytes
     }
 }
 

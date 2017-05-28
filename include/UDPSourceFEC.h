@@ -68,8 +68,13 @@ class UDPSourceFEC : public UDPSource
 public:
     UDPSourceFEC(const std::string& address, unsigned int port);
     virtual ~UDPSourceFEC();
+
+    /**
+     * Read IQ samples from UDP port. Returns a complete protected frame of 127*127 samples
+     */
     virtual void read(IQSampleVector& samples_in);
-    virtual int getNbBlocksFEC() const { return m_nbBlocksFEC.load(); }
+
+    int getNbBlocksFEC() const { return m_nbBlocksFEC.load(); }
 
 private:
 #pragma pack(push, 1)

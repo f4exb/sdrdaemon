@@ -378,8 +378,8 @@ int main(int argc, char **argv)
     double tuner_freq = sinksdr->get_frequency();
     fprintf(stderr, "device tuned for:  %.6f MHz\n", tuner_freq * 1.0e-6);
 
-    double ifrate = sinksdr->get_sample_rate();
-    fprintf(stderr, "IF sample rate:    %.0f Hz\n", ifrate);
+    uint32_t ifrate = sinksdr->get_sample_rate();
+    fprintf(stderr, "IF sample rate:    %u Hz\n", ifrate);
 
     sinksdr->print_specific_parms();
 
@@ -420,25 +420,25 @@ int main(int argc, char **argv)
     for (unsigned int block = 0; !stop_flag.load(); block++)
     {
         // Check for overflow of sink buffer.
-        if (!sink_buf_overflow_warning && sink_buffer.queued_samples() > 10 * ifrate)
+        if (!sink_buf_overflow_warning && sink_buffer.queued_samples() > 10 * sinksdr->get_sample_rate())
         {
             fprintf(stderr, "\nWARNING: Sink buffer is growing (system too fast)\n");
             sink_buf_overflow_warning = true;
         }
 
-        if (sink_buf_overflow_warning && sink_buffer.queued_samples() < 6 * ifrate)
+        if (sink_buf_overflow_warning && sink_buffer.queued_samples() < 6 * sinksdr->get_sample_rate())
         {
             sink_buf_overflow_warning = false;
         }
 
         // Check for underflow of sink buffer.
-        if (!sink_buf_underflow_warning && sink_buffer.queued_samples() < 2 * ifrate)
+        if (!sink_buf_underflow_warning && sink_buffer.queued_samples() < 2 * sinksdr->get_sample_rate())
         {
             fprintf(stderr, "\nWARNING: Sink buffer is depleting (system too slow)\n");
             sink_buf_underflow_warning = true;
         }
 
-        if (sink_buf_underflow_warning && sink_buffer.queued_samples() > 6 * ifrate)
+        if (sink_buf_underflow_warning && sink_buffer.queued_samples() > 6 * sinksdr->get_sample_rate())
         {
             sink_buf_underflow_warning = false;
         }
@@ -456,12 +456,14 @@ int main(int argc, char **argv)
         {
             if (up.getLog2Interpolation() == 0)
             {
+                //fprintf(stderr, "no upsampling: push %lu samples\n", insamples.size());
                 sink_buffer.push(move(insamples));
             }
             else
             {
                 unsigned int sampleSize = sinksdr->get_sample_bits();
                 up.process(sampleSize, insamples, outsamples);
+                //fprintf(stderr, "upsampling: push %lu samples\n", outsamples.size());
                 sink_buffer.push(move(outsamples));
             }
         }

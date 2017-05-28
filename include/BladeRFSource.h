@@ -25,9 +25,9 @@
 #include <thread>
 #include "libbladeRF.h"
 
-#include "Source.h"
+#include "DeviceSource.h"
 
-class BladeRFSource : public Source
+class BladeRFSource : public DeviceSource
 {
 public:
 

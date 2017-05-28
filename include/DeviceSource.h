@@ -16,8 +16,8 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.          //
 ///////////////////////////////////////////////////////////////////////////////////
 
-#ifndef INCLUDE_SOURCE_H_
-#define INCLUDE_SOURCE_H_
+#ifndef INCLUDE_DEVICESOURCE_H_
+#define INCLUDE_DEVICESOURCE_H_
 
 #include <string>
 #include <atomic>
@@ -35,10 +35,10 @@
 
 class Downsampler;
 
-class Source
+class DeviceSource
 {
 public:
-    Source() : m_confFreq(0),
+    DeviceSource() : m_confFreq(0),
 	    m_decim(0),
 	    m_nbFECBlocks(1),
         m_txDelay(0),
@@ -51,7 +51,7 @@ public:
         assert(m_nnReceiver != -1);
     }
 
-    virtual ~Source() {}
+    virtual ~DeviceSource() {}
 
     /** Associate with a Downsampler. The Downsampler will be configured
      *  dynamically from the source
@@ -153,4 +153,4 @@ protected:
     virtual bool configure(parsekv::pairs_type& m) = 0;
 };
 
-#endif /* INCLUDE_SOURCE_H_ */
+#endif /* INCLUDE_DEVICESOURCE_H_ */

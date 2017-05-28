@@ -23,9 +23,9 @@
 #include <thread>
 #include <cstdlib>
 
+#include "HackRFSource.h"
 #include "util.h"
 #include "parsekv.h"
-#include "HackRFSource.h"
 
 HackRFSource *HackRFSource::m_this = 0;
 const std::vector<int> HackRFSource::m_lgains({0, 8, 16, 24, 32, 40});
@@ -575,7 +575,7 @@ void HackRFSource::run(hackrf_device* dev, std::atomic_bool *stop_flag)
             {
                 std::string msg((char *) msgBuf, len);
                 std::cerr << "HackRFSource::run: received: " << msg << std::endl;
-                m_this->Source::configure(msg);
+                m_this->DeviceSource::configure(msg);
                 nn_freemsg(msgBuf);
                 msgBuf = 0;
             }

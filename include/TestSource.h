@@ -24,9 +24,9 @@
 #include <vector>
 #include <thread>
 
-#include "Source.h"
+#include "DeviceSource.h"
 
-class TestSource : public Source
+class TestSource : public DeviceSource
 {
 public:
 

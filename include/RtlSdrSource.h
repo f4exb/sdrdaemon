@@ -24,9 +24,9 @@
 #include <vector>
 #include <thread>
 
-#include "Source.h"
+#include "DeviceSource.h"
 
-class RtlSdrSource : public Source
+class RtlSdrSource : public DeviceSource
 {
 public:
 

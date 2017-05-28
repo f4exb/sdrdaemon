@@ -16,12 +16,13 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.          //
 ///////////////////////////////////////////////////////////////////////////////////
 
-#include "Source.h"
+#include "DeviceSource.h"
+
 #include "Downsampler.h"
 
 #include <iostream>
 
-bool Source::configure(std::string& configureStr)
+bool DeviceSource::configure(std::string& configureStr)
 {
     namespace qi = boost::spirit::qi;
     parsekv::key_value_sequence<std::string::iterator> p;

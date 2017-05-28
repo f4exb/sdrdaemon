@@ -172,7 +172,7 @@ set(sdmnbase_SOURCES
     sdmnbase/Decimators.cpp
     sdmnbase/Downsampler.cpp
     sdmnbase/HBFilterTraits.cpp
-    sdmnbase/Source.cpp
+    sdmnbase/DeviceSource.cpp
     sdmnbase/UDPSink.cpp
     sdmnbase/UDPSinkUncompressed.cpp
     sdmnbase/UDPSinkLZ4.cpp
@@ -187,7 +187,7 @@ set(sdmnbase_HEADERS
     include/HBFilterTraits.h
     include/IntHalfbandFilter.h
     include/parsekv.h
-    include/Source.h
+    include/DeviceSource.h
     include/UDPSink.h
     include/UDPSinkUncompressed.h
     include/UDPSinkLZ4.h
@@ -200,7 +200,7 @@ set(sdmnfecbase_SOURCES
     sdmnbase/Decimators.cpp
     sdmnbase/Downsampler.cpp
     sdmnbase/HBFilterTraits.cpp
-    sdmnbase/Source.cpp
+    sdmnbase/DeviceSource.cpp
     sdmnbase/UDPSink.cpp
     sdmnbase/UDPSinkFEC.cpp
     sdmnbase/UDPSinkUncompressed.cpp
@@ -221,7 +221,7 @@ set(sdmnfecbase_HEADERS
     include/IntHalfbandFilterST.h
     include/IntHalfbandFilterSTi.h
     include/parsekv.h
-    include/Source.h
+    include/DeviceSource.h
     include/UDPSink.h
     include/UDPSinkFEC.h
     include/UDPSinkUncompressed.h

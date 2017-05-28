@@ -24,9 +24,9 @@
 #include <thread>
 #include <unistd.h>
 
+#include "TestSource.h"
 #include "util.h"
 #include "parsekv.h"
-#include "TestSource.h"
 
 TestSource *TestSource::m_this = 0;
 
@@ -321,7 +321,7 @@ void TestSource::run()
         {
             std::string msg((char *) msgBuf, len);
             std::cerr << "TestSource::run: received: " << msg << std::endl;
-            m_this->Source::configure(msg);
+            m_this->DeviceSource::configure(msg);
             nn_freemsg(msgBuf);
             msgBuf = 0;
         }

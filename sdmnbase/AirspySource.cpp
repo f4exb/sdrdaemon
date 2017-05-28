@@ -24,9 +24,9 @@
 #include <cstdlib>
 #include <cerrno>
 
+#include "AirspySource.h"
 #include "util.h"
 #include "parsekv.h"
-#include "AirspySource.h"
 
 AirspySource *AirspySource::m_this = 0;
 const std::vector<int> AirspySource::m_lgains({0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14});
@@ -647,7 +647,7 @@ void AirspySource::run(airspy_device* dev, std::atomic_bool *stop_flag)
             {
                 std::string msg((char *) msgBuf, len);
                 std::cerr << "AirspySource::run: received: " << msg << std::endl;
-                m_this->Source::configure(msg);
+                m_this->DeviceSource::configure(msg);
                 nn_freemsg(msgBuf);
                 msgBuf = 0;
             }

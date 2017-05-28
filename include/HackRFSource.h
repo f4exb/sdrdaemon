@@ -16,17 +16,17 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.          //
 ///////////////////////////////////////////////////////////////////////////////////
 
-#ifndef INCLUDE_HACKRFSOURCE_H_
-#define INCLUDE_HACKRFSOURCE_H_
+#ifndef INCLUDE_HACKRFDEVICESOURCE_H_
+#define INCLUDE_HACKRFDEVICESOURCE_H_
 
 #include <cstdint>
 #include <string>
 #include <vector>
 #include "libhackrf/hackrf.h"
 
-#include "Source.h"
+#include "DeviceSource.h"
 
-class HackRFSource : public Source
+class HackRFSource : public DeviceSource
 {
 public:
 
@@ -113,4 +113,4 @@ private:
     std::string m_bwfiltStr;
 };
 
-#endif /* INCLUDE_HACKRFSOURCE_H_ */
+#endif /* INCLUDE_HACKRFDEVICESOURCE_H_ */

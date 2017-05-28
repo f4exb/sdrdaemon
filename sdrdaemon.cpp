@@ -49,7 +49,7 @@
     #include "BladeRFSource.h"
 #endif
 #include "TestSource.h"
-#include "include/SDRDaemon.h"
+#include "SDRDaemon.h"
 
 //#include <type_traits>
 
@@ -252,7 +252,7 @@ bool parse_int(const char *s, int& v, bool allow_unit=false)
 }
 
 
-static bool get_device(std::vector<std::string> &devnames, std::string& devtype, Source **srcsdr, int devidx)
+static bool get_device(std::vector<std::string> &devnames, std::string& devtype, DeviceSource **srcsdr, int devidx)
 {
     bool deviceDefined = false;
 #ifdef HAS_RTLSDR
@@ -375,7 +375,7 @@ int main(int argc, char **argv)
     std::string dataaddress("127.0.0.1");
     unsigned int dataport = 9090;
     unsigned int cfgport = 9091;
-    Source  *srcsdr = 0;
+    DeviceSource  *srcsdr = 0;
     unsigned int outputbuf_samples = 48 * UDPSIZE;
     uint32_t compressedMinSize = 0;
     unsigned int txDelay = 0;
@@ -542,7 +542,7 @@ int main(int argc, char **argv)
 
     // ownership will be transferred to thread therefore the unique_ptr with move is convenient
     // if the pointer is to be shared with the main thread use shared_ptr (and no move) instead
-    std::unique_ptr<Source> up_srcsdr(srcsdr);
+    std::unique_ptr<DeviceSource> up_srcsdr(srcsdr);
 
     // Start reading from device in separate thread.
     //std::thread source_thread(read_source_data, std::move(up_srcsdr), &source_buffer);

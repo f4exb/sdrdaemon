@@ -24,9 +24,9 @@
 #include <thread>
 #include <rtl-sdr.h>
 
+#include "RtlSdrSource.h"
 #include "util.h"
 #include "parsekv.h"
-#include "RtlSdrSource.h"
 
 RtlSdrSource *RtlSdrSource::m_this = 0;
 
@@ -108,7 +108,7 @@ bool RtlSdrSource::configure(parsekv::pairs_type& m)
         if (m_fcPos != 2)
         {
             changeFlags |= 0x2; // need to adjust actual center frequency if not centered
-        }        
+        }
 	}
 
 	if (m.find("freq") != m.end())
@@ -440,7 +440,7 @@ void RtlSdrSource::run()
         {
             std::string msg((char *) msgBuf, len);
             std::cerr << "RtlSdrSource::run: received: " << msg << std::endl;
-            m_this->Source::configure(msg);
+            m_this->DeviceSource::configure(msg);
             nn_freemsg(msgBuf);
             msgBuf = 0;
         }

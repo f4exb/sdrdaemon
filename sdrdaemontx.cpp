@@ -47,7 +47,7 @@
 #ifdef HAS_HACKRF
     #include "HackRFSink.h"
 #endif
-#include "include/SDRDaemon.h"
+#include "SDRDaemon.h"
 
 //#include <type_traits>
 

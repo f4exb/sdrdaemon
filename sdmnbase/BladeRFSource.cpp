@@ -23,9 +23,9 @@
 #include <sstream>
 #include <thread>
 
+#include "BladeRFSource.h"
 #include "util.h"
 #include "parsekv.h"
-#include "BladeRFSource.h"
 
 BladeRFSource *BladeRFSource::m_this = 0;
 const std::vector<int> BladeRFSource::m_lnaGains({0, 3, 6});
@@ -505,7 +505,7 @@ void BladeRFSource::run()
         {
             std::string msg((char *) msgBuf, len);
             std::cerr << "BladeRFSource::run: received: " << msg << std::endl;
-            m_this->Source::configure(msg);
+            m_this->DeviceSource::configure(msg);
             nn_freemsg(msgBuf);
             msgBuf = 0;
         }

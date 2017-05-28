@@ -16,19 +16,19 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.          //
 ///////////////////////////////////////////////////////////////////////////////////
 
-#ifndef INCLUDE_AIRSPYSOURCE_H_
-#define INCLUDE_AIRSPYSOURCE_H_
+#ifndef INCLUDE_AIRSPYDEVICESOURCE_H_
+#define INCLUDE_AIRSPYDEVICESOURCE_H_
 
 #include <cstdint>
 #include <string>
 #include <vector>
 #include "libairspy/airspy.h"
 
-#include "Source.h"
+#include "DeviceSource.h"
 
 #define AIRSPY_MAX_DEVICE (32)
 
-class AirspySource : public Source
+class AirspySource : public DeviceSource
 {
 public:
 
@@ -120,4 +120,4 @@ private:
     std::string m_sratesStr;
 };
 
-#endif /* INCLUDE_AIRSPYSOURCE_H_ */
+#endif /* INCLUDE_AIRSPYDEVICESOURCE_H_ */

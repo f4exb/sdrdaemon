@@ -355,13 +355,17 @@ int main(int argc, char **argv)
 
     // Prepare upsampler.
     Upsampler up;
-    sinksdr->associateUpsampler(&up);
+    sinksdr->associateUpsampler(&up); // used to pass configuration from device to upsampler and not for upsampling
 
     if (!sinksdr->configure(config_str))
     {
         fprintf(stderr, "ERROR: sink configuration: %s\n", sinksdr->error().c_str());
         delete sinksdr;
         exit(1);
+    }
+    else
+    {
+        fprintf(stderr, "Selection of %s successful. Number of sample bits: %u\n", sinksdr->get_device_name().c_str(), sinksdr->get_sample_bits());
     }
 
     /*
@@ -463,7 +467,7 @@ int main(int argc, char **argv)
             {
                 unsigned int sampleSize = sinksdr->get_sample_bits();
                 up.process(sampleSize, insamples, outsamples);
-                //fprintf(stderr, "upsampling: push %lu samples\n", outsamples.size());
+                fprintf(stderr, "upsampling: push %lu samples. sampleSize: %u\n", outsamples.size(), sampleSize);
                 sink_buffer.push(move(outsamples));
             }
         }

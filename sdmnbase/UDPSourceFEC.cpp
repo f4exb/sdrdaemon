@@ -38,6 +38,7 @@ UDPSourceFEC::UDPSourceFEC(const std::string& address, unsigned int port) :
 {
     m_currentMetaFEC.init();
     m_udpReceived.store(true);
+    m_socket.BindLocalAddressAndPort(m_address, m_port);
 }
 
 UDPSourceFEC::~UDPSourceFEC()
@@ -53,10 +54,8 @@ void UDPSourceFEC::read(IQSampleVector& samples_out)
 {
     SuperBlock superBlock;
     bool dataAvailable = false;
-    uint8_t *data = 0;
+    uint8_t data[128*512];
     std::size_t dataLength;
-
-    fprintf(stderr, "UDPSourceFEC::read\n");
 
     while (!dataAvailable)
     {
@@ -68,17 +67,20 @@ void UDPSourceFEC::read(IQSampleVector& samples_out)
         }
     }
 
-    if (data)
+    if (dataLength > 0)
     {
         samples_out.resize(dataLength/4);
         memcpy(&samples_out[0], data, dataLength);
+        fprintf(stderr, "UDPSourceFEC::read %lu bytes\n", dataLength);
     }
 }
 
 int UDPSourceFEC::receiveUDP(UDPSourceFEC *udpSourceFEC, SuperBlock *superBlock)
 {
-    fprintf(stderr, "UDPSourceFEC::receiveUDP at %s:%u\n", udpSourceFEC->m_address.c_str(), udpSourceFEC->m_port);
-    int nbRead = udpSourceFEC->m_socket.RecvDataGram((void *) superBlock, (int) udpSourceFEC->m_udpSize, udpSourceFEC->m_address, udpSourceFEC->m_port);
-    fprintf(stderr, "UDPSourceFEC::receiveUDP: received %d bytes\n", nbRead);
+    std::string fromAddress;
+    unsigned short fromPort;
+    //fprintf(stderr, "UDPSourceFEC::receiveUDP at %s:%u\n", udpSourceFEC->m_address.c_str(), udpSourceFEC->m_port);
+    int nbRead = udpSourceFEC->m_socket.RecvDataGram((void *) superBlock, (int) udpSourceFEC->m_udpSize, fromAddress, fromPort);
+    //fprintf(stderr, "UDPSourceFEC::receiveUDP: received %d bytes from %s:%u\n", nbRead, fromAddress.c_str(), fromPort);
     return nbRead;
 }

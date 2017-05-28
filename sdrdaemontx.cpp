@@ -325,6 +325,7 @@ int main(int argc, char **argv)
 
     // Prepare reader.
     UDPSource *udp_input_instance;
+    fprintf(stderr, "Binding to %s:%u\n", dataaddress.c_str(), dataport);
     udp_input_instance = new UDPSourceFEC(dataaddress, dataport);
     std::unique_ptr<UDPSource> udp_input(udp_input_instance);
 

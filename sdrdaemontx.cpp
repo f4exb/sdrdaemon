@@ -460,14 +460,14 @@ int main(int argc, char **argv)
         {
             if (up.getLog2Interpolation() == 0)
             {
-                //fprintf(stderr, "no upsampling: push %lu samples\n", insamples.size());
+                fprintf(stderr, "no upsampling: push %lu samples\n", insamples.size());
                 sink_buffer.push(move(insamples));
             }
             else
             {
                 unsigned int sampleSize = sinksdr->get_sample_bits();
                 up.process(sampleSize, insamples, outsamples);
-                fprintf(stderr, "upsampling: push %lu samples. sampleSize: %u\n", outsamples.size(), sampleSize);
+                fprintf(stderr, "upsampling: push %lu samples. output sample size: %u\n", outsamples.size(), sampleSize);
                 sink_buffer.push(move(outsamples));
             }
         }

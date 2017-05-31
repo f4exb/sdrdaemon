@@ -591,39 +591,36 @@ int HackRFSink::tx_callback(hackrf_transfer* transfer)
 
 void HackRFSink::callback(char* buf, int len)
 {
-    if (m_buf->test_buffer_fill(len/2))
+    int i = 0;
+
+    for (; i < len/2; i++)
     {
-        for (int i = 0; i < len/2; i++)
+        if (m_iqSamplesIndex < m_iqSamples.size())
         {
-            if (m_iqSamplesIndex < m_iqSamples.size())
+            buf[2*i]     = m_iqSamples[m_iqSamplesIndex].real() >> 8;
+            buf[2*i+1]   = m_iqSamples[m_iqSamplesIndex].imag() >> 8;
+            m_iqSamplesIndex++;
+        }
+        else
+        {
+            if (m_buf->test_buffer_fill((len/2) - m_iqSamplesIndex))
             {
-                buf[2*i]     = m_iqSamples[m_iqSamplesIndex].real() >> 8;
-                buf[2*i+1]   = m_iqSamples[m_iqSamplesIndex].imag() >> 8;
-                m_iqSamplesIndex++;
+                m_iqSamples = m_buf->pull();
+                fprintf(stderr, "HackRFSink::callback: len: %d, pull size: %lu, queue size: %lu\n", len, m_iqSamples.size(), m_buf->queued_samples());
+                m_iqSamplesIndex = 0;
             }
             else
             {
-                IQSampleVector iqsamples = m_buf->pull();
-                fprintf(stderr, "HackRFSink::callback: len: %d, pull size: %lu\n", len, iqsamples.size());
+                m_iqSamples.clear();
                 m_iqSamplesIndex = 0;
+                break;
             }
         }
-
-//        IQSampleVector iqsamples = m_buf->pull();
-//        fprintf(stderr, "HackRFSink::callback: len: %d, pull size: %lu\n", len, iqsamples.size());
-//
-//        for (int i = 0; i < len/2; i++)
-//        {
-//            buf[2*i]     = iqsamples[i].real() >> 8;
-//            buf[2*i+1]   = iqsamples[i].imag() >> 8;
-//        }
     }
-    else
+
+    for (; i < len/2; i++)
     {
-        for (int i = 0; i < len/2; i++)
-        {
-            buf[2*i]     = 8;
-            buf[2*i+1]   = 0;
-        }
+        buf[2*i]     = 8;
+        buf[2*i+1]   = 0;
     }
 }

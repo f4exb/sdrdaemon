@@ -106,6 +106,8 @@ private:
     static const std::vector<int> m_bwfilt;
     std::string m_vgainsStr;
     std::string m_bwfiltStr;
+    IQSampleVector m_iqSamples;
+    uint32_t m_iqSamplesIndex;
 };
 
 #endif /* INCLUDE_HACKRFDEVICESINK_H_ */

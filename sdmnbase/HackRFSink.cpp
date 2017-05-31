@@ -43,7 +43,8 @@ HackRFSink::HackRFSink(int dev_index) :
     m_extAmp(false),
     m_biasAnt(false),
     m_running(false),
-    m_thread(0)
+    m_thread(0),
+    m_iqSamplesIndex(0)
 {
     m_devname = "HackRFSink";
 
@@ -592,14 +593,30 @@ void HackRFSink::callback(char* buf, int len)
 {
     if (m_buf->test_buffer_fill(len/2))
     {
-        IQSampleVector iqsamples = m_buf->pull();
-        fprintf(stderr, "HackRFSink::callback: len: %d, pull size: %lu\n", len, iqsamples.size());
-
         for (int i = 0; i < len/2; i++)
         {
-            buf[2*i]     = iqsamples[i].real() >> 8;
-            buf[2*i+1]   = iqsamples[i].imag() >> 8;
+            if (m_iqSamplesIndex < m_iqSamples.size())
+            {
+                buf[2*i]     = m_iqSamples[m_iqSamplesIndex].real() >> 8;
+                buf[2*i+1]   = m_iqSamples[m_iqSamplesIndex].imag() >> 8;
+                m_iqSamplesIndex++;
+            }
+            else
+            {
+                IQSampleVector iqsamples = m_buf->pull();
+                fprintf(stderr, "HackRFSink::callback: len: %d, pull size: %lu\n", len, iqsamples.size());
+                m_iqSamplesIndex = 0;
+            }
         }
+
+//        IQSampleVector iqsamples = m_buf->pull();
+//        fprintf(stderr, "HackRFSink::callback: len: %d, pull size: %lu\n", len, iqsamples.size());
+//
+//        for (int i = 0; i < len/2; i++)
+//        {
+//            buf[2*i]     = iqsamples[i].real() >> 8;
+//            buf[2*i+1]   = iqsamples[i].imag() >> 8;
+//        }
     }
     else
     {

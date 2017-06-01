@@ -34,10 +34,10 @@ public:
 
     //static const int default_block_length = 65536;
 
-    /** Open HackRF device. */
-    FileSink(int dev_index);
+    /** Open File Sink device. */
+    FileSink();
 
-    /** Close HackRF device. */
+    /** Close File Sink device. */
     virtual ~FileSink();
 
     /** Return sample size in bits */
@@ -85,14 +85,13 @@ private:
     );
 
     void closeAndOpen();
-    void callback(char* buf, int len);
-    static int tx_callback();
     static void run(std::atomic_bool *stop_flag);
 
     uint32_t m_sampleRate;
     uint64_t m_frequency;
-    atd::string m_filename;
+    std::string m_filename;
     std::ofstream m_ofstream;
+    uint32_t m_delayUS;
     bool m_running;
     std::thread *m_thread;
     static FileSink *m_this;

@@ -24,6 +24,7 @@
 #include <thread>
 #include <cstdlib>
 #include <ctime>
+#include <unistd.h>
 
 #include "FileSink.h"
 #include "util.h"
@@ -31,40 +32,16 @@
 
 FileSink *FileSink::m_this = 0;
 
-FileSink::FileSink(int dev_index) :
+FileSink::FileSink() :
     m_sampleRate(192000),
     m_frequency(435000000),
     m_filename("test.sdriq"),
+    m_delayUS(1000000),
     m_running(false),
     m_thread(0),
     m_iqSamplesIndex(0)
 {
     m_devname = "FileSink";
-
-//    hackrf_error rc = (hackrf_error) hackrf_init();
-//
-//    if (rc != HACKRF_SUCCESS)
-//    {
-//        std::ostringstream err_ostr;
-//        err_ostr << "HackRFSink::HackRFSink: failed to open HackRF library (" << rc << ": " << hackrf_error_name(rc) << ")";
-//        m_error = err_ostr.str();
-//        m_dev = 0;
-//    }
-//    else
-//    {
-//        hackrf_device_list_t *hackrf_devices = hackrf_device_list();
-//
-//        rc = (hackrf_error) hackrf_device_list_open(hackrf_devices, dev_index, &m_dev);
-//
-//        if (rc != HACKRF_SUCCESS)
-//        {
-//            std::ostringstream err_ostr;
-//            err_ostr << "HackRFSink::HackRFSink: failed to open HackRF device " << dev_index << " (" << rc << ": " << hackrf_error_name(rc) << ")";
-//            m_error = err_ostr.str();
-//            m_dev = 0;
-//        }
-//    }
-
     m_this = this;
 }
 
@@ -79,6 +56,7 @@ FileSink::~FileSink()
 
 void FileSink::get_device_names(std::vector<std::string>& devices)
 {
+    devices.push_back("file");
 }
 
 std::uint32_t FileSink::get_sample_rate()
@@ -106,12 +84,14 @@ bool FileSink::configure(uint32_t changeFlags,
     if (changeFlags & 0x1)
     {
     	m_frequency = frequency;
-    	closeAndOpen = true;
+    	closeAndOpenFlag = true;
     }
 
     if (changeFlags & 0x2)
     {
         m_sampleRate = sample_rate;
+        double delayF = (127*127*750000.0) / m_sampleRate; // 0.75 factor
+        m_delayUS = (uint32_t) delayF;
         closeAndOpenFlag = true;
     }
 
@@ -206,9 +186,10 @@ void FileSink::closeAndOpen()
     int actualSampleRate = m_sampleRate * (1<<m_interp);
     m_ofstream.write((const char *) &actualSampleRate, sizeof(int));
     m_ofstream.write((const char *) &m_frequency, sizeof(uint64_t));
-    std::time_t = startingTimeStamp = time(0);
-    m_startingTimeStamp = time(0);
+    std::time_t startingTimeStamp = time(0);
     m_ofstream.write((const char *) &startingTimeStamp, sizeof(std::time_t));
+
+    fprintf(stderr, "FileSink::closeAndOpen: %s %d %lu\n", m_filename.c_str(), actualSampleRate, m_frequency);
 }
 
 bool FileSink::start(DataBuffer<IQSample> *buf, std::atomic_bool *stop_flag)
@@ -237,6 +218,8 @@ void FileSink::run(std::atomic_bool *stop_flag)
     std::cerr << "FileSink::run" << std::endl;
     void *msgBuf = 0;
 
+    if (!m_this->m_ofstream.is_open()) m_this->closeAndOpen();
+
     while (!stop_flag->load())
     {
         int len = nn_recv(m_this->m_nnReceiver, &msgBuf, NN_MSG, NN_DONTWAIT);
@@ -245,78 +228,25 @@ void FileSink::run(std::atomic_bool *stop_flag)
         {
             std::string msg((char *) msgBuf, len);
             std::cerr << "FileSink::run: received message: " << msg << std::endl;
-            bool success = m_this->Sink::configure(msg);
+            bool success = m_this->DeviceSink::configure(msg);
             nn_freemsg(msgBuf);
             msgBuf = 0;
             if (!success) {
-                std::cerr << "FileSink::run: config error: " << m_this->Sink::error() << std::endl;
+                std::cerr << "FileSink::run: config error: " << m_this->DeviceSink::error() << std::endl;
             }
         }
 
+        if (m_this->m_buf->queued_samples() > 0)
+        {
+            fprintf(stderr, "FileSink::run: %lu samples left in queue\n", m_this->m_buf->queued_samples());
+            m_this->m_iqSamples = m_this->m_buf->pull();
+            m_this->m_ofstream.write(reinterpret_cast<char*>(&(m_this->m_iqSamples[0])), m_this->m_iqSamples.size()*2*sizeof(int16_t));
+        }
 
+        usleep(m_this->m_delayUS);
     }
 
-
-
-//    while (!stop_flag->load())
-//    {
-//        sleep(1);
-//
-//        int len = nn_recv(m_this->m_nnReceiver, &msgBuf, NN_MSG, NN_DONTWAIT);
-//
-//        if ((len > 0) && msgBuf)
-//        {
-//            std::string msg((char *) msgBuf, len);
-//            std::cerr << "HackRFSink::run: received message: " << msg << std::endl;
-//            bool success = m_this->Sink::configure(msg);
-//            nn_freemsg(msgBuf);
-//            msgBuf = 0;
-//            if (!success) {
-//                std::cerr << "HackRFSink::run: config error: " << m_this->Sink::error() << std::endl;
-//            }
-//        }
-//    }
-//
-//    std::cerr << "HackRFSink::run: finished" << std::endl;
-
-//    hackrf_error rc = (hackrf_error) hackrf_start_tx(dev, tx_callback, 0);
-//
-//    if (rc == HACKRF_SUCCESS)
-//    {
-//        while (!stop_flag->load() && (hackrf_is_streaming(dev) == HACKRF_TRUE))
-//        {
-//            sleep(1);
-//
-//            int len = nn_recv(m_this->m_nnReceiver, &msgBuf, NN_MSG, NN_DONTWAIT);
-//
-//            if ((len > 0) && msgBuf)
-//            {
-//                std::string msg((char *) msgBuf, len);
-//                std::cerr << "HackRFSink::run: received message: " << msg << std::endl;
-//                bool success = m_this->DeviceSink::configure(msg);
-//                nn_freemsg(msgBuf);
-//                msgBuf = 0;
-//                if (!success) {
-//                    std::cerr << "HackRFSink::run: config error: " << m_this->DeviceSink::error() << std::endl;
-//                }
-//            }
-//
-//            //std::cerr << "HackRFSink::run..." << std::endl;
-//        }
-//
-//        std::cerr << "HackRFSink::run: finished" << std::endl;
-//
-//        rc = (hackrf_error) hackrf_stop_tx(dev);
-//
-//        if (rc != HACKRF_SUCCESS)
-//        {
-//            std::cerr << "HackRFSink::run: Cannot stop HackRF Tx: " << rc << ": " << hackrf_error_name(rc) << std::endl;
-//        }
-//    }
-//    else
-//    {
-//        std::cerr << "HackRFSink::run: Cannot start HackRF Tx: " << rc << ": " << hackrf_error_name(rc) << std::endl;
-//    }
+    m_this->m_ofstream.close();
 }
 
 bool FileSink::stop()
@@ -326,54 +256,4 @@ bool FileSink::stop()
     m_thread->join();
     delete m_thread;
     return true;
-}
-
-int FileSink::tx_callback()
-{
-//    int bytes_to_read = transfer->valid_length; // bytes to read from FIFO as expected by the Tx
-//
-//    if (m_this)
-//    {
-//        m_this->callback((char *) transfer->buffer, bytes_to_read);
-//    }
-//
-//    return 0;
-}
-
-void FileSink::callback(char* buf, int len)
-{
-    int i = 0;
-
-    for (; i < len/2; i++)
-    {
-        if (m_iqSamplesIndex < m_iqSamples.size())
-        {
-            buf[2*i]     = 8;
-            buf[2*i+1]   = 0;
-//            buf[2*i]     = m_iqSamples[m_iqSamplesIndex].real() >> 4;
-//            buf[2*i+1]   = m_iqSamples[m_iqSamplesIndex].imag() >> 4;
-            m_iqSamplesIndex++;
-        }
-        else
-        {
-            if (m_buf->test_buffer_fill((len/2) - m_iqSamplesIndex))
-            {
-                m_iqSamples = m_buf->pull();
-                fprintf(stderr, "FileSink::callback: len: %d, pull size: %lu, queue size: %lu\n", len, m_iqSamples.size(), m_buf->queued_samples());
-                m_iqSamplesIndex = 0;
-            }
-            else
-            {
-                m_iqSamples.clear();
-                m_iqSamplesIndex = 0;
-                break;
-            }
-        }
-    }
-
-    for (; i < len/2; i++)
-    {
-        buf[2*i]     = 8;
-        buf[2*i+1]   = 0;
-    }
 }

@@ -47,6 +47,8 @@
 #ifdef HAS_HACKRF
     #include "HackRFSink.h"
 #endif
+
+#include "FileSink.h"
 #include "SDRDaemon.h"
 
 //#include <type_traits>
@@ -121,6 +123,7 @@ void usage()
     fprintf(stderr,
     "Usage: sdrdaemontx [options]\n"
             "  -t devtype     Device type:\n"
+            "                   - file:    File sink (mainly for debug)\n"
 #ifdef HAS_HACKRF
             "                   - hackrf:  HackRF One or Jawbreaker\n"
 #endif
@@ -150,6 +153,12 @@ void usage()
             "  antbias        Enable antemma bias (default disabled)\n"
             "\n"
 #endif
+            "Configuration options for the File sink\n"
+            "  freq=<int>     Frequency of radio station in Hz (default 435000000)\n"
+            "                 valid values: 1M to 6G\n"
+            "  srate=<int>    IF sample rate in Hz (default 48000)\n"
+            "                 (valid ranges: [48000,5000000]))\n"
+            "  file=<srting>  Output file name (default: test.sdriq)\n"
             "\n");
 }
 
@@ -183,8 +192,14 @@ bool parse_int(const char *s, int& v, bool allow_unit=false)
 static bool get_device(std::vector<std::string> &devnames, std::string& devtype, DeviceSink **sinksdr, int devidx)
 {
     bool deviceDefined = false;
+
+    if (strcasecmp(devtype.c_str(), "file") == 0)
+    {
+        FileSink::get_device_names(devnames);
+        deviceDefined = true;
+    }
 #ifdef HAS_HACKRF
-    if (strcasecmp(devtype.c_str(), "hackrf") == 0)
+    else if (strcasecmp(devtype.c_str(), "hackrf") == 0)
     {
         HackRFSink::get_device_names(devnames);
         deviceDefined = true;
@@ -194,6 +209,7 @@ static bool get_device(std::vector<std::string> &devnames, std::string& devtype,
     if (!deviceDefined)
     {
         fprintf(stderr, "ERROR: wrong device type (-t option) must be one of the following:\n");
+        fprintf(stderr, "       file\n");
 #ifdef HAS_HACKRF
         fprintf(stderr, "       hackrf\n");
 #endif
@@ -219,8 +235,13 @@ static bool get_device(std::vector<std::string> &devnames, std::string& devtype,
 
     fprintf(stderr, "sdrdaemontx: using device %d: %s\n", devidx, devnames[devidx].c_str());
 
+    if (strcasecmp(devtype.c_str(), "file") == 0)
+    {
+        // Create a file sink device.
+        *sinksdr = new FileSink();
+    }
 #ifdef HAS_HACKRF
-    if (strcasecmp(devtype.c_str(), "hackrf") == 0)
+    else if (strcasecmp(devtype.c_str(), "hackrf") == 0)
     {
         // Open HackRF device.
         *sinksdr = new HackRFSink(devidx);

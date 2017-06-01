@@ -112,7 +112,7 @@ bool FileSink::configure(uint32_t changeFlags,
 
 bool FileSink::configure(parsekv::pairs_type& m)
 {
-    uint32_t sampleRate = 5000000;
+    uint32_t sampleRate = 48000;
     uint64_t frequency = m_confFreq;
     std::uint32_t changeFlags = 0;
 

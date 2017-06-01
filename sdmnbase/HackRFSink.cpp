@@ -597,8 +597,10 @@ void HackRFSink::callback(char* buf, int len)
     {
         if (m_iqSamplesIndex < m_iqSamples.size())
         {
-            buf[2*i]     = m_iqSamples[m_iqSamplesIndex].real() >> 8;
-            buf[2*i+1]   = m_iqSamples[m_iqSamplesIndex].imag() >> 8;
+            buf[2*i]     = 8;
+            buf[2*i+1]   = 0;
+//            buf[2*i]     = m_iqSamples[m_iqSamplesIndex].real() >> 4;
+//            buf[2*i+1]   = m_iqSamples[m_iqSamplesIndex].imag() >> 4;
             m_iqSamplesIndex++;
         }
         else

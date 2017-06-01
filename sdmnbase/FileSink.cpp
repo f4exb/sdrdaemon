@@ -23,6 +23,7 @@
 #include <iomanip>
 #include <thread>
 #include <cstdlib>
+#include <ctime>
 
 #include "FileSink.h"
 #include "util.h"
@@ -33,6 +34,7 @@ FileSink *FileSink::m_this = 0;
 FileSink::FileSink(int dev_index) :
     m_sampleRate(192000),
     m_frequency(435000000),
+    m_filename("test.sdriq"),
     m_running(false),
     m_thread(0),
     m_iqSamplesIndex(0)
@@ -91,6 +93,7 @@ std::uint32_t FileSink::get_frequency()
 
 void FileSink::print_specific_parms()
 {
+    fprintf(stderr, "File name:         %s\n", m_filename.c_str());
 }
 
 bool FileSink::configure(uint32_t changeFlags,
@@ -98,44 +101,31 @@ bool FileSink::configure(uint32_t changeFlags,
 		uint64_t frequency
 )
 {
+    bool closeAndOpenFlag = false;
+
     if (changeFlags & 0x1)
     {
     	m_frequency = frequency;
-
-//        rc = (hackrf_error) hackrf_set_freq(m_dev, m_frequency);
-//
-//        if (rc != HACKRF_SUCCESS)
-//        {
-//            std::ostringstream err_ostr;
-//            err_ostr << "HackRFSink::configure(flags): could not set center frequency to " << m_frequency << " Hz";
-//            m_error = err_ostr.str();
-//            return false;
-//        }
-//        else
-//        {
-//            std::cerr << "HackRFSink::configure(flags): set center frequency to " << m_frequency << " Hz" << std::endl;
-//        }
+    	closeAndOpen = true;
     }
 
     if (changeFlags & 0x2)
     {
         m_sampleRate = sample_rate;
-
-//        rc = (hackrf_error) hackrf_set_sample_rate_manual(m_dev, sample_rate, 1);
-//
-//        if (rc != HACKRF_SUCCESS)
-//        {
-//            std::ostringstream err_ostr;
-//            err_ostr << "HackRFSink::configure(flags): could not set sample rate to " << sample_rate << " Hz";
-//            m_error = err_ostr.str();
-//            return false;
-//        }
-//        else
-//        {
-//            std::cerr << "HackRFSink::configure(flags): set sample rate to " << sample_rate << " Hz" << std::endl;
-//            m_sampleRate = sample_rate;
-//        }
+        closeAndOpenFlag = true;
     }
+
+    if (changeFlags & 0x4) // file name
+    {
+        closeAndOpenFlag = true;
+    }
+
+    if (changeFlags & 0x8) // interpolation factor
+    {
+        closeAndOpenFlag = true;
+    }
+
+    if (closeAndOpenFlag) closeAndOpen();
 
     return true;
 }
@@ -176,28 +166,49 @@ bool FileSink::configure(parsekv::pairs_type& m)
 		}
 	}
 
-	if (m.find("interp") != m.end())
+	if (m.find("file") != m.end())
 	{
-		std::cerr << "FileSink::configure: interp: " << m["interp"] << std::endl;
-		int log2Interp = atoi(m["interp"].c_str());
-
-		if ((log2Interp < 0) || (log2Interp > 6))
-		{
-		    std::cerr << "FileSink::configure: Invalid log2 interpolation factor" << std::endl;
-		}
-		else
-		{
-			m_interp = log2Interp;
-		}
+		std::cerr << "FileSink::configure: file: " << m["file"] << std::endl;
+        m_filename = m["file"];
+        changeFlags |= 0x4;
 	}
 
-    m_confFreq = frequency;
-	double tuner_freq;
+    if (m.find("interp") != m.end())
+    {
+        std::cerr << "FileSink::configure: interp: " << m["interp"] << std::endl;
+        int log2Interp = atoi(m["interp"].c_str());
 
-	// Centered
-	tuner_freq = frequency;
+        if ((log2Interp < 0) || (log2Interp > 6))
+        {
+            std::cerr << "FileSink::configure: Invalid log2 interpolation factor" << std::endl;
+        }
+        else
+        {
+            m_interp = log2Interp;
+            changeFlags |= 0x8;
+        }
+    }
+
+    m_confFreq = frequency;
+	double tuner_freq = frequency;
 
     return configure(changeFlags, sampleRate, tuner_freq);
+}
+
+void FileSink::closeAndOpen()
+{
+    if (m_ofstream.is_open()) {
+        m_ofstream.close();
+    }
+
+    m_ofstream.open(m_filename.c_str(),  std::ios::binary);
+
+    int actualSampleRate = m_sampleRate * (1<<m_interp);
+    m_ofstream.write((const char *) &actualSampleRate, sizeof(int));
+    m_ofstream.write((const char *) &m_frequency, sizeof(uint64_t));
+    std::time_t = startingTimeStamp = time(0);
+    m_startingTimeStamp = time(0);
+    m_ofstream.write((const char *) &startingTimeStamp, sizeof(std::time_t));
 }
 
 bool FileSink::start(DataBuffer<IQSample> *buf, std::atomic_bool *stop_flag)
@@ -225,6 +236,27 @@ void FileSink::run(std::atomic_bool *stop_flag)
 {
     std::cerr << "FileSink::run" << std::endl;
     void *msgBuf = 0;
+
+    while (!stop_flag->load())
+    {
+        int len = nn_recv(m_this->m_nnReceiver, &msgBuf, NN_MSG, NN_DONTWAIT);
+
+        if ((len > 0) && msgBuf)
+        {
+            std::string msg((char *) msgBuf, len);
+            std::cerr << "FileSink::run: received message: " << msg << std::endl;
+            bool success = m_this->Sink::configure(msg);
+            nn_freemsg(msgBuf);
+            msgBuf = 0;
+            if (!success) {
+                std::cerr << "FileSink::run: config error: " << m_this->Sink::error() << std::endl;
+            }
+        }
+
+
+    }
+
+
 
 //    while (!stop_flag->load())
 //    {
@@ -327,7 +359,7 @@ void FileSink::callback(char* buf, int len)
             if (m_buf->test_buffer_fill((len/2) - m_iqSamplesIndex))
             {
                 m_iqSamples = m_buf->pull();
-                fprintf(stderr, "HackRFSink::callback: len: %d, pull size: %lu, queue size: %lu\n", len, m_iqSamples.size(), m_buf->queued_samples());
+                fprintf(stderr, "FileSink::callback: len: %d, pull size: %lu, queue size: %lu\n", len, m_iqSamples.size(), m_buf->queued_samples());
                 m_iqSamplesIndex = 0;
             }
             else

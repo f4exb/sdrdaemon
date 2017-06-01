@@ -79,17 +79,20 @@ private:
      *
      * Return true for success, false if an error occurred.
      */
-    bool configure(std::uint32_t changeFlags,
+    bool configure(uint32_t changeFlags,
                    uint32_t sample_rate,
                    uint64_t frequency
     );
 
+    void closeAndOpen();
     void callback(char* buf, int len);
     static int tx_callback();
     static void run(std::atomic_bool *stop_flag);
 
     uint32_t m_sampleRate;
     uint64_t m_frequency;
+    atd::string m_filename;
+    std::ofstream m_ofstream;
     bool m_running;
     std::thread *m_thread;
     static FileSink *m_this;

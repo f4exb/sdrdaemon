@@ -183,13 +183,12 @@ void FileSink::closeAndOpen()
 
     m_ofstream.open(m_filename.c_str(),  std::ios::binary);
 
-    int actualSampleRate = m_sampleRate * (1<<m_interp);
-    m_ofstream.write((const char *) &actualSampleRate, sizeof(int));
+    m_ofstream.write((const char *) &m_sampleRate, sizeof(int));
     m_ofstream.write((const char *) &m_frequency, sizeof(uint64_t));
     std::time_t startingTimeStamp = time(0);
     m_ofstream.write((const char *) &startingTimeStamp, sizeof(std::time_t));
 
-    fprintf(stderr, "FileSink::closeAndOpen: %s %d %lu\n", m_filename.c_str(), actualSampleRate, m_frequency);
+    fprintf(stderr, "FileSink::closeAndOpen: %s %u %lu\n", m_filename.c_str(), m_sampleRate, m_frequency);
 }
 
 bool FileSink::start(DataBuffer<IQSample> *buf, std::atomic_bool *stop_flag)

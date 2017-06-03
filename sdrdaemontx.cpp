@@ -123,10 +123,10 @@ void usage()
     fprintf(stderr,
     "Usage: sdrdaemontx [options]\n"
             "  -t devtype     Device type:\n"
-            "                   - file:    File sink (mainly for debug)\n"
 #ifdef HAS_HACKRF
             "                   - hackrf:  HackRF One or Jawbreaker\n"
 #endif
+            "                   - file:    File sink (mainly for debug)\n"
             "  -c config      Startup configuration. Comma separated key=value configuration pairs\n"
             "                 or just key for switches. See below for valid values\n"
             "  -d devidx      Device index, 'list' to show device list (default 0)\n"
@@ -386,7 +386,7 @@ int main(int argc, char **argv)
     }
     else
     {
-        fprintf(stderr, "Selection of %s successful. Number of sample bits: %u\n", sinksdr->get_device_name().c_str(), sinksdr->get_sample_bits());
+        fprintf(stderr, "Selection of %s successful. Number of sample bits: %u\n", sinksdr->get_device_name().c_str(), sinksdr->get_device_sample_bits());
     }
 
     /*
@@ -486,9 +486,9 @@ int main(int argc, char **argv)
             }
             else
             {
-                unsigned int sampleSize = sinksdr->get_sample_bits();
+                unsigned int sampleSize = sinksdr->get_device_sample_bits();
                 up.process(sampleSize, insamples, outsamples);
-                fprintf(stderr, "upsampling: push %lu samples. output sample size: %u\n", outsamples.size(), sampleSize);
+                fprintf(stderr, "upsampling: push %lu samples. device sample size (bits): %u\n", outsamples.size(), sampleSize);
                 sink_buffer.push(move(outsamples));
             }
         }

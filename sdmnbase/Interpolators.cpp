@@ -20,31 +20,32 @@
 #include <string.h>
 #include "Interpolators.h"
 
-void Interpolators::interpolate2_cen(unsigned int& sampleSize, const IQSampleVector& in, IQSampleVector& out)
+void Interpolators::interpolate2_cen(unsigned int& deviceSampleSize, const IQSampleVector& in, IQSampleVector& out)
 {
     int len = in.size();
     out.resize(len*2);
-    IQSampleVector::iterator it = out.begin();
-    unsigned int trunk_shift = (sampleSize < 15 ? 0 : sampleSize - 15); // trunk to keep 16 bits (shift right)
-    unsigned int norm_shift  = (sampleSize < 15 ? 15 - sampleSize : 0); // shift to normalize to 16 bits (shift left)
+    IQSampleVector::const_iterator itIn = in.begin();
+    IQSampleVector::iterator itOut = out.begin();
+    unsigned int trunk_shift = (deviceSampleSize > 16 ? 0 : 1);                         // trunk to keep 16 bits (shift right)
+    unsigned int norm_shift  = (deviceSampleSize > 16 ? 0 : 16 - deviceSampleSize + 1); // shift to normalize to 16 bits (shift left)
     int32_t intbuf[4];
 
-    for (int pos = 0; pos < len - 3; pos += 4)
+    for (; itIn != in.end(); ++itIn)
     {
-        intbuf[0]  = in[pos].real() << norm_shift;
-        intbuf[1]  = in[pos].imag() << norm_shift;
+        intbuf[0]  = itIn->real() << norm_shift;
+        intbuf[1]  = itIn->imag() << norm_shift;
 
         m_interpolator2.myInterpolate(&intbuf[0], &intbuf[1], &intbuf[2], &intbuf[3]);
 
-        it->setReal(intbuf[0] >> trunk_shift);
-        it->setImag(intbuf[1] >> trunk_shift);
-        ++it;
-        it->setReal(intbuf[2] >> trunk_shift);
-        it->setImag(intbuf[3] >> trunk_shift);
-        ++it;
+        itOut->setReal(intbuf[0] >> trunk_shift);
+        itOut->setImag(intbuf[1] >> trunk_shift);
+        ++itOut;
+        itOut->setReal(intbuf[2] >> trunk_shift);
+        itOut->setImag(intbuf[3] >> trunk_shift);
+        ++itOut;
     }
 
-    sampleSize += (1 - trunk_shift);
+    deviceSampleSize += (1 - trunk_shift);
 }
 
 void Interpolators::interpolate4_cen(unsigned int& sampleSize, const IQSampleVector& in, IQSampleVector& out)

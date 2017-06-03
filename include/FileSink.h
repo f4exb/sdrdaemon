@@ -41,7 +41,7 @@ public:
     virtual ~FileSink();
 
     /** Return sample size in bits */
-    virtual std::uint32_t get_sample_bits() { return 8; }
+    virtual std::uint32_t get_device_sample_bits() { return 16; }
 
     /** Return current sample frequency in Hz. */
     virtual std::uint32_t get_sample_rate();

@@ -80,8 +80,8 @@ public:
      */
     bool configure(std::string& configureStr);
 
-    /** Return sample size in bits */
-    virtual std::uint32_t get_sample_bits() = 0;
+    /** Return device sample size in bits */
+    virtual std::uint32_t get_device_sample_bits() = 0;
 
     /** Return current sample frequency in Hz. */
     virtual std::uint32_t get_sample_rate() = 0;

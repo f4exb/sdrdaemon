@@ -49,7 +49,7 @@ bool Upsampler::configure(parsekv::pairs_type& m)
 	return true;
 }
 
-void Upsampler::process(unsigned int& sampleSize, const IQSampleVector& samples_in, IQSampleVector& samples_out)
+void Upsampler::process(unsigned int sampleSize, const IQSampleVector& samples_in, IQSampleVector& samples_out)
 {
 	if (m_interp == 0)
 	{

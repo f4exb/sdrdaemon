@@ -486,9 +486,8 @@ int main(int argc, char **argv)
             }
             else
             {
-                unsigned int sampleSize = sinksdr->get_device_sample_bits();
-                up.process(sampleSize, insamples, outsamples);
-                fprintf(stderr, "upsampling: push %lu samples. device sample size (bits): %u\n", outsamples.size(), sampleSize);
+                up.process(sinksdr->get_device_sample_bits(), insamples, outsamples);
+                fprintf(stderr, "upsampling: push %lu samples\n", outsamples.size());
                 sink_buffer.push(move(outsamples));
             }
         }

@@ -47,7 +47,7 @@ public:
     /**
      * Process samples.
      */
-    void process(unsigned int& sampleSize, const IQSampleVector& samples_in, IQSampleVector& samples_out);
+    void process(unsigned int sampleSize, const IQSampleVector& samples_in, IQSampleVector& samples_out);
 
     /** State operator */
     operator bool() const

@@ -74,6 +74,11 @@ public:
      */
     virtual void read(IQSampleVector& samples_in);
 
+    /**
+     * Format a status message in the given string
+     */
+    virtual void getStatusMessage(char *messageBuffer) const;
+
     int getNbBlocksFEC() const { return m_nbBlocksFEC.load(); }
 
 private:

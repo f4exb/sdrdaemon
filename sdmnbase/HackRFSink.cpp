@@ -27,6 +27,7 @@
 #include "HackRFSink.h"
 #include "util.h"
 #include "parsekv.h"
+#include "UDPSource.h"
 
 HackRFSink *HackRFSink::m_this = 0;
 const std::vector<int> HackRFSink::m_vgains({0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52, 54, 56, 58, 60, 62});
@@ -552,7 +553,13 @@ void HackRFSink::run(hackrf_device* dev, std::atomic_bool *stop_flag)
             }
 
             uint32_t queuedVectors = m_this->m_buf->queued_vectors();
-            sprintf(msgBufSend, "QL=%u", queuedVectors);
+            sprintf(msgBufSend, "%u", queuedVectors);
+
+            if (m_this->m_udpSource)
+            {
+                m_this->m_udpSource->getStatusMessage(msgBufSend);
+            }
+
             int bufSize = strlen(msgBufSend);
             int rc = nn_send(m_this->m_nnReceiver, (void *) msgBufSend, bufSize, 0);
 

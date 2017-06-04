@@ -376,7 +376,8 @@ int main(int argc, char **argv)
 
     // Prepare upsampler.
     Upsampler up;
-    sinksdr->associateUpsampler(&up); // used to pass configuration from device to upsampler and not for upsampling
+    sinksdr->associateUpsampler(&up);                // used to pass configuration from device to upsampler and not for upsampling
+    sinksdr->associateUDPSource(udp_input_instance); // used to get status message
 
     if (!sinksdr->configure(config_str))
     {

@@ -35,6 +35,7 @@
 #include "SDRDaemon.h"
 
 class Upsampler;
+class UDPSource;
 
 class DeviceSink
 {
@@ -44,7 +45,8 @@ public:
 	    m_nbFECBlocks(1),
 		m_buf(0),
         m_stop_flag(0),
-		m_upsampler(0)
+		m_upsampler(0),
+		m_udpSource(0)
     {
         m_nnReceiver = nn_socket(AF_SP, NN_PAIR);
         assert(m_nnReceiver != -1);
@@ -58,6 +60,13 @@ public:
     void associateUpsampler(Upsampler *upampler)
     {
         m_upsampler = upampler;
+    }
+
+    /** Associate with a UDP source to get its status to be sent to remote
+     */
+    void associateUDPSource(const UDPSource *udpSource)
+    {
+        m_udpSource = udpSource;
     }
 
     /** set the TCP port used by nanomsg to receive configuration messages */
@@ -138,6 +147,7 @@ protected:
     DataBuffer<IQSample> *m_buf;
     std::atomic_bool     *m_stop_flag;
     Upsampler            *m_upsampler;
+    const UDPSource      *m_udpSource;
     int                   m_nnReceiver; //!< nanomsg socket handle
 
 

@@ -78,6 +78,12 @@ void UDPSourceFEC::read(IQSampleVector& samples_out)
     }
 }
 
+void UDPSourceFEC::getStatusMessage(char *messageBuffer) const
+{
+    int msgLen = strlen(messageBuffer);
+    sprintf(&messageBuffer[msgLen], ":%.1f/%.1f", m_sdmnFECBuffer.getAvgNbBlocks(), m_sdmnFECBuffer.getAvgNbRecovery());
+}
+
 int UDPSourceFEC::receiveUDP(UDPSourceFEC *udpSourceFEC, SuperBlock *superBlock)
 {
     std::string fromAddress;

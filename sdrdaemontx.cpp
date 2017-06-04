@@ -481,13 +481,13 @@ int main(int argc, char **argv)
         {
             if (up.getLog2Interpolation() == 0)
             {
-                fprintf(stderr, "no upsampling: push %lu samples\n", insamples.size());
+//                fprintf(stderr, "no upsampling: push %lu samples\n", insamples.size());
                 sink_buffer.push(move(insamples));
             }
             else
             {
-                up.process(sinksdr->get_device_sample_bits(), insamples, outsamples);
-                fprintf(stderr, "upsampling: push %lu samples\n", outsamples.size());
+                up.process(insamples, outsamples);
+//                fprintf(stderr, "upsampling: push %lu samples\n", outsamples.size());
                 sink_buffer.push(move(outsamples));
             }
         }

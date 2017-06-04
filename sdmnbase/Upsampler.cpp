@@ -49,7 +49,7 @@ bool Upsampler::configure(parsekv::pairs_type& m)
 	return true;
 }
 
-void Upsampler::process(unsigned int sampleSize, const IQSampleVector& samples_in, IQSampleVector& samples_out)
+void Upsampler::process(const IQSampleVector& samples_in, IQSampleVector& samples_out)
 {
 	if (m_interp == 0)
 	{
@@ -60,22 +60,22 @@ void Upsampler::process(unsigned int sampleSize, const IQSampleVector& samples_i
         switch (m_interp)
         {
         case 1:
-            m_interpolators.interpolate2_cen(sampleSize, samples_in, samples_out);
+            m_interpolators.interpolate2_cen(samples_in, samples_out);
             break;
         case 2:
-            m_interpolators.interpolate4_cen(sampleSize, samples_in, samples_out);
+            m_interpolators.interpolate4_cen(samples_in, samples_out);
             break;
         case 3:
-            m_interpolators.interpolate8_cen(sampleSize, samples_in, samples_out);
+            m_interpolators.interpolate8_cen(samples_in, samples_out);
             break;
         case 4:
-            m_interpolators.interpolate16_cen(sampleSize, samples_in, samples_out);
+            m_interpolators.interpolate16_cen(samples_in, samples_out);
             break;
         case 5:
-            m_interpolators.interpolate32_cen(sampleSize, samples_in, samples_out);
+            m_interpolators.interpolate32_cen(samples_in, samples_out);
             break;
         case 6:
-            m_interpolators.interpolate64_cen(sampleSize, samples_in, samples_out);
+            m_interpolators.interpolate64_cen(samples_in, samples_out);
             break;
         default:
             break;

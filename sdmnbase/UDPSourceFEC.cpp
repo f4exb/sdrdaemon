@@ -74,7 +74,7 @@ void UDPSourceFEC::read(IQSampleVector& samples_out)
     {
         samples_out.resize(dataLength/4);
         memcpy(&samples_out[0], data, dataLength);
-        fprintf(stderr, "UDPSourceFEC::read %lu bytes\n", dataLength); // always 64516 bytes
+//        fprintf(stderr, "UDPSourceFEC::read %lu bytes\n", dataLength); // always 64516 bytes
     }
 }
 

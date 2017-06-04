@@ -63,6 +63,13 @@ public:
         return m_qlen;
     }
 
+    /** Return number of vectors in queue. */
+    std::size_t queued_vectors()
+    {
+        std::unique_lock<std::mutex> lock(m_mutex);
+        return m_queue.size();
+    }
+
     /**
      * If the queue is non-empty, remove a block from the queue and
      * return the samples. If the end marker has been reached, return

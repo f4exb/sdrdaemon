@@ -35,12 +35,12 @@
 class Interpolators
 {
 public:
-	void interpolate2_cen(unsigned int sampleSize, const IQSampleVector& in, IQSampleVector& out);
-	void interpolate4_cen(unsigned int sampleSize, const IQSampleVector& in, IQSampleVector& out);
-	void interpolate8_cen(unsigned int sampleSize, const IQSampleVector& in, IQSampleVector& out);
-	void interpolate16_cen(unsigned int sampleSize, const IQSampleVector& in, IQSampleVector& out);
-	void interpolate32_cen(unsigned int sampleSize, const IQSampleVector& in, IQSampleVector& out);
-	void interpolate64_cen(unsigned int sampleSize, const IQSampleVector& in, IQSampleVector& out);
+	void interpolate2_cen(const IQSampleVector& in, IQSampleVector& out);
+	void interpolate4_cen(const IQSampleVector& in, IQSampleVector& out);
+	void interpolate8_cen(const IQSampleVector& in, IQSampleVector& out);
+	void interpolate16_cen(const IQSampleVector& in, IQSampleVector& out);
+	void interpolate32_cen(const IQSampleVector& in, IQSampleVector& out);
+	void interpolate64_cen(const IQSampleVector& in, IQSampleVector& out);
 
 private:
 #if defined(USE_SSE4_1)

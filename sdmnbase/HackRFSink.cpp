@@ -506,6 +506,7 @@ void HackRFSink::run(hackrf_device* dev, std::atomic_bool *stop_flag)
 {
     std::cerr << "HackRFSink::run" << std::endl;
     void *msgBuf = 0;
+    char msgBufSend[128];
 
 //    while (!stop_flag->load())
 //    {
@@ -550,7 +551,15 @@ void HackRFSink::run(hackrf_device* dev, std::atomic_bool *stop_flag)
                 }
             }
 
-            //std::cerr << "HackRFSink::run..." << std::endl;
+            uint32_t queuedVectors = m_this->m_buf->queued_vectors();
+            sprintf(msgBufSend, "QL=%u", queuedVectors);
+            int bufSize = strlen(msgBufSend);
+            int rc = nn_send(m_this->m_nnReceiver, (void *) msgBufSend, bufSize, 0);
+
+            if (rc != bufSize)
+            {
+                std::cerr << "HackRFSink::run: Cannot send message: " << msgBufSend << std::endl;
+            }
         }
 
         std::cerr << "HackRFSink::run: finished" << std::endl;
@@ -600,7 +609,7 @@ void HackRFSink::callback(char* buf, int len)
             if (m_buf->test_buffer_fill((len/2) - i))
             {
                 m_iqSamples = m_buf->pull();
-                fprintf(stderr, "HackRFSink::callback: len: %d, pull size: %lu, queue size: %lu\n", len, m_iqSamples.size(), m_buf->queued_vectors());
+//                fprintf(stderr, "HackRFSink::callback: len: %d, pull size: %lu, queue size: %lu\n", len, m_iqSamples.size(), m_buf->queued_vectors());
                 m_iqSamplesIndex = 0;
             }
             else

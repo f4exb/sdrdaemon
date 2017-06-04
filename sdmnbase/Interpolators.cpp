@@ -26,14 +26,13 @@ void Interpolators::interpolate2_cen(unsigned int deviceSampleSize, const IQSamp
     out.resize(len*2);
     IQSampleVector::const_iterator itIn = in.begin();
     IQSampleVector::iterator itOut = out.begin();
-    unsigned int trunk_shift = (deviceSampleSize > 16 ? 0 : 1);                         // trunk to keep 16 bits (shift right)
-    unsigned int norm_shift  = (deviceSampleSize > 16 ? 0 : 16 - deviceSampleSize + 1); // shift to normalize to 16 bits (shift left)
+    unsigned int trunk_shift  = (deviceSampleSize > 16 ? 0 : 16 - deviceSampleSize); // shift to normalize to number of output bits (shift left)
     int32_t intbuf[4];
 
     for (; itIn != in.end(); ++itIn)
     {
-        intbuf[0]  = itIn->real() << norm_shift;
-        intbuf[1]  = itIn->imag() << norm_shift;
+        intbuf[0]  = itIn->real();
+        intbuf[1]  = itIn->imag();
 
         m_interpolator2.myInterpolate(&intbuf[0], &intbuf[1], &intbuf[2], &intbuf[3]);
 
@@ -52,14 +51,13 @@ void Interpolators::interpolate4_cen(unsigned int deviceSampleSize, const IQSamp
     out.resize(len*4);
     IQSampleVector::const_iterator itIn = in.begin();
     IQSampleVector::iterator itOut = out.begin();
-    unsigned int trunk_shift = (deviceSampleSize > 16 ? 0 : 1);                         // trunk to keep 16 bits (shift right)
-    unsigned int norm_shift  = (deviceSampleSize > 16 ? 0 : 16 - deviceSampleSize + 1); // shift to normalize to 16 bits (shift left)
+    unsigned int trunk_shift  = (deviceSampleSize > 16 ? 0 : 16 - deviceSampleSize); // shift to normalize to number of output bits (shift left)
     int32_t intbuf[8];
 
     for (; itIn != in.end(); ++itIn)
     {
-        intbuf[0]  = itIn->real() << norm_shift;
-        intbuf[1]  = itIn->imag() << norm_shift;
+        intbuf[0]  = itIn->real();
+        intbuf[1]  = itIn->imag();
 
         m_interpolator2.myInterpolate(&intbuf[0], &intbuf[1], &intbuf[4], &intbuf[5]);
 
@@ -87,14 +85,13 @@ void Interpolators::interpolate8_cen(unsigned int deviceSampleSize, const IQSamp
     out.resize(len*8);
     IQSampleVector::const_iterator itIn = in.begin();
     IQSampleVector::iterator itOut = out.begin();
-    unsigned int trunk_shift = (deviceSampleSize > 16 ? 0 : 1);                         // trunk to keep 16 bits (shift right)
-    unsigned int norm_shift  = (deviceSampleSize > 16 ? 0 : 16 - deviceSampleSize + 1); // shift to normalize to 16 bits (shift left)
+    unsigned int trunk_shift  = (deviceSampleSize > 16 ? 0 : 16 - deviceSampleSize); // shift to normalize to number of output bits (shift left)
     int32_t intbuf[16];
 
     for (; itIn != in.end(); ++itIn)
     {
-        intbuf[0]  = itIn->real() << norm_shift;
-        intbuf[1]  = itIn->imag() << norm_shift;
+        intbuf[0]  = itIn->real();
+        intbuf[1]  = itIn->imag();
 
         m_interpolator2.myInterpolate(&intbuf[0], &intbuf[1], &intbuf[8], &intbuf[9]);
 
@@ -139,14 +136,13 @@ void Interpolators::interpolate16_cen(unsigned int deviceSampleSize, const IQSam
     out.resize(len*16);
     IQSampleVector::const_iterator itIn = in.begin();
     IQSampleVector::iterator itOut = out.begin();
-    unsigned int trunk_shift = (deviceSampleSize > 16 ? 0 : 1);                         // trunk to keep 16 bits (shift right)
-    unsigned int norm_shift  = (deviceSampleSize > 16 ? 0 : 16 - deviceSampleSize + 1); // shift to normalize to 16 bits (shift left)
+    unsigned int trunk_shift  = (deviceSampleSize > 16 ? 0 : 16 - deviceSampleSize); // shift to normalize to number of output bits (shift left)
     int32_t intbuf[32];
 
     for (; itIn != in.end(); ++itIn)
     {
-        intbuf[0]  = itIn->real() << norm_shift;
-        intbuf[1]  = itIn->imag() << norm_shift;
+        intbuf[0]  = itIn->real();
+        intbuf[1]  = itIn->imag();
 
         m_interpolator2.myInterpolate(&intbuf[0], &intbuf[1], &intbuf[16], &intbuf[17]);
 
@@ -224,14 +220,13 @@ void Interpolators::interpolate32_cen(unsigned int deviceSampleSize, const IQSam
     out.resize(len*32);
     IQSampleVector::const_iterator itIn = in.begin();
     IQSampleVector::iterator itOut = out.begin();
-    unsigned int trunk_shift = (deviceSampleSize > 16 ? 0 : 1);                         // trunk to keep 16 bits (shift right)
-    unsigned int norm_shift  = (deviceSampleSize > 16 ? 0 : 16 - deviceSampleSize + 1); // shift to normalize to 16 bits (shift left)
+    unsigned int trunk_shift  = (deviceSampleSize > 16 ? 0 : 16 - deviceSampleSize); // shift to normalize to number of output bits (shift left)
     int32_t intbuf[64];
 
     for (; itIn != in.end(); ++itIn)
     {
-        intbuf[0]  = itIn->real() << norm_shift;
-        intbuf[1]  = itIn->imag() << norm_shift;
+        intbuf[0]  = itIn->real();
+        intbuf[1]  = itIn->imag();
 
         m_interpolator2.myInterpolate(&intbuf[0], &intbuf[1], &intbuf[32], &intbuf[33]);
 
@@ -376,15 +371,14 @@ void Interpolators::interpolate64_cen(unsigned int deviceSampleSize, const IQSam
     out.resize(len*64);
     IQSampleVector::const_iterator itIn = in.begin();
     IQSampleVector::iterator itOut = out.begin();
-    unsigned int trunk_shift = (deviceSampleSize > 16 ? 0 : 1);                         // trunk to keep 16 bits (shift right)
-    unsigned int norm_shift  = (deviceSampleSize > 16 ? 0 : 16 - deviceSampleSize + 1); // shift to normalize to 16 bits (shift left)
+    unsigned int trunk_shift  = (deviceSampleSize > 16 ? 0 : 16 - deviceSampleSize); // shift to normalize to number of output bits (shift left)
     int32_t intbuf[128];
     memset((void *) &intbuf[64], 0, 64*sizeof(int32_t));
 
     for (; itIn != in.end(); ++itIn)
     {
-        intbuf[0]  = itIn->real() << norm_shift;
-        intbuf[1]  = itIn->imag() << norm_shift;
+        intbuf[0]  = itIn->real();
+        intbuf[1]  = itIn->imag();
 
         m_interpolator2.myInterpolate(&intbuf[0], &intbuf[1], &intbuf[32], &intbuf[33]);
 

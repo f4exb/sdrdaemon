@@ -370,7 +370,7 @@ add_executable(sdrdaemonfec
     sdrdaemonfec.cpp
 )
 
-add_executable(sdrdaemonfec
+add_executable(sdrdaemontx
     sdrdaemontx.cpp
 )
 
@@ -619,8 +619,6 @@ if((HAS_SSSE3 OR HAS_NEON) AND CM256CC_FOUND)
     )
 
     target_link_libraries(sdmntxbase ${CM256CC_LIBRARIES})
-    
-    
     
     target_link_libraries(sdrdaemontx
         sdmntxbase

@@ -81,15 +81,18 @@ void UDPSourceFEC::read(IQSampleVector& samples_out)
 void UDPSourceFEC::getStatusMessage(char *messageBuffer)
 {
     int msgLen = strlen(messageBuffer);
-    int statusCode = 2;
+    int statusCode;
+    int minNbBlocks = m_sdmnFECBuffer.getMinNbBlocks();
 
-    if (m_sdmnFECBuffer.getMinNbBlocks() < UDPSOURCEFEC_NBORIGINALBLOCKS) {
-        statusCode = 0;
-    } else if (m_sdmnFECBuffer.getMinNbBlocks() < UDPSOURCEFEC_NBORIGINALBLOCKS + m_nbBlocksFEC) {
-        statusCode = 1;
+    if (minNbBlocks < UDPSOURCEFEC_NBORIGINALBLOCKS) {
+        statusCode = 1; // Some data is definitely lost
+    } else if (minNbBlocks < UDPSOURCEFEC_NBORIGINALBLOCKS + m_nbBlocksFEC) {
+        statusCode = 0; // Recovereable or unknown
+    } else {
+        statusCode = 2; // all OK
     }
 
-    sprintf(&messageBuffer[msgLen], ":%d:%03d/%03d", statusCode, m_sdmnFECBuffer.getMinNbBlocks(), m_sdmnFECBuffer.getMaxNbRecovery());
+    sprintf(&messageBuffer[msgLen], ":%d:%03d/%03d", statusCode, minNbBlocks, m_sdmnFECBuffer.getMaxNbRecovery());
 }
 
 int UDPSourceFEC::receiveUDP(UDPSourceFEC *udpSourceFEC, SuperBlock *superBlock)

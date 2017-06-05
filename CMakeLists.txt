@@ -311,6 +311,16 @@ set(sdmnfecbase_HEADERS
     ${sdmndevice_HEADERS}
 )
 
+set(sdmntxbase_SOURCES
+    ${sdmntxbase_SOURCES}
+    ${sdmndevice_SOURCES}
+)
+
+set(sdmntxbase_HEADERS
+    ${sdmntxbase_HEADERS}
+    ${sdmndevice_HEADERS}
+)
+
 include_directories(
     ${CMAKE_SOURCE_DIR}/include
     ${LIBNANOMSG_INCLUDE_DIR}
@@ -334,6 +344,10 @@ add_library(sdmnfecbase STATIC
     ${sdmnfecbase_SOURCES}
 )
 
+add_library(sdmntxbase STATIC
+    ${sdmnfecbase_SOURCES}
+)
+
 target_link_libraries(sdmnbase 
     cm256cc
     airspy
@@ -351,6 +365,12 @@ target_link_libraries(sdmnfecbase
     hackrf
     rtlsdr
     ${LZ4_LIBRARIES}
+    ${LIBNANOMSG_LIBRARIES}
+)
+
+target_link_libraries(sdmntxbase 
+    cm256cc
+    hackrf
     ${LIBNANOMSG_LIBRARIES}
 )
 

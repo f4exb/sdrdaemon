@@ -273,52 +273,58 @@ add_subdirectory(libbladerf)
 add_subdirectory(libhackrf)
 add_subdirectory(librtlsdr)
 
-set(sdmndevice_SOURCES
+set(sdmndevicerx_SOURCES
     sdmnbase/TestSource.cpp
     sdmnbase/RtlSdrSource.cpp
     sdmnbase/AirspySource.cpp
     sdmnbase/BladeRFSource.cpp
     sdmnbase/HackRFSource.cpp
-    sdmnbase/HackRFSink.cpp
 )
 
-set(sdmndevice_HEADERS
+set(sdmndevicerx_HEADERS
     include/TestSource.h
     include/RtlSdrSource.h
     include/AirspySource.h
     include/BladeRFSource.h
     include/HackRFSource.h
-    include/HackRFSink.h
+)
+
+set(sdmndevicetx_SOURCES
+    sdmnbase/HackRFSink.cpp
+)
+
+set(sdmndevicetx_HEADERS
+    sdmnbase/HackRFSink.h
 )
 
 set(sdmnbase_SOURCES
     ${sdmnbase_SOURCES}
-    ${sdmndevice_SOURCES}
+    ${sdmndevicerx_SOURCES}
 )    
 
 set(sdmnbase_HEADERS
     ${sdmnbase_HEADERS}
-    ${sdmndevice_HEADERS}
+    ${sdmndevicerx_HEADERS}
 )
 
 set(sdmnfecbase_SOURCES
     ${sdmnfecbase_SOURCES}
-    ${sdmndevice_SOURCES}
+    ${sdmndevicerx_SOURCES}
 )    
 
 set(sdmnfecbase_HEADERS
     ${sdmnfecbase_HEADERS}
-    ${sdmndevice_HEADERS}
+    ${sdmndevicerx_HEADERS}
 )
 
 set(sdmntxbase_SOURCES
     ${sdmntxbase_SOURCES}
-    ${sdmndevice_SOURCES}
+    ${sdmndevicetx_SOURCES}
 )
 
 set(sdmntxbase_HEADERS
     ${sdmntxbase_HEADERS}
-    ${sdmndevice_HEADERS}
+    ${sdmndevicetx_HEADERS}
 )
 
 include_directories(
@@ -345,7 +351,7 @@ add_library(sdmnfecbase STATIC
 )
 
 add_library(sdmntxbase STATIC
-    ${sdmnfecbase_SOURCES}
+    ${sdmntxbase_SOURCES}
 )
 
 target_link_libraries(sdmnbase 

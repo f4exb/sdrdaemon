@@ -81,7 +81,15 @@ void UDPSourceFEC::read(IQSampleVector& samples_out)
 void UDPSourceFEC::getStatusMessage(char *messageBuffer)
 {
     int msgLen = strlen(messageBuffer);
-    sprintf(&messageBuffer[msgLen], ":%03d/%03d", m_sdmnFECBuffer.getMinNbBlocks(), m_sdmnFECBuffer.getMaxNbRecovery());
+    int statusCode = 2;
+
+    if (m_sdmnFECBuffer.getMinNbBlocks() < UDPSOURCEFEC_NBORIGINALBLOCKS) {
+        statusCode = 0;
+    } else if (m_sdmnFECBuffer.getMinNbBlocks() < UDPSOURCEFEC_NBORIGINALBLOCKS + m_nbBlocksFEC) {
+        statusCode = 1;
+    }
+
+    sprintf(&messageBuffer[msgLen], ":%d:%03d/%03d", statusCode, m_sdmnFECBuffer.getMinNbBlocks(), m_sdmnFECBuffer.getMaxNbRecovery());
 }
 
 int UDPSourceFEC::receiveUDP(UDPSourceFEC *udpSourceFEC, SuperBlock *superBlock)

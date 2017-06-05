@@ -329,7 +329,7 @@ bool HackRFSink::configure(parsekv::pairs_type& m)
 		std::cerr << "HackRFSink::configure: srate: " << m["srate"] << std::endl;
 		sampleRate = atoi(m["srate"].c_str());
 
-		if ((sampleRate < 2400000) || (sampleRate > 20000000))
+		if ((sampleRate < 1000000) || (sampleRate > 20000000))
 		{
 		    std::cerr << "HackRFSink::configure: Invalid sample rate " << sampleRate << " skipping" << std::endl;
 		}

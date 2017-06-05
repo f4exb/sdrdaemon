@@ -214,17 +214,17 @@ bool SDRdaemonFECBuffer::writeAndRead(uint8_t *array, uint8_t *data, std::size_t
 //                    }
 
                     // debug print
-                    std::cerr << "SDRdaemonFECBuffer::writeAndRead:"
-                            << " recovered block #" << blockIndex
-                            << " i.q: ";
-
-                    for (int i = 0; i < 10; i++)
-                    {
-                        std::cerr << " " << recoveredBlock->samples[i].i
-                                << "." << recoveredBlock->samples[i].q;
-                    }
-
-                    std::cerr << std::endl;
+//                    std::cerr << "SDRdaemonFECBuffer::writeAndRead:"
+//                            << " recovered block #" << blockIndex
+//                            << " i.q: ";
+//
+//                    for (int i = 0; i < 10; i++)
+//                    {
+//                        std::cerr << " " << recoveredBlock->samples[i].i
+//                                << "." << recoveredBlock->samples[i].q;
+//                    }
+//
+//                    std::cerr << std::endl;
                     // end debug print
                 } // recover
             } // success to decode

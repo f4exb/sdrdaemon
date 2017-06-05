@@ -98,7 +98,7 @@ void SDRdaemonFECBuffer::initDecodeSlot()
     m_curNbBlocks = m_decoderSlot.m_blockCount;
     m_curNbRecovery = m_decoderSlot.m_recoveryCount;
     if (m_curNbBlocks < m_minNbBlocks) m_minNbBlocks = m_curNbBlocks;
-    if (m_curNbRecovery < m_maxNbRecovery) m_maxNbRecovery = m_curNbRecovery;
+    if (m_curNbRecovery > m_maxNbRecovery) m_maxNbRecovery = m_curNbRecovery;
     m_avgNbBlocks(m_curNbBlocks);
     m_avgNbRecovery(m_curNbRecovery);
     // void the slot

@@ -29,7 +29,6 @@
 
 UDPSourceFEC::UDPSourceFEC(const std::string& address, unsigned int port) :
     UDPSource::UDPSource(address, port, UDPSOURCEFEC_UDPSIZE),
-    m_nbBlocksFEC(0),
     m_rxThread(0),
 	m_rxBlockIndex(0),
 	m_rxBlocksIndex(0),
@@ -86,7 +85,7 @@ void UDPSourceFEC::getStatusMessage(char *messageBuffer)
 
     if (minNbBlocks < UDPSOURCEFEC_NBORIGINALBLOCKS) {
         statusCode = 1; // Some data is definitely lost
-    } else if (minNbBlocks < UDPSOURCEFEC_NBORIGINALBLOCKS + m_nbBlocksFEC) {
+    } else if (minNbBlocks < UDPSOURCEFEC_NBORIGINALBLOCKS + m_sdmnFECBuffer.getCurrentMeta().m_nbFECBlocks) {
         statusCode = 0; // Recovereable or unknown
     } else {
         statusCode = 2; // all OK

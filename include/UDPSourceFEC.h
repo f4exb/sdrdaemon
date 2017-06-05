@@ -79,8 +79,6 @@ public:
      */
     virtual void getStatusMessage(char *messageBuffer);
 
-    int getNbBlocksFEC() const { return m_nbBlocksFEC.load(); }
-
 private:
 #pragma pack(push, 1)
     struct MetaDataFEC
@@ -130,7 +128,6 @@ private:
 
     SDRdaemonFECBuffer m_sdmnFECBuffer;  //!< FEC handling buffer
     MetaDataFEC m_currentMetaFEC;        //!< Meta data for current frame
-    std::atomic_int m_nbBlocksFEC;       //!< Variable number of FEC blocks
     SuperBlock m_rxBlocks[4][256];       //!< UDP blocks received with original data + FEC
     std::thread *m_rxThread;             //!< Thread to transmit UDP blocks
     SuperBlock m_superBlock;             //!< current super block being built

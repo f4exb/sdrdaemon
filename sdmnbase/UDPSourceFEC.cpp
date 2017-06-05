@@ -83,9 +83,7 @@ void UDPSourceFEC::getStatusMessage(char *messageBuffer)
     int statusCode;
     int minNbBlocks = m_sdmnFECBuffer.getMinNbBlocks();
 
-    if (minNbBlocks == 256) {
-        statusCode = 0; // Recovereable or unknown
-    } else if (minNbBlocks < UDPSOURCEFEC_NBORIGINALBLOCKS) {
+    if (minNbBlocks < UDPSOURCEFEC_NBORIGINALBLOCKS) {
         statusCode = 1; // Some data is definitely lost
     } else if (minNbBlocks < UDPSOURCEFEC_NBORIGINALBLOCKS + m_sdmnFECBuffer.getCurrentMeta().m_nbFECBlocks) {
         statusCode = 0; // Recovereable or unknown

@@ -111,6 +111,20 @@ public:
 	float getAvgNbBlocks() const { return m_avgNbBlocks; }
 	float getAvgNbRecovery() const { return m_avgNbRecovery; }
 
+	int getMinNbBlocks()
+	{
+	    int minNbBlocks = m_minNbBlocks;
+	    m_minNbBlocks = 256;
+	    return minNbBlocks;
+	}
+
+	int getMaxNbRecovery()
+	{
+	    int maxNbRecovery = m_maxNbRecovery;
+	    m_maxNbRecovery = 0;
+	    return maxNbRecovery;
+	}
+
 private:
 	static const int udpSize = SDRDAEMONFEC_UDPSIZE;
 	static const int nbOriginalBlocks = SDRDAEMONFEC_NBORIGINALBLOCKS;
@@ -152,6 +166,8 @@ private:
 	int                  m_frameHead;
 	int                  m_curNbBlocks;          //!< (stats) instantaneous number of blocks received
 	int                  m_curNbRecovery;        //!< (stats) instantaneous number of recovery blocks used
+    int                  m_minNbBlocks;          //!< (stats) minimum number of blocks received since last call to corresponding getter
+    int                  m_maxNbRecovery;        //!< (stats) maximum number of recovery blocks used since last call to corresponding getter
 	MovingAverage<int, int, 10> m_avgNbBlocks;   //!< (stats) average number of blocks received
 	MovingAverage<int, int, 10> m_avgNbRecovery; //!< (stats) average number of recovery blocks used
 	CM256                m_cm256;

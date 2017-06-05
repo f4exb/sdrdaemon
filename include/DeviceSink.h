@@ -64,7 +64,7 @@ public:
 
     /** Associate with a UDP source to get its status to be sent to remote
      */
-    void associateUDPSource(const UDPSource *udpSource)
+    void associateUDPSource(UDPSource *udpSource)
     {
         m_udpSource = udpSource;
     }
@@ -147,7 +147,7 @@ protected:
     DataBuffer<IQSample> *m_buf;
     std::atomic_bool     *m_stop_flag;
     Upsampler            *m_upsampler;
-    const UDPSource      *m_udpSource;
+    UDPSource            *m_udpSource;
     int                   m_nnReceiver; //!< nanomsg socket handle
 
 

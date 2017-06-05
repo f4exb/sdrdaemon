@@ -78,10 +78,10 @@ void UDPSourceFEC::read(IQSampleVector& samples_out)
     }
 }
 
-void UDPSourceFEC::getStatusMessage(char *messageBuffer) const
+void UDPSourceFEC::getStatusMessage(char *messageBuffer)
 {
     int msgLen = strlen(messageBuffer);
-    sprintf(&messageBuffer[msgLen], ":%.1f/%.1f", m_sdmnFECBuffer.getAvgNbBlocks(), m_sdmnFECBuffer.getAvgNbRecovery());
+    sprintf(&messageBuffer[msgLen], ":%03d/%03d", m_sdmnFECBuffer.getMinNbBlocks(), m_sdmnFECBuffer.getMaxNbRecovery());
 }
 
 int UDPSourceFEC::receiveUDP(UDPSourceFEC *udpSourceFEC, SuperBlock *superBlock)

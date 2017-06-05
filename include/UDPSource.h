@@ -85,7 +85,7 @@ public:
 	/**
 	 * Get a status message
 	 */
-	virtual void getStatusMessage(char *messageBuffer) const = 0;
+	virtual void getStatusMessage(char *messageBuffer) = 0;
 
     /** Return the last error, or return an empty string if there is no error. */
     std::string error()

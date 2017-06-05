@@ -36,6 +36,8 @@ SDRdaemonFECBuffer::SDRdaemonFECBuffer()
     m_frameHead = -1;
     m_curNbBlocks = 0;
     m_curNbRecovery = 0;
+    m_minNbBlocks = 256;
+    m_maxNbRecovery = 0;
 
     if (m_cm256.isInitialized())
     {
@@ -95,6 +97,8 @@ void SDRdaemonFECBuffer::initDecodeSlot()
     // collect stats before voiding the slot
     m_curNbBlocks = m_decoderSlot.m_blockCount;
     m_curNbRecovery = m_decoderSlot.m_recoveryCount;
+    if (m_curNbBlocks < m_minNbBlocks) m_minNbBlocks = m_curNbBlocks;
+    if (m_curNbRecovery < m_maxNbRecovery) m_maxNbRecovery = m_curNbRecovery;
     m_avgNbBlocks(m_curNbBlocks);
     m_avgNbRecovery(m_curNbRecovery);
     // void the slot

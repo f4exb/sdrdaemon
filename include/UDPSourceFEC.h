@@ -77,7 +77,7 @@ public:
     /**
      * Format a status message in the given string
      */
-    virtual void getStatusMessage(char *messageBuffer) const;
+    virtual void getStatusMessage(char *messageBuffer);
 
     int getNbBlocksFEC() const { return m_nbBlocksFEC.load(); }
 

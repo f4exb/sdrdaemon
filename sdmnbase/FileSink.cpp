@@ -29,6 +29,7 @@
 #include "FileSink.h"
 #include "util.h"
 #include "parsekv.h"
+#include "UDPSource.h"
 
 FileSink *FileSink::m_this = 0;
 
@@ -216,6 +217,8 @@ void FileSink::run(std::atomic_bool *stop_flag)
 {
     std::cerr << "FileSink::run" << std::endl;
     void *msgBuf = 0;
+    unsigned int count = 0;
+    char msgBufSend[128];
 
     if (!m_this->m_ofstream.is_open()) m_this->closeAndOpen();
 
@@ -240,6 +243,31 @@ void FileSink::run(std::atomic_bool *stop_flag)
             fprintf(stderr, "FileSink::run: %lu samples left in queue\n", m_this->m_buf->queued_samples());
             m_this->m_iqSamples = m_this->m_buf->pull();
             m_this->m_ofstream.write(reinterpret_cast<char*>(&(m_this->m_iqSamples[0])), m_this->m_iqSamples.size()*2*sizeof(int16_t));
+        }
+
+        if (count < 1000000 / m_this->m_delayUS)
+        {
+            count++;
+        }
+        else
+        {
+            uint32_t queuedVectors = m_this->m_buf->queued_vectors();
+            sprintf(msgBufSend, "%u", queuedVectors);
+
+            if (m_this->m_udpSource)
+            {
+                m_this->m_udpSource->getStatusMessage(msgBufSend);
+            }
+
+            int bufSize = strlen(msgBufSend);
+            int rc = nn_send(m_this->m_nnReceiver, (void *) msgBufSend, bufSize, 0);
+
+            if (rc != bufSize)
+            {
+                std::cerr << "HackRFSink::run: Cannot send message: " << msgBufSend << std::endl;
+            }
+
+            count = 0;
         }
 
         usleep(m_this->m_delayUS);

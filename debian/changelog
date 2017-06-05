@@ -1,3 +1,10 @@
+sdrdaemon (3.0.0-1) unstable; urgency=medium
+
+  * Transmission support with HackRF
+  * Also file sink for debugging
+
+ -- Edouard Griffiths, F4EXB <f4exb06@gmail.com>  Mon, 05 Jun 2017 05:14:18 +0100
+
 sdrdaemon (2.1.3-1) unstable; urgency=medium
 
   * Fixed errors in cmake when no cm256cc package is available

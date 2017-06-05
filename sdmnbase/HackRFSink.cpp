@@ -418,15 +418,15 @@ bool HackRFSink::configure(parsekv::pairs_type& m)
 
 	if (m.find("extamp") != m.end())
 	{
-		std::cerr << "HackRFSink::configure: extamp" << std::endl;
-		extAmp = true;
+		std::cerr << "HackRFSink::configure: extamp" << m["extamp"] << std::endl;
+		extAmp = m["extamp"] == "1";
         changeFlags |= 0x20;
 	}
 
 	if (m.find("antbias") != m.end())
 	{
-		std::cerr << "HackRFSink::configure: antbias" << std::endl;
-		antBias = true;
+		std::cerr << "HackRFSink::configure: antbias" << m["antbias"] << std::endl;
+		antBias = m["antbias"] == "1";
         changeFlags |= 0x10;
 	}
 

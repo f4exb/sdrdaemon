@@ -126,7 +126,7 @@ void usage()
 #ifdef HAS_HACKRF
             "                   - hackrf:  HackRF One or Jawbreaker\n"
 #endif
-            "                   - file:    File sink (mainly for debug)\n"
+            "                   - file:    File sink with SDRangel sdriq header (mainly for debug)\n"
             "  -c config      Startup configuration. Comma separated key=value configuration pairs\n"
             "                 or just key for switches. See below for valid values\n"
             "  -d devidx      Device index, 'list' to show device list (default 0)\n"
@@ -141,24 +141,26 @@ void usage()
             "\n"
 #ifdef HAS_HACKRF
             "Configuration options for HackRF devices\n"
-            "  freq=<int>     Frequency of radio station in Hz (default 100000000)\n"
+            "  freq=<int>     Center frequency of operation in Hz (default 100000000)\n"
             "                 valid values: 1M to 6G\n"
-            "  srate=<int>    IF sample rate in Hz (default 5000000)\n"
-            "                 (valid ranges: [2500000,20000000]))\n"
+            "  srate=<int>    Device sample rate in Hz (default 5000000)\n"
+            "                 (valid ranges: [1000000,20000000]))\n"
             "  ppmp=<float>   Set LO correction in positive PPM. Takes precedence over ppmn parameter (default 0)\n"
             "  ppmn=<float>   Set LO correction in negative PPM (default 0)\n"
             "  vgain=<int>    VGA gain in dB. 'list' to just get a list of valid values: (default 22)\n"
             "  bwfilter=<int> Filter bandwidth in MHz. 'list' to just get a list of valid values: (default 2.5)\n"
-            "  extamp         Enable extra RF amplifier (default disabled)\n"
-            "  antbias        Enable antemma bias (default disabled)\n"
+            "  extamp=<int>   1: Enable 0: disable extra RF amplifier (default 0: disabled)\n"
+            "  antbias=<int>  1: Enable 0: disable antemma bias (default 0: disabled)\n"
             "\n"
 #endif
             "Configuration options for the File sink\n"
-            "  freq=<int>     Frequency of radio station in Hz (default 435000000)\n"
+            "  freq=<int>     Center frequency in file meta data in Hz (default 435000000)\n"
             "                 valid values: 1M to 6G\n"
-            "  srate=<int>    IF sample rate in Hz (default 48000)\n"
+            "  srate=<int>    Sample rate in file meta data in Hz (default 48000)\n"
             "                 (valid ranges: [48000,5000000]))\n"
             "  file=<srting>  Output file name (default: test.sdriq)\n"
+            "\n"
+            "Note: center frequency and sample rate are taken from the configuration options not the meta data\n"
             "\n");
 }
 

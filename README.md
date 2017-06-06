@@ -1,28 +1,44 @@
 SDRdaemon
 =========
 
-**SDRdaemon** can be used to send I/Q samples read from a SDR device over the network via UDP.
+**SDRdaemon** package can be used to:
+  - send I/Q samples read from a SDR device over the network via UDP (Rx mode)
+  - rceive I/Q samples from the network via UDP and send them to a SDR device (Tx mode) 
 
 <h1>Introduction</h1>
 
-**SDRdaemon** is a basic software-defined radio receiver that just sends the I/Q samples over the network via UDP. It was developed on the base of NGSoftFM (also found in this Github repo: https://github.com/f4exb/ngsoftfm) and shares a lot of the code for the interface with the SDR hardware devices.
+**sdrdaemonfec** is a basic software-defined radio receiver that just sends the I/Q samples over the network via UDP. It was developed on the base of NGSoftFM (also found in this Github repo: https://github.com/f4exb/ngsoftfm) and shares a lot of the code for the interface with the SDR hardware devices.
 
 It conveys meta data in the data flow so that the receiving application is informed about parameters essential to render correctly the data coming next such as the sample rate, the number of bytes used for the samples, the number of effective sample bits, the center frequency... (See the "Data format" chapter for detals).
 
 While running the program accepts configuration commands on a TCP port using nanomsg messages with a content in the same format as the configuration string given on the command line (See the "Running" chapter for details). This provides a dynamic control of the device or features of the application such as the decimation. A Python script is provided to send such messages.
 
+In order to recover possible lost blocks it uses Cauchy MDS Block Erasure codec to encode data with redundancy, It can add a user defined number of redundant block so that if the nominal number of blocks is received (128 blocks) it can recover the lost blocks in any position.
+
+Note that if you set the number of redundant blocks to 0 then no FEC is used.
+
+**sdrdaemon** does the same but without error correction. Unlike sdrdaemonfec it can compress data using LZ4 algorithm. It uses a different meta data block. It is recommended to use the FEC variant sdrdaemonfec unless compression is absolutely ncecessary. 
+
+**sdrdaemontx** does the same thing as sdrdaemonfec but the other way round. It takses blocks read from UDP possibly with redundant blocks and sends the I/Q data to a SDR transmitter.
+
 Hardware supported:
+
+Receivers:
 
   - **RTL-SDR** based (RTL2832-based) hardware is supported and uses the _librtlsdr_ library to interface with the RTL-SDR hardware.
   - **HackRF** One and variants are supported with _libhackrf_ library.
   - **Airspy** is supported with _libairspy_ library.
   - **BladeRF** is supported with _libbladerf_ library.
 
-SDRdaemon can be used conveniently along with SDRangel (found in this Github repo: https://github.com/f4exb/sdrangel) as the client application. So in this remote type of configuration you will need both an angel and a daemon :-)
+Transmitters:
 
-GNUradio is also supported with a specific source block provided in the `gr-sdrdaemon` subdirectory.
+  - **HackRF** One and variants are supported with _libhackrf_ library.
 
-SDRdaemon requires:
+SDRdaemon programs can be used conveniently along with SDRangel (found in this Github repo: https://github.com/f4exb/sdrangel) as the client application. So in this remote type of configuration you will need both an angel and a daemon :-)
+
+GNUradio is also supported with a specific source block provided in the `gr-sdrdaemonfec` and `gr-sdrdaemon` subdirectories depending on the variants used. There is no sink block at the moment.
+
+SDRdaemon package requires:
 
  - Linux
  - C++11
@@ -31,12 +47,13 @@ SDRdaemon requires:
  - LZ4 at least version 131
    - source (https://github.com/Cyan4973/lz4)
    - set custom install prefix with -DLIBLZ4_INSTALL_PREFIX=... on cmake command line
+ - CM256cc library found in this Github repo: https://github.com/f4exb/cm256cc
  - RTL-SDR library (http://sdr.osmocom.org/trac/wiki/rtl-sdr) for RTL-SDR support
  - HackRF library (https://github.com/mossmann/hackrf/tree/master/host/libhackrf) for HackRF support
  - Airspy library (https://github.com/airspy/host/tree/master/libairspy) for Airspy support
  - BladeRF library (https://github.com/Nuand/bladeRF/tree/master/host) for BladeRF support
  - supported hardware
- - A computer or embedded device such as the Raspberry Pi 2 to which you connect the hardware.
+ - A computer or embedded device such as the Raspberry Pi 2 or 3 to which you connect the hardware.
  
 For the latest version, see https://github.com/f4exb/SDRdaemon
 
@@ -222,13 +239,17 @@ Typical commands:
 
   - `fecblk=<int>` value should be between 0 (no FEC) and 127. This is the number of FEC blocks added to the 128 I/Q data blocks sent per frame. See the "Data formats" chapter for details about the frame construction in the FEC case.
 
-<h2>Common configuration options for the decimation</h2>
+<h2>Common configuration options for the decimation (sdrdaemonfec, sdrdaemon)</h2>
 
-  - `decim=<int>` log2 of the decimation factor. Samples collected from the device are down-sampled by two to the power of this value. On 8 bit samples native systems (RTL-SDR and HackRF) For a value greater than 0 (thus an effective downsampling) the size of the samples is increased to 2x16 bits.
+  - `decim=<int>` log2 of the decimation factor. Samples collected from the device are down-sampled by two to the power of this value. On 8 bit samples native systems (RTL-SDR and HackRF) for a value greater than 0 (thus an effective downsampling) the size of the samples is increased to 2x16 bits.
   - `fcpos=<int>` Relative position of the center frequency in the resulting decimation:
     - `0` is infra-dyne i.e. decimation is done around -fc/4 where fc is the device center frequency
     - `1` is supra-dyne i.e. decimation is done around fc/4
     - `2` is centered i.e. decimation is done around fc
+
+<h2>Common configuration options for the interpolation (sdrdaemontx)</h2>
+
+  - `interp=<int>` log2 of the interpolation factor. Samples received from the network are up sampled by two to the power of this value. Samples are recived as 2x16 bits and resized depending on the transmiting device. Interpolation is done always centered on the transmission frequency. There is no infra-dyne nor supra-dyne translation.
 
 <h2>Device type specific configuration options</h2>
 
@@ -253,7 +274,7 @@ Note that these options can be used both as the initial configuration as the arg
   - `srate=<float>` Device sample rate (default `5000000`). Valid values from 1M to 20M. In fact rates lower than 10M are not specified in the datasheets of the ADC chip however a rate of `1000000` (1M) still works well with SDRdaemon.
   - `ppmp=<float>` Argument is positive. Positive LO correction in ppm. LO is corrected by this value in ppm
   - `ppmn=<float>` Argument is positive. Negative LO correction in ppm. LO is corrected by minus this value in ppm. If `ppmp` is also specified `ppmp` takes precedence.  
-  - `lgain=<x>` LNA gain in dB. Valid values are: `0, 8, 16, 24, 32, 40, list`. `list` lists valid values and exits. (default `16`)
+  - `lgain=<x>` (Rx only) LNA gain in dB. Valid values are: `0, 8, 16, 24, 32, 40, list`. `list` lists valid values and exits. (default `16`)
   - `vgain=<x>` VGA gain in dB. Valid values are: `0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52, 54, 56, 58, 60, 62, list`. `list` lists valid values and exits. (default `22`)
   - `bwfilter=<x>` RF (IF) filter bandwidth in MHz. Actual value is taken as the closest to the following values: `1.75, 2.5, 3.5, 5, 5.5, 6, 7,  8, 9, 10, 12, 14, 15, 20, 24, 28, list`. `list` lists valid values and exits. (default `2.5`)
   - `extamp` Turn on the extra amplifier (default off)
@@ -314,11 +335,13 @@ Have a look at the `service` subdirectory.
 
 <h1>Data formats</h1>
 
-<h2>With FEC</h2>
+<h2>With FEC (sdrdamonfec and sdrdaemontx)</h2>
 
 <h3>Packaging</h3>
 
 The I/Q data is sent in frames of 128 fixed size data blocks including a first block ("block zero") containing only meta data and a variable number of FEC blocks up to 127 FEC blocks. It is possible to use this scheme without FEC in which case no additional FEC blocks are present. All blocks have a fixed size of 512 bytes that represent the UDP payload size. The first 4 bytes are occupied by signalling data consisting of a 2 bytes frame count (wraps around at 65535), a 1 byte block count (0 to 127 (min) or 255 (max)) and a 1 byte filler. The rest is occupied by either the meta data (block zero), actual I/Q samples (127 samples per block resulting in 508 bytes) for data bytes or FEC data. The FEC is calculated on the 128 blocks of 508 bytes of meta data and I/Q samples.
+
+Thus a complete frame contains 127 * 127 = 16129 samples.
 
 <h3>Meta data block</h3>
 
@@ -387,9 +410,9 @@ The block of "meta" data consists of the following (values expressed in bytes):
     </tr>
 </table>
 
-Total size is 24 bytes. The 484 (!) remaining bytes are reserved for future use.
+Total size is 24 bytes. The 484 (!) remaining bytes are reserved for future use. 
 
-<h2>Without FEC</h2>
+<h2>Without FEC (sdrdaemon)</h2>
 
 <h3>Packaging</h3>
 
@@ -496,15 +519,40 @@ The block of "meta" data consists of the following (values expressed in bytes):
 
 Total size is 42 bytes including the 8 bytes CRC.
 
-<h3>I/Q data blocks</h3>
+<h1>GNUradio supoort</h1>
+
+Source blocks are available in the _gr-sdrdaemon_ and _gr-sdrdaemonfec_ subdirectories depending on the FEC flavour or not. These subdirectories are complete OOT modules that can be built independently following GNUradio standards. Please refer to the documentation found in these directories for further information.
+
+<h1>License</h1>
+
+**SDRdaemon**, copyright (C) 2015-2017, Edouard Griffiths, F4EXB
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with this program; if not, see http://www.gnu.org/licenses/gpl-2.0.html
+
+<h1>Possible dribble use with care</h1>
+
+This refers to sdrdaemon and not to sdrdaemonfec nor sdrdaemontx.
+
+<h2>I/Q data blocks</h2>
 
 When the stream is uncompressed UDP blocks of the payload size are stuffed with complete I/Q samples leaving a possible unused gap of less than an I/Q sample at the end of the block. The last block is filled only with the remainder samples. The number of maximally filled blocks and remainder samples in the last block is given in the "meta" data. Of course as the data stream is uncompressed these values can also be calculated from the total number of samples and the payload size.
 
 When the stream is compressed UDP blocks are stuffed completely with bytes of the compressed stream. The last block being filled only with the remainder bytes. The number of full blocks and remainder bytes is given in the "meta" block and these values cannot be calculated otherwise.
 
-<h3>Summary diagrams</h3>
+<h2>Summary diagrams</h2>
 
-</h4>Uncompressed stream</h4>
+</h3>Uncompressed stream</h3>
 
 <pre>
 hardware block (2 byte I or Q samples):
@@ -546,23 +594,5 @@ Complete blocks......................:  2 (calculated)
 Remainder bytes......................: 17 (calculated)
 </pre>
 
-<h1>GNUradio supoort</h1>
 
-A source block is available in the _gr-sdrdaemon_ subdirectory. This subdirectory is a complete OOT module that can be built independently following GNUradio standards. Please refer to the documentation found in this directory for further information.
 
-<h1>License</h1>
-
-**SDRdaemon**, copyright (C) 2015-2016, Edouard Griffiths, F4EXB
-
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License along
-with this program; if not, see http://www.gnu.org/licenses/gpl-2.0.html

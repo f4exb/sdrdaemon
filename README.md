@@ -7,7 +7,7 @@ SDRdaemon
 
 <h1>Introduction</h1>
 
-**sdrdaemonfec** is a basic software-defined radio receiver that just sends the I/Q samples over the network via UDP. It was developed on the base of NGSoftFM (also found in this Github repo: https://github.com/f4exb/ngsoftfm) and shares a lot of the code for the interface with the SDR hardware devices.
+**sdrdaemonrx** is a basic software-defined radio receiver that just sends the I/Q samples over the network via UDP. It was developed on the base of NGSoftFM (also found in this Github repo: https://github.com/f4exb/ngsoftfm) and shares a lot of the code for the interface with the SDR hardware devices.
 
 It conveys meta data in the data flow so that the receiving application is informed about parameters essential to render correctly the data coming next such as the sample rate, the number of bytes used for the samples, the number of effective sample bits, the center frequency... (See the "Data format" chapter for detals).
 
@@ -17,9 +17,9 @@ In order to recover possible lost blocks it uses Cauchy MDS Block Erasure codec 
 
 Note that if you set the number of redundant blocks to 0 then no FEC is used.
 
-**sdrdaemon** does the same but without error correction. Unlike sdrdaemonfec it can compress data using LZ4 algorithm. It uses a different meta data block. It is recommended to use the FEC variant sdrdaemonfec unless compression is absolutely ncecessary. 
+**sdrdaemon** is an older version of sdrdaemonrx that does the same but without error correction. Unlike sdrdaemonrx it can compress data using LZ4 algorithm. It uses a different meta data block. It is recommended to use the FEC variant sdrdaemonrx unless compression is absolutely ncecessary. 
 
-**sdrdaemontx** does the same thing as sdrdaemonfec but the other way round. It takses blocks read from UDP possibly with redundant blocks and sends the I/Q data to a SDR transmitter.
+**sdrdaemontx** does the same thing as sdrdaemonrx but the other way round. It takes blocks read from UDP possibly with redundant blocks and sends the I/Q data to a SDR transmitter.
 
 Hardware supported:
 
@@ -36,7 +36,7 @@ Transmitters:
 
 SDRdaemon programs can be used conveniently along with SDRangel (found in this Github repo: https://github.com/f4exb/sdrangel) as the client application. So in this remote type of configuration you will need both an angel and a daemon :-)
 
-GNUradio is also supported with a specific source block provided in the `gr-sdrdaemonfec` and `gr-sdrdaemon` subdirectories depending on the variants used. There is no sink block at the moment.
+GNUradio is also supported with a specific source block provided in the `gr-sdrdaemonfec` and `gr-sdrdaemon` subdirectories depending on the Rx variants used. There is no sink block for Tx at the moment.
 
 SDRdaemon package requires:
 
@@ -72,14 +72,13 @@ Branches:
 
 <h2>Forward Erasure Correction (FEC) support</h2>
 
-To enable the version with FEC (`sdrdaemonfec` binary and libsdrdmnfec) you have to install [
-CM256cc](https://github.com/f4exb/cm256cc). You will then have to specify the include and library paths on the cmake command line. Say if you install cm256cc in `/opt/install/cm256cc` you will have to add `-DCM256CC_INCLUDE_DIR=/opt/install/cm256cc/include/cm256cc -DCM256CC_LIBRARIES=/opt/install/cm256cc/lib/libcm256cc.so` to the cmake commands.
+You have to install [CM256cc](https://github.com/f4exb/cm256cc). You will then have to specify the include and library paths on the cmake command line. Say if you install cm256cc in `/opt/install/cm256cc` you will have to add `-DCM256CC_INCLUDE_DIR=/opt/install/cm256cc/include/cm256cc -DCM256CC_LIBRARIES=/opt/install/cm256cc/lib/libcm256cc.so` to the cmake commands.
 
 The GNUradio source block supporting FEC is located in the `gr-sdrdaemonfec` subdirectory.
 
-The binary `sdrdaemonfec` has the same features than `sdrdaemon` but in addition it supports FEC using the `-f` option. It also recognizes the configuration commmand `fecblk` to specify the number of FEC blocks. When enabling FEC with the `-f` option the frame structure is quite different than when FEC is not enabled. The structure is described in the Data Format section. Even when `fecblk=0` is specified in the commands and hence no FEC blocks are enabled the data structure is the same. 
+`sdrdaemonrx` binary recognizes the configuration commmand `fecblk` to specify the number of FEC blocks. When `fecblk=0` is specified in the commands and hence no FEC blocks are added. 
 
-In FEC enabled format frames and blocks are numbered and even if no FEC blocks are added this can help in reconstructing frames with appropriate timings.
+Frames and blocks are numbered and even if no FEC blocks are added this can help in reconstructing frames with appropriate timings.
 
 <h2>Airspy support</h2>
 
@@ -145,31 +144,32 @@ Compile and install
 
 <h1>Running</h1>
 
-<h2>Examples</h2>
+<h2>Rx examples</h2>
 
 Typical commands:
 
-  - RTL-SDR: `./sdrdaemon -t rtlsdr -I 192.168.1.3 -D 9090 -C 9091 -c txdelay=300,freq=433970000,srate=1000000,ppmp=58,gain=40.2,decim=5,fcpos=2`
+  - RTL-SDR: `./sdrdaemonrx -t rtlsdr -I 192.168.1.3 -D 9090 -C 9091 -c txdelay=300,fecblk=8,freq=433970000,srate=1000000,ppmp=58,gain=40.2,decim=5,fcpos=2`
     - Use RTL-SDR device #0
     - Destination address for the data is: `192.168.1.3`
     - Using UDP port `9090` for the data (it is the default anyway)
     - Using TCP port `9091` to listen to configuration commands (it is the default anyway)
     - Startup configuration:
+      - Wait between UDP blocks: 300 microseconds
+      - FEC: add 8 FEC blocks to the 128 blocks data frame resulting in a total of 136 blocks per frame.
       - Center frequency: _433.97 MHz_
       - Device sample rate: _1 MHz_
       - Local oscillator correction: _58 ppm_
       - RF gain: _40.2 dB_
       - Decimation: 2^_5_ = 32; thus stream sample rate is 31.25 kHz
       - Position of center frequency: _2_ is centered (decimation around the center)
-  - RTL-SDR with FEC enabled:  `./sdrdaemonfec -f -t rtlsdr -I 192.168.1.3 -D 9090 -C 9091 -c txdelay=300,fecblk=8,freq=433970000,srate=1000000,ppmp=58,gain=40.2,decim=5,fcpos=2`. Additional commands from the previous command:
-     - `-f` option to enable FEC 
-     - `fecblk=8`: add 8 FEC blocks to the 128 blocks data frame resulting in a total of 136 blocks per frame. 
-  - Airspy: `./sdrdaemon -t airspy -I 192.168.1.3 -D 9090 -c txdelay=300,freq=433970000,srate=10000000,ppmn=1.7,lgain=13,mgain=9,vgain=6,decim=5,fcpos=0`
+  - Airspy: `./sdrdaemonrx -t airspy -I 192.168.1.3 -D 9090 -c txdelay=300,fecblk=8,freq=433970000,srate=10000000,ppmn=1.7,lgain=13,mgain=9,vgain=6,decim=5,fcpos=0`
     - Use Airspy device #0
     - Destination address for the data is: `192.168.1.3`
     - Using UDP port `9090` for the data (it is the default anyway)
     - Using TCP port `9091` to listen to configuration commands (it is the default anyway)
     - Startup configuration:
+      - Wait between UDP blocks: 300 microseconds
+      - FEC: add 8 FEC blocks to the 128 blocks data frame resulting in a total of 136 blocks per frame.
       - Center frequency: _433.97 MHz_
       - Device sample rate: _10 MHz_
       - LO correction: _-1.7 ppm_
@@ -178,24 +178,28 @@ Typical commands:
       - VGA gain: _6 dB_
       - Decimation: 2^_5_ = 32; thus stream sample rate is 312.5 kHz
       - Position of center frequency: _0_ is infra-dyne (decimation around -fc/4)
-  - HackRF: `./sdrdaemon -t hackrf -I 192.168.1.3 -D 9090 -c txdelay=300,freq=433970000,srate=3200000,lgain=32,vgain=24,bwfilter=1.75,decim=3,fcpos=1`
+  - HackRF: `./sdrdaemonrx -t hackrf -I 192.168.1.3 -D 9090 -c txdelay=300,fecblk=8,freq=433970000,srate=3200000,lgain=32,vgain=24,bwfilter=1.75,decim=3,fcpos=1`
     - Use HackRF device #0
     - Destination address for the data is: `192.168.1.3`
     - Using UDP port `9090` for the data (it is the default anyway)
     - Using TCP port `9091` to listen to configuration commands (it is the default anyway)
     - Startup configuration:
+      - Wait between UDP blocks: 300 microseconds
+      - FEC: add 8 FEC blocks to the 128 blocks data frame resulting in a total of 136 blocks per frame.
       - Center frequency: _433.97 MHz_
       - Device sample rate: _3.2 MHz_
       - LNA gain: _32 dB_
       - VGA gain: _24 dB_
       - Decimation: 2^_3_ = 8; thus stream sample rate is 400 kHz
       - Position of center frequency: _1_ is supra-dyne (decimation around fc/4)
-  - BladeRF: `./sdrdaemon -t bladerf -I 192.168.1.3 -D 9090 -c txdelay=300,freq=433900000,srate=3200000,lgain=6,v1gain=6,v2gain=3,decim=3,bw=2500000,fcpos=1`
+  - BladeRF: `./sdrdaemonrx -t bladerf -I 192.168.1.3 -D 9090 -c txdelay=300,fecblk=8,freq=433900000,srate=3200000,lgain=6,v1gain=6,v2gain=3,decim=3,bw=2500000,fcpos=1`
     - Use BladeRF device #0
     - Destination address for the data is: `192.168.1.3`
     - Using UDP port `9090` for the data (it is the default anyway)
     - Using TCP port `9091` to listen to configuration commands (it is the default anyway)
     - Startup configuration:
+      - Wait between UDP blocks: 300 microseconds
+      - FEC: add 8 FEC blocks to the 128 blocks data frame resulting in a total of 136 blocks per frame.
       - Center frequency: _433.9 MHz_
       - Device sample rate: _3.2 MHz_
       - RF filter bandwidth: _2.5 MHz_
@@ -204,13 +208,29 @@ Typical commands:
       - VGA2 gain: _3 dB_
       - Decimation: 2^_3_ = 8; thus stream sample rate is 400 kHz
       - Position of center frequency: _1_ is supra-dyne (decimation around fc/4)
-  - Test signal source: `./sdrdaemon -t test -I 192.168.1.3 -D 9090 -c power=40,decim=2,srate=500000,dfp=25000`
+  - Test signal source: `./sdrdaemonrx -t test -I 192.168.1.3 -D 9090 -c fecblk=8,power=40,decim=2,srate=500000,dfp=25000`
     - Destination address for the data is: `192.168.1.3`
     - Using UDP port `9090` for the data (it is the default anyway)
+    - FEC: add 8 FEC blocks to the 128 blocks data frame resulting in a total of 136 blocks per frame.
     - Carrier relative power is _-40 dB_
     - Base sample rate is _500 kHz_
     - Decimation is 2^_2_ = 4; thus stream sample rate is 125 kHz
     - Carrier frequency shift from the center is _25 kHz_
+
+<h2>Tx examples</h2>
+
+Typical commands:
+
+  - HackRF: `./sdrdaemontx -t hackrf -I 192.168.1.3 -D 9090 -c freq=433970000,srate=3200000,vgain=24,bwfilter=1.75,interp=3`
+    - Use HackRF device #0
+    - Address of interface for the data is: `192.168.1.3`
+    - Using UDP port `9090` for the data (it is the default anyway)
+    - Using TCP port `9091` to dialog with the remote for commands and status (it is the default anyway)
+    - Startup configuration:
+      - Center frequency: _433.97 MHz_
+      - Device sample rate: _3.2 MHz_
+      - VGA gain: _24 dB_
+      - Interpolation: 2^_3_ = 8; thus stream sample rate is 400 kHz
 
 <h2>All options</h2>
 
@@ -219,27 +239,21 @@ Typical commands:
     - `hackrf` for HackRF devices
     - `airspy` for Airspy
     - `bladerf` for BladeRF
-    - `test` for test signal source (always available)
+    - `test` for test signal source (Rx only not hardware dependent)
+    - `file` for file sink (Tx only not hardware dependent)
  - `-c config` Comma separated list of configuration options as key=value pairs or just key for switches. Depends on device type (see next paragraphs).
  - `-d devidx` Device index, 'list' to show device list (default 0)
- - `-f` Activate FEC (sdrdaemonfec only)
- - `-r pcmrate` Audio sample rate in Hz (default 48000 Hz)
- - `-M ` Disable stereo decoding
- - `-R filename` Write audio data as raw S16_LE samples. Use filename `-` to write to stdout
- - `-W filename` Write audio data to .WAV file
- - `-P [device]` Play audio via ALSA device (default `default`). Use `aplay -L` to get the list of devices for your system
- - `-T filename` Write pulse-per-second timestamps. Use filename '-' to write to stdout
  - `-z bytes` Compress I/Q data using LZ4 algorithm with a minimum number of `bytes` for each frame. It will default to at least 64kB.
 
-<h2>Common configuration option for UDP transmission</h2>
+<h2>Common configuration option for UDP transmission (sdrdaemonrx, sdrdaemon)</h2>
 
-  - `txdelay=<int>` delay between the transmission of successive UDP blocks in microseconds. This may not result in the exact delay in microseconds as this is in fact the argument to `usleep` function. The system guarantees that at least this delay is respected and in many practical cases it is not possible to have a delay smaller than ~100 microseconds. You may adjust this number depending on the speed of your link. This prevents UDP congestion by mitigating competition between the process sending blocks as fast as possible and the IP link absorbing them. 
+  - `txdelay=<int>` Rx only. Delay between the transmission of successive UDP blocks in microseconds. This may not result in the exact delay in microseconds as this is in fact the argument to `usleep` function. The system guarantees that at least this delay is respected and in many practical cases it is not possible to have a delay smaller than ~100 microseconds. You may adjust this number depending on the speed of your link. This prevents UDP congestion by mitigating competition between the process sending blocks as fast as possible and the IP link absorbing them. 
 
-<h2>Common configuration option for Forward Erasure Correction when enabled</h2>
+<h2>Common configuration option for Forward Erasure Correction (sdrdaemonrx)</h2>
 
-  - `fecblk=<int>` value should be between 0 (no FEC) and 127. This is the number of FEC blocks added to the 128 I/Q data blocks sent per frame. See the "Data formats" chapter for details about the frame construction in the FEC case.
+  - `fecblk=<int>` Rx only. Value should be between 0 (no FEC) and 127. This is the number of FEC blocks added to the 128 I/Q data blocks sent per frame. See the "Data formats" chapter for details about the frame construction in the FEC case. In Tx mode the number of FEC blocks is given in the meta data of each frame.
 
-<h2>Common configuration options for the decimation (sdrdaemonfec, sdrdaemon)</h2>
+<h2>Common configuration options for the decimation (sdrdaemonrx, sdrdaemon)</h2>
 
   - `decim=<int>` log2 of the decimation factor. Samples collected from the device are down-sampled by two to the power of this value. On 8 bit samples native systems (RTL-SDR and HackRF) for a value greater than 0 (thus an effective downsampling) the size of the samples is increased to 2x16 bits.
   - `fcpos=<int>` Relative position of the center frequency in the resulting decimation:
@@ -277,8 +291,8 @@ Note that these options can be used both as the initial configuration as the arg
   - `lgain=<x>` (Rx only) LNA gain in dB. Valid values are: `0, 8, 16, 24, 32, 40, list`. `list` lists valid values and exits. (default `16`)
   - `vgain=<x>` VGA gain in dB. Valid values are: `0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52, 54, 56, 58, 60, 62, list`. `list` lists valid values and exits. (default `22`)
   - `bwfilter=<x>` RF (IF) filter bandwidth in MHz. Actual value is taken as the closest to the following values: `1.75, 2.5, 3.5, 5, 5.5, 6, 7,  8, 9, 10, 12, 14, 15, 20, 24, 28, list`. `list` lists valid values and exits. (default `2.5`)
-  - `extamp` Turn on the extra amplifier (default off)
-  - `antbias` Turn on the antenna bias for remote LNA (default off)
+  - `extamp=<int>` Turn on (1) or off (0) the extra amplifier (default 0: off)
+  - `antbias=<int>` Turn on (1) or off (0) the antenna bias for remote LNA (default 0: off)
 
 <h3>Airspy</h3>
 
@@ -304,7 +318,7 @@ Note that these options can be used both as the initial configuration as the arg
   - `v1gain=<x>` VGA1 gain in dB. Valid values are: `5, 6, 7, 8 ,9 ,10, 11 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, list`. `list` lists valid values and exits. (default `20`)  
   - `v2gain=<x>` VGA2 gain in dB. Valid values are: `0, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30, list`. `list` lists valid values and exits. (default `9`)  
 
-<h3>Test</h3>
+<h3>Test (Rx only)</h3>
 
   - `freq=<int>` Desired center frequency in Hz sent in the meta data. Valid range 10 kHz to 10 GHz exclusive (default `435000000` i.e. 435 MHz).
   - `srate=<int>` Base sample rate in Hz. Valid range is 8kHZ to 10MHz. (default `5000000` i.e. 5 MS/s).
@@ -315,7 +329,7 @@ Note that these options can be used both as the initial configuration as the arg
 
 <h2>Dynamic remote control</h2>
 
-SDRdaemon listens on a TCP port (the configuration port) for incoming nanomsg messages consisting of a configuration string as described just above. You can use the utility `sdrdmnctl` in the bin directory of the installation directory (sits along `sdrdaemon`) to send such messages. It defaults to the localhost (`127.0.0.1`) and port `9091`. The configuration string is given as the `-c` option (same as for `sdrdaemon`). Example:
+SDRdaemon listens on a TCP port (the configuration port) for incoming nanomsg messages consisting of a configuration string as described just above. You can use the utility `sdrdmnctl` in the bin directory of the installation directory (sits along `sdrdaemonrx` and other) to send such messages. It defaults to the localhost (`127.0.0.1`) and port `9091`. The configuration string is given as the `-c` option (same as for `sdrdaemon`). Example:
 
 `/opt/install/sdrdaemon/bin/sdrdmnctl -I 192.168.1.3 -C 9999 -c frequency=433970000`
 
@@ -335,7 +349,7 @@ Have a look at the `service` subdirectory.
 
 <h1>Data formats</h1>
 
-<h2>With FEC (sdrdamonfec and sdrdaemontx)</h2>
+<h2>With FEC (sdrdamonrx and sdrdaemontx)</h2>
 
 <h3>Packaging</h3>
 
@@ -542,7 +556,7 @@ with this program; if not, see http://www.gnu.org/licenses/gpl-2.0.html
 
 <h1>Possible dribble use with care</h1>
 
-This refers to sdrdaemon and not to sdrdaemonfec nor sdrdaemontx.
+This refers to sdrdaemon and not to sdrdaemonrx nor sdrdaemontx.
 
 <h2>I/Q data blocks</h2>
 

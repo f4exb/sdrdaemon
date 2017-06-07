@@ -195,7 +195,7 @@ set(sdmnbase_HEADERS
     include/util.h
 )
 
-set(sdmnfecbase_SOURCES
+set(sdmnrxbase_SOURCES
     sdmnbase/CRC64.cpp
     sdmnbase/Decimators.cpp
     sdmnbase/Downsampler.cpp
@@ -208,7 +208,7 @@ set(sdmnfecbase_SOURCES
     sdmnbase/UDPSocket.cpp
 )
 
-set(sdmnfecbase_HEADERS
+set(sdmnrxbase_HEADERS
     include/CRC64.h
     include/DataBuffer.h
     include/Decimators.h
@@ -307,13 +307,13 @@ set(sdmnbase_HEADERS
     ${sdmndevicerx_HEADERS}
 )
 
-set(sdmnfecbase_SOURCES
-    ${sdmnfecbase_SOURCES}
+set(sdmnrxbase_SOURCES
+    ${sdmnrxbase_SOURCES}
     ${sdmndevicerx_SOURCES}
 )    
 
-set(sdmnfecbase_HEADERS
-    ${sdmnfecbase_HEADERS}
+set(sdmnrxbase_HEADERS
+    ${sdmnrxbase_HEADERS}
     ${sdmndevicerx_HEADERS}
 )
 
@@ -346,8 +346,8 @@ add_library(sdmnbase STATIC
     ${sdmnbase_SOURCES}
 )
 
-add_library(sdmnfecbase STATIC
-    ${sdmnfecbase_SOURCES}
+add_library(sdmnrxbase STATIC
+    ${sdmnrxbase_SOURCES}
 )
 
 add_library(sdmntxbase STATIC
@@ -364,7 +364,7 @@ target_link_libraries(sdmnbase
     ${LIBNANOMSG_LIBRARIES}
 )
 
-target_link_libraries(sdmnfecbase 
+target_link_libraries(sdmnrxbase 
     cm256cc
     airspy
     bladerf
@@ -392,8 +392,8 @@ add_executable(sdrdaemon
     sdrdaemon.cpp
 )
 
-add_executable(sdrdaemonfec
-    sdrdaemonfec.cpp
+add_executable(sdrdaemonrx
+    sdrdaemonrx.cpp
 )
 
 add_executable(sdrdaemontx
@@ -412,8 +412,8 @@ target_link_libraries(sdrdaemon
     ${EXTRA_LIBS}
 )
 
-target_link_libraries(sdrdaemonfec
-    sdmnfecbase
+target_link_libraries(sdrdaemonrx
+    sdmnrxbase
     ${CMAKE_THREAD_LIBS_INIT}
     ${EXTRA_LIBS}
 )
@@ -424,8 +424,8 @@ target_link_libraries(sdrdaemontx
     ${EXTRA_LIBS}
 )
 
-install(TARGETS sdrdaemon sdrdaemonfec sdrdaemontx sdrdmnctl DESTINATION bin)
-install(TARGETS sdmnbase sdmnfecbase sdmntxbase DESTINATION lib)
+install(TARGETS sdrdaemon sdrdaemonrx sdrdaemontx sdrdmnctl DESTINATION bin)
+install(TARGETS sdmnbase sdmnrxbase sdmntxbase DESTINATION lib)
 
 else(BUILD_DEBIAN)   ### Normal build #################################################################
 
@@ -436,9 +436,9 @@ set(sdmnbase_SOURCES
     ${sdmnbase_HEADERS}
 )
 
-set(sdmnfecbase_SOURCES
-    ${sdmnfecbase_SOURCES}
-    ${sdmnfecbase_HEADERS}
+set(sdmnrxbase_SOURCES
+    ${sdmnrxbase_SOURCES}
+    ${sdmnrxbase_HEADERS}
 )
 
 set(sdmntxbase_SOURCES
@@ -472,8 +472,8 @@ add_executable(sdrdaemon
 
 if((HAS_SSSE3 OR HAS_NEON) AND CM256CC_FOUND)
     message(STATUS "SDRdaemonFEC with SIMD instructions enabled")
-    add_library(sdmnfecbase STATIC
-        ${sdmnfecbase_SOURCES}
+    add_library(sdmnrxbase STATIC
+        ${sdmnrxbase_SOURCES}
     )
 
     message(STATUS "SDRdaemonTx with SIMD instructions enabled")
@@ -481,8 +481,8 @@ if((HAS_SSSE3 OR HAS_NEON) AND CM256CC_FOUND)
         ${sdmntxbase_SOURCES}
     )
 
-    add_executable(sdrdaemonfec
-        sdrdaemonfec.cpp
+    add_executable(sdrdaemonrx
+        sdrdaemonrx.cpp
     )
 
     add_executable(sdrdaemontx
@@ -634,10 +634,10 @@ target_link_libraries(sdrdaemon
 )
 
 if((HAS_SSSE3 OR HAS_NEON) AND CM256CC_FOUND)
-    target_link_libraries(sdmnfecbase ${LZ4_LIBRARIES} ${CM256CC_LIBRARIES})
+    target_link_libraries(sdmnrxbase ${LZ4_LIBRARIES} ${CM256CC_LIBRARIES})
     
-    target_link_libraries(sdrdaemonfec
-        sdmnfecbase
+    target_link_libraries(sdrdaemonrx
+        sdmnrxbase
         ${DEVICE_LIBRARIES}
         sdmntest
         ${CMAKE_THREAD_LIBS_INIT}
@@ -665,8 +665,8 @@ target_link_libraries(sdrdmnctl
 )
 
 if((HAS_SSSE3 OR HAS_NEON) AND CM256CC_FOUND)
-    install(TARGETS sdrdaemon sdrdaemonfec sdrdaemontx sdrdmnctl DESTINATION bin)
-    install(TARGETS sdmnbase sdmnfecbase sdmntxbase ${DEVICE_TARGETS} sdmntest DESTINATION lib${LIB_SUFFIX})
+    install(TARGETS sdrdaemon sdrdaemonrx sdrdaemontx sdrdmnctl DESTINATION bin)
+    install(TARGETS sdmnbase sdmnrxbase sdmntxbase ${DEVICE_TARGETS} sdmntest DESTINATION lib${LIB_SUFFIX})
 else()
     install(TARGETS sdrdaemon sdrdmnctl DESTINATION bin)
     install(TARGETS sdmnbase ${DEVICE_TARGETS} sdmntest DESTINATION lib${LIB_SUFFIX})

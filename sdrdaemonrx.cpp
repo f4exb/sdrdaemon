@@ -133,7 +133,7 @@ static void handle_sigterm(int sig)
 void usage()
 {
     fprintf(stderr,
-    "Usage: sdrdaemonfec [options]\n"
+    "Usage: sdrdaemonrx [options]\n"
             "  -t devtype     Device type:\n"
 #ifdef HAS_RTLSDR
             "                   - rtlsdr:  RTL-SDR devices\n"

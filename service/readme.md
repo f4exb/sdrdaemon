@@ -4,7 +4,7 @@
 
 <h3>Pre-requisites</h3>
 
-You have first to install sdrdaemon package in `/opt/sdrdaemon`. This can be done by compiling the source and specifying this directory as the installation target or installing the package with the `.deb` file. 
+You have first to install sdrdaemon package in `/opt/sdrdaemon`. This can be done by compiling the source and specifying this directory as the installation target or installing the package with the `.deb` file. If you choose any different installation directory you have to update the exacutable full path in `DAEMON` variable in the `/etc/init.d/sdrdaemonrx` 
 
 You also need `jq` a "lightweight and flexible command-line JSON processor":
 
@@ -21,6 +21,7 @@ To install the files you do:
 
 <pre>
 sudo cp sdrdaemonrx /etc/init.d
+sudo chmod +x /etc/init.d/sdrdaemonrx
 sudo mkdir -p /var/lib/sdrdaemon
 sudo cp sdrdaemonrx.conf /var/lib/sdrdaemon
 </pre>
@@ -42,7 +43,7 @@ The configuration file `sdrdaemonrx.conf` is a simple JSON fragment:
     "ip": "192.168.1.3",
     "dport": 9094,
     "cport": 9095,
-    "cmd": "txdelay=300,fecblk=8,freq=430060000,srate=256000,gain=49.6,fcpos=2,decim=2,ppmp=69"
+    "cmd": "txdelay=750,fecblk=8,freq=430060000,srate=256000,gain=49.6,fcpos=2,decim=2,ppmp=69"
 }
 </pre>
 
@@ -67,3 +68,11 @@ Where `<cmd>` is any of the following commands:
   - `restart`: retart the service (equivalent of `stop` followed by `start`)
   - `force-reload`: same as `restart`
   - `status`: display service status. Useful to get the tail of the log in case of a problem.
+  
+<h3>Remove the service</h3>
+
+<pre>
+sudo update-rc.d -f service-name remove
+</pre>
+
+You can then remove (rename) the files

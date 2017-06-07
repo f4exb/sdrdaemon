@@ -28,7 +28,7 @@ if [ -e ${CONF_FILE} ]; then
     dport=$(jq -r '.dport' ${CONF_FILE})
     cport=$(jq -r '.cport' ${CONF_FILE})
     cmd=$(jq -r '.cmd' ${CONF_FILE})
-    SDRDAEMONRX_OPTS="-f -t ${type} -D ${dport} -C ${cport} -I ${ip} -c ${cmd}"
+    SDRDAEMONRX_OPTS="-t ${type} -D ${dport} -C ${cport} -I ${ip} -c ${cmd}"
 fi
 
 case $1 in

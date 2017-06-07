@@ -1,12 +1,12 @@
 #!/bin/sh
                                                                                                                                                                                                                                                                
 ### BEGIN INIT INFO
-# Provides:        sdrdaemonfec
+# Provides:        sdrdaemonrx
 # Required-Start:  $network $syslog
 # Required-Stop:   $network $syslog
 # Default-Start:   2 3 4 5
 # Default-Stop:    0 1 6
-# Short-Description: SDRdaemonFEC daemon control
+# Short-Description: SDRdaemonRx daemon control
 ### END INIT INFO
 
 # Do 'sudo systemctl daemon-reload' to implement and after each change to this file
@@ -14,9 +14,9 @@
 . /lib/lsb/init-functions
 
 JQ=$(which jq)
-DAEMON=/opt/sdrdaemon/bin/sdrdaemonfec
-PIDFILE=/var/run/sdrdaemonfec.pid
-CONF_FILE=/var/lib/sdrdaemon/sdrdaemonfec.conf
+DAEMON=/opt/sdrdaemon/bin/sdrdaemonrx
+PIDFILE=/var/run/sdrdaemonrx.pid
+CONF_FILE=/var/lib/sdrdaemon/sdrdaemonrx.conf
 
 test -x $DAEMON || exit 5
 test -x $JQ || exit 5
@@ -28,19 +28,19 @@ if [ -e ${CONF_FILE} ]; then
     dport=$(jq -r '.dport' ${CONF_FILE})
     cport=$(jq -r '.cport' ${CONF_FILE})
     cmd=$(jq -r '.cmd' ${CONF_FILE})
-    SDRDAEMONFEC_OPTS="-f -t ${type} -D ${dport} -C ${cport} -I ${ip} -c ${cmd}"
+    SDRDAEMONRX_OPTS="-f -t ${type} -D ${dport} -C ${cport} -I ${ip} -c ${cmd}"
 fi
 
 case $1 in
     start)
-        log_daemon_msg "Starting SDRdaemonFEC service" "sdrdaemonfec"
-        start-stop-daemon --start --background --no-close --oknodo --pidfile $PIDFILE --startas $DAEMON -- $SDRDAEMONFEC_OPTS
+        log_daemon_msg "Starting SDRdaemonRx service" "sdrdaemonrx"
+        start-stop-daemon --start --background --no-close --oknodo --pidfile $PIDFILE --startas $DAEMON -- $SDRDAEMONRX_OPTS
         status=$?
         echo $(pgrep -f $DAEMON) > $PIDFILE
         log_end_msg $status
         ;;
     stop)
-        log_daemon_msg "Stopping SDRdaemonFEC service" "sdrdaemonfec"
+        log_daemon_msg "Stopping SDRdaemonRx service" "sdrdaemonrx"
         start-stop-daemon --stop --oknodo --signal 15 --pidfile $PIDFILE
         status=$?
         log_end_msg $status
@@ -49,7 +49,7 @@ case $1 in
         $0 stop && sleep 2 && $0 start
         ;;
     status)
-        status_of_proc $DAEMON "SDRdaemonFEC service"
+        status_of_proc $DAEMON "SDRdaemonRx service"
         ;;
     *)
         echo "Usage: $0 {start|stop|restart|force-reload|status}"

@@ -1,4 +1,6 @@
-## Setup SDRdaemonFEC as a service ##
+## Setup SDRdaemon as a service ##
+
+<h2>sdrdaemonrx</h2>
 
 <h3>Pre-requisites</h3>
 
@@ -12,27 +14,27 @@ You also need `jq` a "lightweight and flexible command-line JSON processor":
 
 The installation simply consists of two files:
 
-  - `sdrdaemonfec`: this is the service script to be copied (with sudo) to `/etc/init.d`
-  - `sdrdaemonfec.conf`: this is a configuration file be copied (with sudo) as `/var/lib/sdrdaemon/sdrdaemonfec.conf`
+  - `sdrdaemonrx`: this is the service script to be copied (with sudo) to `/etc/init.d`
+  - `sdrdaemonrx.conf`: this is a configuration file be copied (with sudo) as `/var/lib/sdrdaemon/sdrdaemonrx.conf`
   
 To install the files you do:
 
 <pre>
-sudo cp sdrdaemonfec /etc/init.d
+sudo cp sdrdaemonrx /etc/init.d
 sudo mkdir -p /var/lib/sdrdaemon
-sudo cp sdrdaemonfec.conf /var/lib/sdrdaemon
+sudo cp sdrdaemonrx.conf /var/lib/sdrdaemon
 </pre>
 
 <h3>Setup the service</h3>
 
 <pre>
-sudo service sdrdaemonfec defaults
-sudo service sdrdaemonfec enable
+sudo service sdrdaemonrx defaults
+sudo service sdrdaemonrx enable
 </pre>
 
 <h3>Configuration file</h3>
 
-The configuration file `sdrdaemonfec.conf` is a simple JSON fragment:
+The configuration file `sdrdaemonrx.conf` is a simple JSON fragment:
 
 <pre>
 {
@@ -56,7 +58,7 @@ Where:
   
 You can manage the service with the `service` command like any other service:
 
-`sudo service <cmd> sdrdaemonfec`
+`sudo service <cmd> sdrdaemonrx`
 
 Where `<cmd>` is any of the following commands:
 

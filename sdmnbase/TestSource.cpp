@@ -29,7 +29,7 @@
 #include "parsekv.h"
 
 TestSource *TestSource::m_this = 0;
-const uint32_t TestSource::m_sampleBits = 15;
+const uint32_t TestSource::m_sampleBits = 16;
 const uint32_t TestSource::m_sampleWidth = 1<<TestSource::m_sampleBits;
 const uint32_t TestSource::m_sampleHalfWidth = 1<<(TestSource::m_sampleBits-1);
 

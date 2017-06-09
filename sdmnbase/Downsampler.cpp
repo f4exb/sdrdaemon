@@ -66,11 +66,17 @@ bool Downsampler::configure(parsekv::pairs_type& m)
 	return true;
 }
 
+void Downsampler::rescale(unsigned int& sampleSize, IQSampleVector& samples_inout)
+{
+	Decimators::decimate1(sampleSize, samples_inout); // rescale
+}
+
 void Downsampler::process(unsigned int& sampleSize, const IQSampleVector& samples_in, IQSampleVector& samples_out)
 {
 	if (m_decim == 0)
 	{
 		samples_out = samples_in;
+		Decimators::decimate1(sampleSize, samples_out); // rescale
 	}
 	else
 	{

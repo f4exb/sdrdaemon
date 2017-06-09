@@ -56,6 +56,11 @@ public:
      */
     void process(unsigned int& sampleSize, const IQSampleVector& samples_in, IQSampleVector& samples_out);
 
+    /**
+     * Rescale (alternative to process samples with decimation = 1
+     */
+    void rescale(unsigned int& sampleSize, IQSampleVector& samples_inout);
+
     /** State operator */
     operator bool() const
 	{

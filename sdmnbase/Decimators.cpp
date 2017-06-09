@@ -18,6 +18,22 @@
 
 #include "Decimators.h"
 
+/** Just do a rescaling to 16 bits */
+void Decimators::decimate1(unsigned int& sampleSize, IQSampleVector& inout)
+{
+	if (sampleSize < 16) // else do nothing
+	{
+		std::size_t len = inout.size();
+		unsigned int norm_shift = 16 - sampleSize; // shift to normalize to 16 bits (shift left)
+
+		for (unsigned int pos = 0; pos < len; pos += 1)
+		{
+			inout[pos].setReal(inout[pos].real()<<norm_shift);
+			inout[pos].setImag(inout[pos].imag()<<norm_shift);
+		}
+	}
+}
+
 /** double byte samples to double byte samples decimation by 2 low band */
 void Decimators::decimate2_inf(unsigned int& sampleSize, const IQSampleVector& in, IQSampleVector& out)
 {

@@ -32,6 +32,7 @@
 class Decimators
 {
 public:
+	static void decimate1(unsigned int& sampleSize, IQSampleVector& inout);
 	static void decimate2_inf(unsigned int& sampleSize, const IQSampleVector& in, IQSampleVector& out);
 	static void decimate2_sup(unsigned int& sampleSize, const IQSampleVector& in, IQSampleVector& out);
 	void decimate2_cen(unsigned int& sampleSize, const IQSampleVector& in, IQSampleVector& out);

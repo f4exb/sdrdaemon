@@ -29,17 +29,20 @@
 #include "parsekv.h"
 
 TestSource *TestSource::m_this = 0;
+const uint32_t TestSource::m_sampleBits = 15;
+const uint32_t TestSource::m_sampleWidth = 1<<TestSource::m_sampleBits;
+const uint32_t TestSource::m_sampleHalfWidth = 1<<(TestSource::m_sampleBits-1);
 
 // Open test device.
 TestSource::TestSource(int dev_index) :
     m_dev(dev_index),
     m_block_length(default_block_length),
     m_thread(0),
-    m_carrierOffset(100000),
+    m_carrierOffset(10000),
 	m_phase(0.0),
 	m_freq(435000000),
-	m_srate(5000000),
-	m_amplitude(1.0)
+	m_srate(64000),
+	m_amplitude(0.1)
 {
     m_this = this;
     m_confFreq = 435000000; // default frequency center position in Source.h is centered
@@ -399,8 +402,8 @@ int TestSource::read_samples(int16_t* data, int iqBlockSize, int& getSize, float
 
 	for (; i < nbSamples * 2; i += 2)
 	{
-        data[i]   = amplitude * cos(phasor) * 2048.0f;
-        data[i+1] = amplitude * sin(phasor) * 2048.0f;
+        data[i]   = amplitude * cos(phasor) * m_sampleHalfWidth;
+        data[i+1] = amplitude * sin(phasor) * m_sampleHalfWidth;
 
 		//phasor += 2.0 * M_PI * (1 / 20.0);
 		phasor += deltaPhase;

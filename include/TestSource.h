@@ -39,7 +39,7 @@ public:
     virtual ~TestSource();
 
     /** Return sample size in bits */
-    virtual std::uint32_t get_sample_bits() { return 12; }
+    virtual std::uint32_t get_sample_bits() { return m_sampleBits; }
 
     /** Return current sample frequency in Hz. */
     virtual std::uint32_t get_sample_rate();
@@ -109,6 +109,10 @@ private:
     uint64_t          m_freq;
     uint32_t          m_srate;
     float             m_amplitude;
+
+    static const uint32_t m_sampleBits;
+    static const uint32_t m_sampleWidth;
+    static const uint32_t m_sampleHalfWidth;
 };
 
 #endif // SDRDAEMON_TESTSOURCE_H

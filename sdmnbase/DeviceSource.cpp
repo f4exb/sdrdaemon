@@ -62,7 +62,7 @@ bool DeviceSource::configure(std::string& configureStr)
         {
             int txdDelay = atoi(m["txdelay"].c_str());
             m_txDelay = (txdDelay < 0 ? 0 : txdDelay);
-            fprintf(stderr, "DeviceSource::configure: txdelay: %u us", m_txDelay);
+            fprintf(stderr, "DeviceSource::configure: txdelay: %u us\n", m_txDelay);
         }
 
         // configuration for the source itself

@@ -204,7 +204,6 @@ set(sdmnrxbase_SOURCES
     sdmnbase/UDPSink.cpp
     sdmnbase/UDPSinkFEC.cpp
     sdmnbase/UDPSinkUncompressed.cpp
-    sdmnbase/UDPSinkLZ4.cpp
     sdmnbase/UDPSocket.cpp
 )
 
@@ -225,7 +224,6 @@ set(sdmnrxbase_HEADERS
     include/UDPSink.h
     include/UDPSinkFEC.h
     include/UDPSinkUncompressed.h
-    include/UDPSinkLZ4.h
     include/UDPSocket.h
     include/util.h
 )
@@ -370,7 +368,6 @@ target_link_libraries(sdmnrxbase
     bladerf
     hackrf
     rtlsdr
-    ${LZ4_LIBRARIES}
     ${LIBNANOMSG_LIBRARIES}
 )
 
@@ -634,7 +631,7 @@ target_link_libraries(sdrdaemon
 )
 
 if((HAS_SSSE3 OR HAS_NEON) AND CM256CC_FOUND)
-    target_link_libraries(sdmnrxbase ${LZ4_LIBRARIES} ${CM256CC_LIBRARIES})
+    target_link_libraries(sdmnrxbase ${CM256CC_LIBRARIES})
     
     target_link_libraries(sdrdaemonrx
         sdmnrxbase

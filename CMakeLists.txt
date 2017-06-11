@@ -377,7 +377,10 @@ target_link_libraries(sdmntxbase
     ${LIBNANOMSG_LIBRARIES}
 )
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DHAS_RTLSDR")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DHAS_RTLSDR")
+target_compile_definitions(sdmnbase PUBLIC -DHAS_AIRSPY -DHAS_BLADERF -DHAS_HACKRF -DHAS_RTLSDR)
+target_compile_definitions(sdmnrxbase PUBLIC -DHAS_AIRSPY -DHAS_BLADERF -DHAS_HACKRF -DHAS_RTLSDR)
+target_compile_definitions(sdmntxbase PUBLIC -DHAS_HACKRF)
 
 ### Executables
 
@@ -420,6 +423,10 @@ target_link_libraries(sdrdaemontx
     ${CMAKE_THREAD_LIBS_INIT}
     ${EXTRA_LIBS}
 )
+
+target_compile_definitions(sdrdaemon PUBLIC -DHAS_AIRSPY -DHAS_BLADERF -DHAS_HACKRF -DHAS_RTLSDR)
+target_compile_definitions(sdrdaemonrx PUBLIC -DHAS_AIRSPY -DHAS_BLADERF -DHAS_HACKRF -DHAS_RTLSDR)
+target_compile_definitions(sdrdaemontx PUBLIC -DHAS_HACKRF)
 
 install(TARGETS sdrdaemon sdrdaemonrx sdrdaemontx sdrdmnctl DESTINATION bin)
 install(TARGETS sdmnbase sdmnrxbase sdmntxbase DESTINATION lib)

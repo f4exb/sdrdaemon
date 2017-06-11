@@ -232,6 +232,15 @@ Typical commands:
       - VGA gain: _24 dB_
       - Interpolation: 2^_3_ = 8; thus stream sample rate is 400 kHz
 
+  - File sink: `./sdrdaemontx -t file -I 192.168.1.3 -D 9090 -c freq=433970000,srate=64000,interp=1,file=test.sdriq`
+    - Address of interface for the data is: `192.168.1.3`
+    - Using UDP port `9090` for the data (it is the default anyway)
+    - Using TCP port `9091` to dialog with the remote for commands and status (it is the default anyway)
+    - Startup configuration:
+      - Center frequency: _433.97 MHz_
+      - Device sample rate: _128 kHz_
+      - Interpolation: 2^_1_ = 2; thus stream sample rate is 64 kHz
+
 <h2>All options</h2>
 
  - `-t devtype` is mandatory and must be either (depending on support libraries installed): 
@@ -326,6 +335,12 @@ Note that these options can be used both as the initial configuration as the arg
   - `dfp=<int>` Positive shift frequency of carrier from center frequency in Hz (default `100000` i.e. 100 kHz)
   - `dfn=<int>` Negative shift frequency of carrier from center frequency in Hz (default `100000` i.e. -100 kHz)
   - `blklen=<int>` Waveform buffer length in number of samples (default 64kS)
+
+<h3>File sink (Tx only)</h3>
+
+  - `freq=<int>` Desired center frequency in Hz sent in the meta data. Valid range 10 kHz to 10 GHz exclusive (default `435000000` i.e. 435 MHz).
+  - `srate=<int>` Base sample rate in Hz. Valid range is 1MHZ to 6GHz. (default `48000` i.e. 48 kS/s).
+  - `file=<string>` Name of the output file. (default `test.sdriq`).
 
 <h2>Dynamic remote control</h2>
 

@@ -68,7 +68,23 @@ Branches:
 
 <h2>Base requirements</h2>
 
+<h3>Ubuntu/Debian</h3>
+
   - `sudo apt-get install cmake pkg-config libusb-1.0-0-dev libasound2-dev libboost-all-dev liblz4-dev libnanomsg-dev`
+
+<h3>OpenSUSE</h3>
+
+in particular if you run the aarch64 version with the RPi3
+
+  - `sudo zypper install cmake gcc-c++ libusb-1_0-devel boost-devel liblz4-devel fftw3-devel`
+
+You need to compile and install libnanomsg:
+
+  - `git clone https://github.com/ZewoGraveyard/libnanomsg.git`
+  - `cd libnanomsg`
+  - `mkdir build; cd build`
+  - `cmake -DCMAKE_INSTALL_PREFIX=/opt/install/libnanomsg ..`
+  - `make -j4 install`
 
 <h2>Forward Erasure Correction (FEC) support</h2>
 
@@ -125,7 +141,7 @@ To install the library from a Debian/Ubuntu installation just do:
 
 <h2>nanomsg custom installation</h2>
 
-If you build nanomsg from source obtained either by git clone or a released source package and install it in your own path (ex: `/opt/install/nanomsg`) you will need to specify the include and library paths like this: `-DLIBNANOMSG_LIBRARIES=/opt/install/nanomsg/lib/libnanomsg.so -DLIBNANOMSG_INCLUDE_DIR=/opt/install/nanomsg/include`
+If you build nanomsg from source obtained either by git clone or a released source package and install it in your own path (ex: `/opt/install/libnanomsg`) you will need to specify the include and library paths like this: `-DLIBNANOMSG_LIBRARIES=/opt/install/libnanomsg/lib/libnanomsg.so -DLIBNANOMSG_INCLUDE_DIR=/opt/install/libnanomsg/include`
 
 <h1>Installing</h1>
 

@@ -55,6 +55,8 @@ SDRdaemon package requires:
  - supported hardware
  - A computer or embedded device such as the Raspberry Pi 2 or 3 to which you connect the hardware.
  
+&#9758; On Raspberry Pi 3 it is recommended to run in a native aarch64 system for better performance. This is particularly true on the Tx side with `sdrdaemontx`. For the moment only OpenSUSE does that: [link](https://en.opensuse.org/HCL:Raspberry_Pi3).
+
 For the latest version, see https://github.com/f4exb/SDRdaemon
 
 Branches:
@@ -74,7 +76,7 @@ Branches:
 
 <h3>OpenSUSE</h3>
 
-in particular if you run the aarch64 version with the RPi3
+in particular if you run the aarch64 version with the RPi3. Performance in a aarch64 (ARM 64 bits amrv8) is considerably better than in an armv7 system. This is particularly true with `sdradaemontx`.
 
   - `sudo zypper install cmake gcc-c++ libusb-1_0-devel boost-devel liblz4-devel fftw3-devel`
 

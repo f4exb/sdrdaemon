@@ -301,7 +301,7 @@ bool HackRFSource::configure(uint32_t changeFlags,
     if (changeFlags & 0x40)
     {
         m_bandwidth = bandwidth;
-        uint32_t hackRFBandwidth = hackrf_compute_baseband_filter_bw_round_down_lt(m_bandwidth);
+        uint32_t hackRFBandwidth = hackrf_compute_baseband_filter_bw_round_down_lt(m_bandwidth + 1); // +1 so the round down to lower than yields desired bandwidth
         rc = (hackrf_error) hackrf_set_baseband_filter_bandwidth(m_dev, hackRFBandwidth);
 
         if (rc != HACKRF_SUCCESS)

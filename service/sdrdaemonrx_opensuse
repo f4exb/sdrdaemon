@@ -1,0 +1,57 @@
+#!/bin/sh
+                                                                                                                                                                                                                                                               
+### BEGIN INIT INFO
+# Provides:        sdrdaemonrx
+# Required-Start:  $network $syslog
+# Required-Stop:   $network $syslog
+# Default-Start:   2 3 4 5
+# Default-Stop:    0 1 6
+# Short-Description: SDRdaemonRx daemon control
+### END INIT INFO
+
+# Do 'sudo systemctl daemon-reload' to implement and after each change to this file
+
+. /lib/lsb/init-functions
+
+JQ=$(which jq)
+DAEMON=/opt/install/sdrdaemon/bin/sdrdaemonrx
+PIDFILE=/var/run/sdrdaemonrx.pid
+CONF_FILE=/var/lib/sdrdaemon/sdrdaemonrx.conf
+
+test -x $DAEMON || exit 5
+test -x $JQ || exit 5
+test -f ${CONF_FILE} || exit 5
+
+if [ -e ${CONF_FILE} ]; then
+    type=$(jq -r '.type' ${CONF_FILE})
+    ip=$(jq -r '.ip' ${CONF_FILE})
+    dport=$(jq -r '.dport' ${CONF_FILE})
+    cport=$(jq -r '.cport' ${CONF_FILE})
+    cmd=$(jq -r '.cmd' ${CONF_FILE})
+    SDRDAEMONRX_OPTS="-t ${type} -D ${dport} -C ${cport} -I ${ip} -c ${cmd}"
+fi
+
+case $1 in
+    start)
+        echo -n "Starting SDRdaemonRx service" "sdrdaemonrx"
+        /sbin/startproc $DAEMON $SDRDAEMONRX_OPTS
+        rc_status -v
+        ;;
+    stop)
+        echo -n "Stopping SDRdaemonRx service" "sdrdaemonrx"
+        /sbin/killproc -TERM $DAEMON
+        rc_status -v
+        ;;
+    restart|force-reload)
+        $0 stop && sleep 2 && $0 start
+        rc_status
+        ;;
+    status)
+        /sbin/checkproc $DAEMON
+        rc_status -v
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|restart|force-reload|status}"
+        exit2
+        ;;
+esac

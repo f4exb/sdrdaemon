@@ -12,15 +12,16 @@ You also need `jq` a "lightweight and flexible command-line JSON processor":
 
 <h3>Install the files</h3>
 
-The installation simply consists of two files:
+The installation simply consists of two files with variants:
 
-  - `sdrdaemonrx`: this is the service script to be copied (with sudo) to `/etc/init.d`
-  - `sdrdaemonrx.conf`: this is a configuration file be copied (with sudo) as `/var/lib/sdrdaemon/sdrdaemonrx.conf`
+  - `sdrdaemonrx_debian`: this is the service script to be copied (with sudo) to `/etc/init.d` in Debian/Ubuntu installations
+  - `sdrdaemonrx_opensuse`: this is the service script to be copied (with sudo) to `/etc/init.d` in openSUSE installations
+  - `sdrdaemonrx.conf`: this is a configuration file be copied (with sudo) as `/var/lib/sdrdaemon/sdrdaemonrx.conf` in all installations
   
 To install the files you do:
 
 <pre>
-sudo cp sdrdaemonrx /etc/init.d
+sudo cp sdrdaemonrx\_<variant> /etc/init.d/sdrdaemonrx
 sudo chmod +x /etc/init.d/sdrdaemonrx
 sudo mkdir -p /var/lib/sdrdaemon
 sudo cp sdrdaemonrx.conf /var/lib/sdrdaemon
@@ -28,9 +29,17 @@ sudo cp sdrdaemonrx.conf /var/lib/sdrdaemon
 
 <h3>Setup the service</h3>
 
+<h4>Debian/Ubuntu</h4>
+
 <pre>
 sudo service sdrdaemonrx defaults
 sudo service sdrdaemonrx enable
+</pre>
+
+<h4>openSUSE</h4>
+
+<pre>
+sudo systemctl enable sdrdaemonrx
 </pre>
 
 <h3>Configuration file</h3>
@@ -57,6 +66,8 @@ Where:
   
 <h3>Manage the service</h3>
   
+<h4>Debian/Ubuntu</h4>
+
 You can manage the service with the `service` command like any other service:
 
 `sudo service <cmd> sdrdaemonrx`
@@ -69,10 +80,27 @@ Where `<cmd>` is any of the following commands:
   - `force-reload`: same as `restart`
   - `status`: display service status. Useful to get the tail of the log in case of a problem.
   
+<h4>openSUSE</h4>
+
+You can manage the service with 'systemctl' command:
+
+'sudo systemctl <cmd> sdrdaemonrx'
+
+The <cmd> commands are the same as for Debian/Ubuntu 
+
 <h3>Remove the service</h3>
+
+<h4>Debian/Ubintu</h4>
 
 <pre>
 sudo update-rc.d -f service-name remove
+</pre>
+
+<h4>openSUSE</h4>
+
+<pre>
+sudo systemctl disable sdrdaemonrx
+sudo systemctl reset-failed
 </pre>
 
 You can then remove (rename) the files

@@ -1,16 +1,17 @@
 ## Setup SDRdaemon as a service ##
 
-<h2>sdrdaemonrx</h2>
+The following applies to `sdrdaemonrx` but `sdrdaemontx` is just the same with a different name
 
-<h3>Pre-requisites</h3>
+<h2>Pre-requisites</h2>
 
 You have first to install sdrdaemon package in `/opt/sdrdaemon`. This can be done by compiling the source and specifying this directory as the installation target or installing the package with the `.deb` file. If you choose any different installation directory you have to update the exacutable full path in `DAEMON` variable in the `/etc/init.d/sdrdaemonrx` 
 
 You also need `jq` a "lightweight and flexible command-line JSON processor":
 
-`sudo apt-get install jq`
+`sudo apt-get install jq` (Debian/Ubuntu)
+`sudo zypper install jq` (openSUSE)
 
-<h3>Install the files</h3>
+<h2>Install the files</h2>
 
 The installation simply consists of two files with variants:
 
@@ -21,28 +22,28 @@ The installation simply consists of two files with variants:
 To install the files you do:
 
 <pre>
-sudo cp sdrdaemonrx\_<variant> /etc/init.d/sdrdaemonrx
+sudo cp sdrdaemonrx<variant> /etc/init.d/sdrdaemonrx
 sudo chmod +x /etc/init.d/sdrdaemonrx
 sudo mkdir -p /var/lib/sdrdaemon
 sudo cp sdrdaemonrx.conf /var/lib/sdrdaemon
 </pre>
 
-<h3>Setup the service</h3>
+<h2>Setup the service</h2>
 
-<h4>Debian/Ubuntu</h4>
+<h3>Debian/Ubuntu</h3>
 
 <pre>
 sudo service sdrdaemonrx defaults
 sudo service sdrdaemonrx enable
 </pre>
 
-<h4>openSUSE</h4>
+<h3>openSUSE</h3>
 
 <pre>
 sudo systemctl enable sdrdaemonrx
 </pre>
 
-<h3>Configuration file</h3>
+<h2>Configuration file</h2>
 
 The configuration file `sdrdaemonrx.conf` is a simple JSON fragment:
 
@@ -64,9 +65,9 @@ Where:
   - cport: is the listening control port as in the `-C` argument
   - cmd: is the device command line as `-c` argument
   
-<h3>Manage the service</h3>
+<h2>Manage the service</h2>
   
-<h4>Debian/Ubuntu</h4>
+<h3>Debian/Ubuntu</h3>
 
 You can manage the service with the `service` command like any other service:
 
@@ -80,23 +81,23 @@ Where `<cmd>` is any of the following commands:
   - `force-reload`: same as `restart`
   - `status`: display service status. Useful to get the tail of the log in case of a problem.
   
-<h4>openSUSE</h4>
+<h3>openSUSE</h3>
 
-You can manage the service with 'systemctl' command:
+You can manage the service with `systemctl` command:
 
-'sudo systemctl <cmd> sdrdaemonrx'
+`sudo systemctl <cmd> sdrdaemonrx`
 
 The <cmd> commands are the same as for Debian/Ubuntu 
 
-<h3>Remove the service</h3>
+<h2>Remove the service</h2>
 
-<h4>Debian/Ubintu</h4>
+<h3>Debian/Ubintu</h3>
 
 <pre>
 sudo update-rc.d -f service-name remove
 </pre>
 
-<h4>openSUSE</h4>
+<h3>openSUSE</h3>
 
 <pre>
 sudo systemctl disable sdrdaemonrx

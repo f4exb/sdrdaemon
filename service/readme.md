@@ -22,7 +22,7 @@ The installation simply consists of two files with variants:
 To install the files you do:
 
 <pre>
-sudo cp sdrdaemonrx<variant> /etc/init.d/sdrdaemonrx
+sudo cp sdrdaemonrx*variant* /etc/init.d/sdrdaemonrx
 sudo chmod +x /etc/init.d/sdrdaemonrx
 sudo mkdir -p /var/lib/sdrdaemon
 sudo cp sdrdaemonrx.conf /var/lib/sdrdaemon

@@ -184,7 +184,8 @@ void UDPSinkFEC::transmitUDP(UDPSinkFEC *udpSinkFEC, int currentTxBlockIndex __a
 //            << " txDelay: " << txDelay << std::endl;
 
 	udpSinkFEC->m_udpSent.store(false);
-    SuperBlock *txBlockx = udpSinkFEC->m_txBlocks[udpSinkFEC->m_txIndexCurrent.load()];
+	int txIndexCurrent = udpSinkFEC->m_txIndexCurrent.load();
+    SuperBlock *txBlockx = udpSinkFEC->m_txBlocks[txIndexCurrent];
 
 	if ((nbBlocksFEC == 0) || !cm256Valid)
 	{

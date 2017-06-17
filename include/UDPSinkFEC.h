@@ -147,7 +147,7 @@ private:
     std::atomic_int m_txIndexCurrent;
     std::atomic_int m_txIndexProcessing;
 
-    static void transmitUDP(UDPSinkFEC *udpSinkFEC, uint16_t frameIndex, int nbBlocksFEC, int txDelay, bool cm256Valid);
+    static void transmitUDP(UDPSinkFEC *udpSinkFEC, int nbBlocksFEC, int txDelay, bool cm256Valid);
 };
 
 

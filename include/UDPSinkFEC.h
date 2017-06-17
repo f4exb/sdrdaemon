@@ -56,6 +56,7 @@
 
 #define UDPSINKFEC_UDPSIZE 512
 #define UDPSINKFEC_NBORIGINALBLOCKS 128
+#define UDPSINKFEC_NBTXBLOCKS 4
 
 namespace std
 {
@@ -122,7 +123,7 @@ private:
     MetaDataFEC m_currentMetaFEC;        //!< Meta data for current frame
     std::atomic_int m_nbBlocksFEC;       //!< Variable number of FEC blocks
     std::atomic_int m_txDelay;           //!< Delay in microseconds (usleep) between each sending of an UDP datagram
-    SuperBlock m_txBlocks[4][256];       //!< UDP blocks to send with original data + FEC
+    SuperBlock m_txBlocks[UDPSINKFEC_NBTXBLOCKS][256]; //!< UDP blocks to send with original data + FEC
     std::thread *m_txThread;             //!< Thread to transmit UDP blocks
     SuperBlock m_superBlock;             //!< current super block being built
     //ProtectedBlock m_fecBlocks[256];     //!< FEC data

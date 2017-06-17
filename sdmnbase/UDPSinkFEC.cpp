@@ -158,7 +158,7 @@ void UDPSinkFEC::write(const IQSampleVector& samples_in)
 //                m_txThread = new std::thread(transmitUDP, this, m_txBlocks[m_txBlocksIndex], m_frameCount, nbBlocksFEC, txDelay, m_cm256Valid);
                 m_txThread = new std::thread(transmitUDP, this, m_txBlocksIndex, m_frameCount, nbBlocksFEC, txDelay, m_cm256Valid);
 
-                m_txBlocksIndex = (m_txBlocksIndex + 1) % 4;
+                m_txBlocksIndex = (m_txBlocksIndex + 1) % UDPSINKFEC_NBTXBLOCKS;
                 m_txBlockIndex = 0;
                 m_frameCount++;
             }

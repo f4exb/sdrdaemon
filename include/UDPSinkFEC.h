@@ -135,7 +135,7 @@ private:
     bool m_cm256Valid;
     std::atomic_bool m_udpSent;          //!< True when UDP sending thread has finished (Frame transmission complete)
 
-    static void transmitUDP(UDPSinkFEC *udpSinkFEC, SuperBlock *txBlockx, uint16_t frameIndex, int nbBlocksFEC, int txDelay, bool cm256Valid);
+    static void transmitUDP(UDPSinkFEC *udpSinkFEC, int currentTxBlockIndex, uint16_t frameIndex, int nbBlocksFEC, int txDelay, bool cm256Valid);
 };
 
 

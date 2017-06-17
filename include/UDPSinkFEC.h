@@ -123,8 +123,8 @@ private:
     {
         bool m_processed;
         uint16_t m_frameIndex;
-        int nbBlocksFEC;
-        int txDelay;
+        int m_nbBlocksFEC;
+        int m_txDelay;
     };
 
     CM256 m_cm256;                       //!< CM256 library object
@@ -147,7 +147,7 @@ private:
     std::atomic_int m_txIndexCurrent;
     std::atomic_int m_txIndexProcessing;
 
-    static void transmitUDP(UDPSinkFEC *udpSinkFEC, int nbBlocksFEC, int txDelay, bool cm256Valid);
+    static void transmitUDP(UDPSinkFEC *udpSinkFEC, bool cm256Valid);
 };
 
 

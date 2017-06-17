@@ -144,6 +144,7 @@ private:
     //cm256_block m_descriptorBlocks[256]; //!< Pointers to data for CM256 encoder
     bool m_cm256Valid;
     std::atomic_bool m_udpSent;          //!< True when UDP sending thread has finished (Frame transmission complete)
+    std::atomic_bool m_running;
     TxControlBlock m_txControlBlocks[UDPSINKFEC_NBTXBLOCKS];
     std::atomic_int m_txIndexCurrent;
     std::atomic_int m_txIndexProcessing;

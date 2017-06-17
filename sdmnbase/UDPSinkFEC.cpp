@@ -39,12 +39,15 @@ UDPSinkFEC::UDPSinkFEC(const std::string& address, unsigned int port) :
     m_currentMetaFEC.init();
     m_udpSent.store(true);
     reset();
+    m_txThread = new std::thread(transmitUDP, this);
+    m_running.store(true);
 }
 
 UDPSinkFEC::~UDPSinkFEC()
 {
 	if (m_txThread)
 	{
+	    m_running.store(false);
 		m_txThread->join();
 		delete m_txThread;
 	}
@@ -153,17 +156,7 @@ void UDPSinkFEC::write(const IQSampleVector& samples_in)
 
             if (m_txBlockIndex == UDPSINKFEC_NBORIGINALBLOCKS - 1) // frame complete
             {
-                if (m_txThread)
-                {
-                	if (!m_udpSent.load())
-                	{
-                		std::cerr << "UDPSinkFEC::write: warning UDP transmission not finished" << std::endl;
-                	}
-
-                    m_txThread->join();
-                    delete m_txThread;
-                }
-
+                bool countsEqual = false;
                 m_txIndexCurrent.store(m_txBlocksIndex);
                 m_txControlBlocks[m_txBlocksIndex].m_frameIndex = m_frameCount;
                 m_txControlBlocks[m_txBlocksIndex].m_processed = false;
@@ -171,7 +164,18 @@ void UDPSinkFEC::write(const IQSampleVector& samples_in)
                 m_txControlBlocks[m_txBlocksIndex].m_txDelay = m_txDelay;
 
 //                m_txThread = new std::thread(transmitUDP, this, m_txBlocks[m_txBlocksIndex], m_frameCount, nbBlocksFEC, txDelay, m_cm256Valid);
-                m_txThread = new std::thread(transmitUDP, this);
+//                m_txThread = new std::thread(transmitUDP, this);
+
+                while (((m_txBlocksIndex + 1) % UDPSINKFEC_NBTXBLOCKS) == m_txIndexProcessing.load())
+                {
+                    if (!countsEqual)
+                    {
+                        std::cerr << "UDPSinkFEC::transmitUDP: warning: transmit too slow" << std::endl;
+                        countsEqual = true;
+                    }
+
+                    usleep(100);
+                }
 
                 m_txBlocksIndex = (m_txBlocksIndex + 1) % UDPSINKFEC_NBTXBLOCKS;
                 m_txBlockIndex = 0;
@@ -190,85 +194,101 @@ void UDPSinkFEC::transmitUDP(UDPSinkFEC *udpSinkFEC)
 	CM256::cm256_encoder_params cm256Params;  //!< Main interface with CM256 encoder
 	CM256::cm256_block descriptorBlocks[256]; //!< Pointers to data for CM256 encoder
 	ProtectedBlock fecBlocks[256];   //!< FEC data
+    bool cm256Valid = udpSinkFEC->m_cm256Valid;
 
 //    std::cerr << "UDPSinkFEC::transmitUDP:"
 //            << " nbBlocksFEC: " << nbBlocksFEC
 //            << " txDelay: " << txDelay << std::endl;
 
-	udpSinkFEC->m_udpSent.store(false);
-	int txIndexCurrent = udpSinkFEC->m_txIndexCurrent.load();
-	bool cm256Valid = udpSinkFEC->m_cm256Valid;
-	uint16_t frameIndex = udpSinkFEC->m_txControlBlocks[txIndexCurrent].m_frameIndex;
-	int nbBlocksFEC = udpSinkFEC->m_txControlBlocks[txIndexCurrent].m_nbBlocksFEC;
-	int txDelay = udpSinkFEC->m_txControlBlocks[txIndexCurrent].m_txDelay;
-    SuperBlock *txBlockx = udpSinkFEC->m_txBlocks[txIndexCurrent];
-
-	if ((nbBlocksFEC == 0) || !cm256Valid)
+	while (udpSinkFEC->m_running.load())
 	{
-	    for (int i = 0; i < UDPSINKFEC_NBORIGINALBLOCKS; i++)
-	    {
-	        udpSinkFEC->m_socket.SendDataGram((const void *) &txBlockx[i], (int) udpSinkFEC->m_udpSize, udpSinkFEC->m_address, udpSinkFEC->m_port);
-	        usleep(txDelay);
-	    }
-	}
-	else
-	{
-        cm256Params.BlockBytes = sizeof(ProtectedBlock);
-        cm256Params.OriginalCount = UDPSINKFEC_NBORIGINALBLOCKS;
-        cm256Params.RecoveryCount = nbBlocksFEC;
+        bool countsEqual = false;
+        int txIndexProcessing = udpSinkFEC->m_txIndexProcessing.load();
 
-	    // Fill pointers to data
-	    for (int i = 0; i < cm256Params.OriginalCount + cm256Params.RecoveryCount; ++i)
-	    {
-	        if (i >= cm256Params.OriginalCount) {
-	            memset((void *) &txBlockx[i].protectedBlock, 0, sizeof(ProtectedBlock));
-	        }
-
-            txBlockx[i].header.frameIndex = frameIndex;
-            txBlockx[i].header.blockIndex = i;
-            descriptorBlocks[i].Block = (void *) &(txBlockx[i].protectedBlock);
-            descriptorBlocks[i].Index = txBlockx[i].header.blockIndex;
-	    }
-
-	    // Encode FEC blocks
-	    if (udpSinkFEC->m_cm256.cm256_encode(cm256Params, descriptorBlocks, fecBlocks))
-	    {
-	        std::cerr << "UDPSinkFEC::transmitUDP: CM256 encode failed. No transmission." << std::endl;
-	        return;
-	    }
-
-	    // Merge FEC with data to transmit
-	    for (int i = 0; i < cm256Params.RecoveryCount; i++)
-	    {
-	        txBlockx[i + cm256Params.OriginalCount].protectedBlock = fecBlocks[i];
-	    }
-
-	    // Transmit all blocks
-	    for (int i = 0; i < cm256Params.OriginalCount + cm256Params.RecoveryCount; i++)
-	    {
-#ifdef SDRDAEMON_PUNCTURE
-            if (i == SDRDAEMON_PUNCTURE) {
-                continue;
+        while (udpSinkFEC->m_txIndexCurrent.load() == txIndexProcessing)
+        {
+            if (!countsEqual)
+            {
+                std::cerr << "UDPSinkFEC::transmitUDP: warning: write too slow" << std::endl;
+                countsEqual = true;
             }
-#endif
-//            std::cerr << "UDPSinkFEC::transmitUDP:"
-//                  << " i: " << i
-//                  << " frameIndex: " << (int) m_txBlocks[i].header.frameIndex
-//                  << " blockIndex: " << (int) m_txBlocks[i].header.blockIndex
-//                  << " i.q:";
-//
-//            for (int j = 0; j < 10; j++)
-//            {
-//                std::cerr << " " << (int) m_txBlocks[i].protectedBlock.m_samples[j].m_real
-//                        << "." << (int) m_txBlocks[i].protectedBlock.m_samples[j].m_imag;
-//            }
-//
-//            std::cerr << std::endl;
 
-	        udpSinkFEC->m_socket.SendDataGram((const void *) &txBlockx[i], (int) udpSinkFEC->m_udpSize, udpSinkFEC->m_address, udpSinkFEC->m_port);
-            usleep(txDelay);
-	    }
+            usleep(100);
+        }
+
+        uint16_t frameIndex = udpSinkFEC->m_txControlBlocks[txIndexProcessing].m_frameIndex;
+        int nbBlocksFEC = udpSinkFEC->m_txControlBlocks[txIndexProcessing].m_nbBlocksFEC;
+        int txDelay = udpSinkFEC->m_txControlBlocks[txIndexProcessing].m_txDelay;
+        SuperBlock *txBlockx = udpSinkFEC->m_txBlocks[txIndexProcessing];
+
+        if ((nbBlocksFEC == 0) || !cm256Valid)
+        {
+            for (int i = 0; i < UDPSINKFEC_NBORIGINALBLOCKS; i++)
+            {
+                udpSinkFEC->m_socket.SendDataGram((const void *) &txBlockx[i], (int) udpSinkFEC->m_udpSize, udpSinkFEC->m_address, udpSinkFEC->m_port);
+                usleep(txDelay);
+            }
+        }
+        else
+        {
+            cm256Params.BlockBytes = sizeof(ProtectedBlock);
+            cm256Params.OriginalCount = UDPSINKFEC_NBORIGINALBLOCKS;
+            cm256Params.RecoveryCount = nbBlocksFEC;
+
+            // Fill pointers to data
+            for (int i = 0; i < cm256Params.OriginalCount + cm256Params.RecoveryCount; ++i)
+            {
+                if (i >= cm256Params.OriginalCount) {
+                    memset((void *) &txBlockx[i].protectedBlock, 0, sizeof(ProtectedBlock));
+                }
+
+                txBlockx[i].header.frameIndex = frameIndex;
+                txBlockx[i].header.blockIndex = i;
+                descriptorBlocks[i].Block = (void *) &(txBlockx[i].protectedBlock);
+                descriptorBlocks[i].Index = txBlockx[i].header.blockIndex;
+            }
+
+            // Encode FEC blocks
+            if (udpSinkFEC->m_cm256.cm256_encode(cm256Params, descriptorBlocks, fecBlocks))
+            {
+                std::cerr << "UDPSinkFEC::transmitUDP: CM256 encode failed. No transmission." << std::endl;
+                return;
+            }
+
+            // Merge FEC with data to transmit
+            for (int i = 0; i < cm256Params.RecoveryCount; i++)
+            {
+                txBlockx[i + cm256Params.OriginalCount].protectedBlock = fecBlocks[i];
+            }
+
+            // Transmit all blocks
+            for (int i = 0; i < cm256Params.OriginalCount + cm256Params.RecoveryCount; i++)
+            {
+    #ifdef SDRDAEMON_PUNCTURE
+                if (i == SDRDAEMON_PUNCTURE) {
+                    continue;
+                }
+    #endif
+    //            std::cerr << "UDPSinkFEC::transmitUDP:"
+    //                  << " i: " << i
+    //                  << " frameIndex: " << (int) m_txBlocks[i].header.frameIndex
+    //                  << " blockIndex: " << (int) m_txBlocks[i].header.blockIndex
+    //                  << " i.q:";
+    //
+    //            for (int j = 0; j < 10; j++)
+    //            {
+    //                std::cerr << " " << (int) m_txBlocks[i].protectedBlock.m_samples[j].m_real
+    //                        << "." << (int) m_txBlocks[i].protectedBlock.m_samples[j].m_imag;
+    //            }
+    //
+    //            std::cerr << std::endl;
+
+                udpSinkFEC->m_socket.SendDataGram((const void *) &txBlockx[i], (int) udpSinkFEC->m_udpSize, udpSinkFEC->m_address, udpSinkFEC->m_port);
+                usleep(txDelay);
+            }
+        }
+
+        udpSinkFEC->m_txControlBlocks[txIndexProcessing].m_processed = true;
+        udpSinkFEC->m_txIndexProcessing.store((txIndexProcessing + 1) % UDPSINKFEC_NBTXBLOCKS);
 	}
-
-	udpSinkFEC->m_udpSent.store(true);
 }

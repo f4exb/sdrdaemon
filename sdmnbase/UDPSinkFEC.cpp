@@ -159,7 +159,7 @@ void UDPSinkFEC::write(const IQSampleVector& samples_in)
                 m_txIndexCurrent.store(m_txBlocksIndex);
 
 //                m_txThread = new std::thread(transmitUDP, this, m_txBlocks[m_txBlocksIndex], m_frameCount, nbBlocksFEC, txDelay, m_cm256Valid);
-                m_txThread = new std::thread(transmitUDP, this, m_txBlocksIndex, m_frameCount, nbBlocksFEC, txDelay, m_cm256Valid);
+                m_txThread = new std::thread(transmitUDP, this, m_frameCount, nbBlocksFEC, txDelay, m_cm256Valid);
 
                 m_txBlocksIndex = (m_txBlocksIndex + 1) % UDPSINKFEC_NBTXBLOCKS;
                 m_txBlockIndex = 0;
@@ -173,7 +173,7 @@ void UDPSinkFEC::write(const IQSampleVector& samples_in)
 	}
 }
 
-void UDPSinkFEC::transmitUDP(UDPSinkFEC *udpSinkFEC, int currentTxBlockIndex __attribute__((unused)), uint16_t frameIndex, int nbBlocksFEC, int txDelay, bool cm256Valid)
+void UDPSinkFEC::transmitUDP(UDPSinkFEC *udpSinkFEC, uint16_t frameIndex, int nbBlocksFEC, int txDelay, bool cm256Valid)
 {
 	CM256::cm256_encoder_params cm256Params;  //!< Main interface with CM256 encoder
 	CM256::cm256_block descriptorBlocks[256]; //!< Pointers to data for CM256 encoder

@@ -71,6 +71,7 @@ public:
     virtual void write(const IQSampleVector& samples_in);
     virtual void setNbBlocksFEC(int nbBlocksFEC);
     virtual void setTxDelay(int txDelay);
+    void reset();
 
 private:
 #pragma pack(push, 1)

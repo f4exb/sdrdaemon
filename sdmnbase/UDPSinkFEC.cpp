@@ -38,8 +38,7 @@ UDPSinkFEC::UDPSinkFEC(const std::string& address, unsigned int port) :
     m_cm256Valid = m_cm256.isInitialized();
     m_currentMetaFEC.init();
     m_udpSent.store(true);
-    m_txIndexCurrent.store(0);
-    m_txIndexProcessing.store(0);
+    reset();
 }
 
 UDPSinkFEC::~UDPSinkFEC()
@@ -55,6 +54,17 @@ void UDPSinkFEC::setTxDelay(int txDelay)
 {
     std::cerr << "UDPSinkFEC::setTxDelay: txDelay: " << txDelay << std::endl;
     m_txDelay = txDelay;
+}
+
+void UDPSinkFEC::reset()
+{
+    for (int i = 0; i < UDPSINKFEC_NBTXBLOCKS; i++)
+    {
+        m_txControlBlocks[i].m_processed = true;
+    }
+
+    m_txIndexCurrent.store(0);
+    m_txIndexProcessing.store(0);
 }
 
 void UDPSinkFEC::setNbBlocksFEC(int nbBlocksFEC)

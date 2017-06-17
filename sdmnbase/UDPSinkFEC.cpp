@@ -166,7 +166,8 @@ void UDPSinkFEC::write(const IQSampleVector& samples_in)
 //                m_txThread = new std::thread(transmitUDP, this, m_txBlocks[m_txBlocksIndex], m_frameCount, nbBlocksFEC, txDelay, m_cm256Valid);
 //                m_txThread = new std::thread(transmitUDP, this);
 
-                while (((m_txBlocksIndex + 1) % UDPSINKFEC_NBTXBLOCKS) == m_txIndexProcessing.load())
+                while ((((m_txBlocksIndex + 1) % UDPSINKFEC_NBTXBLOCKS) == m_txIndexProcessing.load())
+                    && m_running.load())
                 {
                     if (!countsEqual)
                     {
@@ -204,7 +205,7 @@ void UDPSinkFEC::transmitUDP(UDPSinkFEC *udpSinkFEC)
 	{
         int txIndexProcessing = udpSinkFEC->m_txIndexProcessing.load();
 
-        while (udpSinkFEC->m_txIndexCurrent.load() == txIndexProcessing)
+        while ((udpSinkFEC->m_txIndexCurrent.load() == txIndexProcessing) && (udpSinkFEC->m_running.load()))
         {
             usleep(100);
         }

@@ -170,7 +170,7 @@ void UDPSinkFEC::write(const IQSampleVector& samples_in)
                 {
                     if (!countsEqual)
                     {
-                        std::cerr << "UDPSinkFEC::transmitUDP: warning: transmit too slow" << std::endl;
+                        std::cerr << "UDPSinkFEC::write: warning: UDP transmit too slow" << std::endl;
                         countsEqual = true;
                     }
 
@@ -202,17 +202,10 @@ void UDPSinkFEC::transmitUDP(UDPSinkFEC *udpSinkFEC)
 
 	while (udpSinkFEC->m_running.load())
 	{
-        bool countsEqual = false;
         int txIndexProcessing = udpSinkFEC->m_txIndexProcessing.load();
 
         while (udpSinkFEC->m_txIndexCurrent.load() == txIndexProcessing)
         {
-            if (!countsEqual)
-            {
-                std::cerr << "UDPSinkFEC::transmitUDP: warning: write too slow" << std::endl;
-                countsEqual = true;
-            }
-
             usleep(100);
         }
 

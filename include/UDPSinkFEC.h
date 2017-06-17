@@ -119,6 +119,14 @@ private:
     };
 #pragma pack(pop)
 
+    struct TxControlBlock
+    {
+        bool m_processed;
+        uint16_t m_frameIndex;
+        int nbBlocksFEC;
+        int txDelay;
+    };
+
     CM256 m_cm256;                       //!< CM256 library object
     MetaDataFEC m_currentMetaFEC;        //!< Meta data for current frame
     std::atomic_int m_nbBlocksFEC;       //!< Variable number of FEC blocks
@@ -135,6 +143,9 @@ private:
     //cm256_block m_descriptorBlocks[256]; //!< Pointers to data for CM256 encoder
     bool m_cm256Valid;
     std::atomic_bool m_udpSent;          //!< True when UDP sending thread has finished (Frame transmission complete)
+    TxControlBlock m_txControlBlocks[UDPSINKFEC_NBTXBLOCKS];
+    std::atomic_int m_txIndexCurrent;
+    std::atomic_int m_txIndexProcessing;
 
     static void transmitUDP(UDPSinkFEC *udpSinkFEC, int currentTxBlockIndex, uint16_t frameIndex, int nbBlocksFEC, int txDelay, bool cm256Valid);
 };

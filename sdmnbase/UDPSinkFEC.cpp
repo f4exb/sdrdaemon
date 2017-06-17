@@ -38,6 +38,8 @@ UDPSinkFEC::UDPSinkFEC(const std::string& address, unsigned int port) :
     m_cm256Valid = m_cm256.isInitialized();
     m_currentMetaFEC.init();
     m_udpSent.store(true);
+    m_txIndexCurrent.store(0);
+    m_txIndexProcessing.store(0);
 }
 
 UDPSinkFEC::~UDPSinkFEC()

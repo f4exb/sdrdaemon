@@ -35,6 +35,8 @@ sudo cp sdrdaemonrx.conf /var/lib/sdrdaemon
 <pre>
 sudo service sdrdaemonrx defaults
 sudo service sdrdaemonrx enable
+sudo update-rc.d sdrdaemonrx defaults
+sudo update-rc.d sdrdaemonrx enable
 </pre>
 
 <h3>openSUSE</h3>

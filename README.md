@@ -76,9 +76,14 @@ Branches:
 
 <h3>OpenSUSE</h3>
 
-in particular if you run the aarch64 version with the RPi3. Performance in a aarch64 (ARM 64 bits amrv8) is considerably better than in an armv7 system. This is particularly true with `sdradaemontx`.
+in particular if you run the aarch64 version with the RPi3. Performance in a aarch64 (ARM 64 bits amrv8) is considerably better than in an armv7 system. This is particularly true with `sdradaemontx`. Use gcc version 6 to get automatic vectorization.
 
-  - `sudo zypper install cmake gcc-c++ libusb-1_0-devel boost-devel liblz4-devel fftw3-devel`
+  - `sudo zypper install cmake gcc6 gcc6-c++ libusb-1_0-devel boost-devel liblz4-devel fftw3-devel`
+
+Do one in the shell where you compile:
+
+  - `export CC=/usr/bin/gcc-6`
+  - `export CXX=/usr/bin/g++-6`
 
 You need to compile and install libnanomsg:
 

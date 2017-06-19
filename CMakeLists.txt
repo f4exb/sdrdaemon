@@ -82,15 +82,10 @@ elseif (${ARCHITECTURE} MATCHES "armv7l")
         set(HAS_NEON OFF CACHE BOOL FORCE "Architecture does not have NEON SIMD enabled")
     endif()
 elseif (${ARCHITECTURE} MATCHES "aarch64")
-    EXECUTE_PROCESS( COMMAND grep Features /proc/cpuinfo OUTPUT_VARIABLE CPU_FLAGS )
-    if (${CPU_FLAGS} MATCHES "asimd")
-        set(HAS_NEON ON CACHE BOOL FORCE "Architecture has NEON SIMD enabled")
-        if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_CLANGXX)
-            message(STATUS "Aarch64 always has NEON SIMD instructions")
-            add_definitions(-DUSE_NEON)
-        endif()
-    else()
-        set(HAS_NEON OFF CACHE BOOL FORCE "Architecture does not have NEON SIMD enabled")
+    set(HAS_NEON ON CACHE BOOL FORCE "Architecture has NEON SIMD enabled")
+    if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_CLANGXX)
+        message(STATUS "Aarch64 always has NEON SIMD instructions")
+        add_definitions(-DUSE_NEON)
     endif()
 endif()
 
@@ -486,7 +481,7 @@ add_executable(sdrdaemon
 )
 
 if((HAS_SSSE3 OR HAS_NEON) AND CM256CC_FOUND)
-    message(STATUS "SDRdaemonFEC with SIMD instructions enabled")
+    message(STATUS "SDRdaemonRx with SIMD instructions enabled")
     add_library(sdmnrxbase STATIC
         ${sdmnrxbase_SOURCES}
     )

@@ -34,7 +34,7 @@ Transmitters:
 
 SDRdaemon programs can be used conveniently along with SDRangel (found in this Github repo: https://github.com/f4exb/sdrangel) as the client application. So in this remote type of configuration you will need both an angel and a daemon :-)
 
-GNUradio is also supported with a specific source block provided in the `gr-sdrdaemonsource` subdirectory for Rx devices. There is no sink block for Tx at the moment.
+GNUradio is also supported with a specific `sdrdaemonsource`source block for Rx devices provided in the `gr-sdrdaemon` OOT module. The `sdrdaemonsink` sink block for Tx devices is an empty shell at the moment.
 
 SDRdaemon package requires:
 
@@ -456,7 +456,7 @@ Total size is 24 bytes. The 484 (!) remaining bytes are reserved for future use.
 
 <h1>GNUradio supoort</h1>
 
-Source block is available in the __gr-sdrdaemonsource_ subdirectory. This subdirectory is a complete OOT module that can be built independently following GNUradio standards. Please refer to the documentation found in this directory for further information.
+The _gr-sdrdaemon_ module is provided in the _gr-sdrdaemon_ subdirectory. This subdirectory is a complete OOT module that can be built independently following GNUradio standards. Please refer to the documentation found in this directory for further information.
 
 <h1>License</h1>
 

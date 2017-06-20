@@ -94,7 +94,6 @@ endif()
 find_package(Threads)
 find_package(PkgConfig)
 find_package(Boost 1.47 REQUIRED)
-find_package(LZ4 131)
 find_package(CM256cc REQUIRED)
 find_package(LibUSB)
 find_package(LibNANOMSG REQUIRED)
@@ -294,7 +293,6 @@ set(sdmntxbase_HEADERS
 include_directories(
     ${CMAKE_SOURCE_DIR}/include
     ${LIBNANOMSG_INCLUDE_DIR}
-    ${LZ4_INCLUDE_DIRS}
     ${LIBCM256CCSRC}
     ${LIBAIRSPYSRC}
     ${LIBAIRSPYSRC}/libairspy/src

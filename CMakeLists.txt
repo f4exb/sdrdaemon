@@ -209,7 +209,6 @@ set(sdmnrxbase_SOURCES
     sdmnbase/DeviceSource.cpp
     sdmnbase/UDPSink.cpp
     sdmnbase/UDPSinkFEC.cpp
-    sdmnbase/UDPSinkUncompressed.cpp
     sdmnbase/UDPSocket.cpp
 )
 
@@ -229,7 +228,6 @@ set(sdmnrxbase_HEADERS
     include/DeviceSource.h
     include/UDPSink.h
     include/UDPSinkFEC.h
-    include/UDPSinkUncompressed.h
     include/UDPSocket.h
     include/util.h
 )

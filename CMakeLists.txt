@@ -93,11 +93,11 @@ endif()
 
 find_package(Threads)
 find_package(PkgConfig)
-find_package(Boost 1.47)
+find_package(Boost 1.47 REQUIRED)
 find_package(LZ4 131)
-find_package(CM256cc)
+find_package(CM256cc REQUIRED)
 find_package(LibUSB)
-find_package(LibNANOMSG)
+find_package(LibNANOMSG REQUIRED)
 
 # Find Airspy library.
 pkg_check_modules(PKG_AIRSPY libairspy)

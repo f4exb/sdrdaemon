@@ -1,3 +1,9 @@
+sdrdaemon (3.1.0-1) unstable; urgency=medium
+
+  * Removed sdrdaemon from the build and liblz4 dependency
+
+ -- Edouard Griffiths, F4EXB <f4exb06@gmail.com>  Tue, 20 Jun 2017 19:14:18 +0200
+
 sdrdaemon (3.0.1-1) unstable; urgency=medium
 
   * Fixed UDP transmission irregularities in Rx mode by adding buffering

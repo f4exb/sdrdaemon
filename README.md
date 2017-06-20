@@ -17,8 +17,6 @@ In order to recover possible lost blocks it uses Cauchy MDS Block Erasure codec 
 
 Note that if you set the number of redundant blocks to 0 then no FEC is used.
 
-**sdrdaemon** is an older version of sdrdaemonrx that does the same but without error correction. Unlike sdrdaemonrx it can compress data using LZ4 algorithm. It uses a different meta data block. It is recommended to use the FEC variant sdrdaemonrx unless compression is absolutely ncecessary. 
-
 **sdrdaemontx** does the same thing as sdrdaemonrx but the other way round. It takes blocks read from UDP possibly with redundant blocks and sends the I/Q data to a SDR transmitter.
 
 Hardware supported:
@@ -36,7 +34,7 @@ Transmitters:
 
 SDRdaemon programs can be used conveniently along with SDRangel (found in this Github repo: https://github.com/f4exb/sdrangel) as the client application. So in this remote type of configuration you will need both an angel and a daemon :-)
 
-GNUradio is also supported with a specific source block provided in the `gr-sdrdaemonfec` and `gr-sdrdaemon` subdirectories depending on the Rx variants used. There is no sink block for Tx at the moment.
+GNUradio is also supported with a specific source block provided in the `gr-sdrdaemonsource` subdirectory for Rx devices. There is no sink block for Tx at the moment.
 
 SDRdaemon package requires:
 
@@ -44,9 +42,6 @@ SDRdaemon package requires:
  - C++11
  - Boost includes only (library is not linked with SDRdaemon)
  - nanomsg
- - LZ4 at least version 131
-   - source (https://github.com/Cyan4973/lz4)
-   - set custom install prefix with -DLIBLZ4_INSTALL_PREFIX=... on cmake command line
  - CM256cc library found in this Github repo: https://github.com/f4exb/cm256cc
  - RTL-SDR library (http://sdr.osmocom.org/trac/wiki/rtl-sdr) for RTL-SDR support
  - HackRF library (https://github.com/mossmann/hackrf/tree/master/host/libhackrf) for HackRF support
@@ -72,13 +67,13 @@ Branches:
 
 <h3>Ubuntu/Debian</h3>
 
-  - `sudo apt-get install cmake pkg-config libusb-1.0-0-dev libasound2-dev libboost-all-dev liblz4-dev libnanomsg-dev`
+  - `sudo apt-get install cmake pkg-config libusb-1.0-0-dev libasound2-dev libboost-all-dev libnanomsg-dev`
 
 <h3>OpenSUSE</h3>
 
 in particular if you run the aarch64 version with the RPi3. Performance in an aarch64 (ARM 64 bits amrv8) is considerably better than in an armv7 system. This is particularly true with `sdradaemontx`. Use gcc version 6 to get automatic vectorization.
 
-  - `sudo zypper install cmake gcc6 gcc6-c++ libusb-1_0-devel boost-devel liblz4-devel fftw3-devel`
+  - `sudo zypper install cmake gcc6 gcc6-c++ libusb-1_0-devel boost-devel fftw3-devel`
 
 Do once in the shell where you compile:
 
@@ -96,8 +91,6 @@ You will need to compile and install libnanomsg because it is not available as a
 <h2>Forward Erasure Correction (FEC) support</h2>
 
 You have to install [CM256cc](https://github.com/f4exb/cm256cc). You will then have to specify the include and library paths on the cmake command line. Say if you install cm256cc in `/opt/install/cm256cc` you will have to add `-DCM256CC_INCLUDE_DIR=/opt/install/cm256cc/include/cm256cc -DCM256CC_LIBRARIES=/opt/install/cm256cc/lib/libcm256cc.so` to the cmake commands.
-
-The GNUradio standard source block (supporting FEC) is located in the `gr-sdrdaemonfec` subdirectory.
 
 `sdrdaemonrx` binary recognizes the configuration commmand `fecblk` to specify the number of FEC blocks. When `fecblk=0` is specified in the commands and hence no FEC blocks are added. 
 
@@ -275,7 +268,6 @@ Typical commands:
     - `file` for file sink (Tx only not hardware dependent)
  - `-c config` Comma separated list of configuration options as key=value pairs or just key for switches. Depends on device type (see next paragraphs).
  - `-d devidx` Device index, 'list' to show device list (default 0)
- - `-z bytes` Compress I/Q data using LZ4 algorithm with a minimum number of `bytes` for each frame. It will default to at least 64kB.
 
 <h2>Common configuration option for UDP transmission (sdrdaemonrx, sdrdaemon)</h2>
 
@@ -387,15 +379,13 @@ Have a look at the `service` subdirectory.
 
 <h1>Data formats</h1>
 
-<h2>With FEC (sdrdamonrx and sdrdaemontx)</h2>
-
-<h3>Packaging</h3>
+<h2>Packaging</h2>
 
 The I/Q data is sent in frames of 128 fixed size data blocks including a first block ("block zero") containing only meta data and a variable number of FEC blocks up to 127 FEC blocks. It is possible to use this scheme without FEC in which case no additional FEC blocks are present. All blocks have a fixed size of 512 bytes that represent the UDP payload size. The first 4 bytes are occupied by signalling data consisting of a 2 bytes frame count (wraps around at 65535), a 1 byte block count (0 to 127 (min) or 255 (max)) and a 1 byte filler. The rest is occupied by either the meta data (block zero), actual I/Q samples (127 samples per block resulting in 508 bytes) for data bytes or FEC data. The FEC is calculated on the 128 blocks of 508 bytes of meta data and I/Q samples.
 
 Thus a complete frame contains 127 * 127 = 16129 samples.
 
-<h3>Meta data block</h3>
+<h2>Meta data block</h2>
 
 The block of "meta" data consists of the following (values expressed in bytes):
 
@@ -464,116 +454,9 @@ The block of "meta" data consists of the following (values expressed in bytes):
 
 Total size is 24 bytes. The 484 (!) remaining bytes are reserved for future use. 
 
-<h2>Without FEC (sdrdaemon)</h2>
-
-<h3>Packaging</h3>
-
-The block of data retrieved from the hardware device is sliced into blocks of the UDP payload size. This sequence of blocks is called a "frame" in the following. A special block called the "meta" block is sent before a frame. It is used to convey "meta" data about the frame and its data that follows. A CRC on 64 bits is calculated on this "meta" data and appended to it. It serves as a verification and also to recognize the "meta" block from the data blocks thus achieving synchronization. There is effectively a very low probability to mix it up with a data block.
-
-A compressed stream may pack several data blocks retrieved from the hardware in one frame to improve compression efficiency. So the case may arise that a change of meta data occurs from one "hardware" block to the next in the same frame. In this case the frame is split and a new frame is constructed with a starting "meta" block from the block where the meta data has changed. The first part of the original frame being sent immediately over UDP. This ensures that the data frame and its "meta" block are always consistent.
-
-<h3>Meta data block</h3>
-
-The block of "meta" data consists of the following (values expressed in bytes):
-
-<table>
-    <tr>
-        <th>Offset</th>
-        <th>Length</th>
-        <th>Type</th>
-        <th>Content</th>
-    </tr>
-    <tr>
-        <td>0</td>
-        <td>8</td>
-        <td>unsigned integer</td>
-        <td>Center frequency of reception in Hz</td>
-    </tr>
-    <tr>
-        <td>8</td>
-        <td>4</td>
-        <td>unsigned integer</td>
-        <td>Stream sample rate (Samples/second)</td>
-    </tr>
-    <tr>
-        <td>12</td>
-        <td>1([7:5])</td>
-        <td>bitfield</td>
-        <td>Reserved</td>
-    </tr>
-    <tr>
-        <td>12</td>
-        <td>1([4])</td>
-        <td>bitfield</td>
-        <td>Stream is compressed with LZ4</td>
-    </tr>
-    <tr>
-        <td>12</td>
-        <td>1([3:0])</td>
-        <td>bitfield</td>
-        <td>number of bytes per sample. Practically 1 or 2</td>
-    </tr>
-    <tr>
-        <td>13</td>
-        <td>1</td>
-        <td>unsigned integer</td>
-        <td>number of effective bits per sample. Practically 8 to 16</td>
-    </tr>
-    <tr>
-        <td>14</td>
-        <td>2</td>
-        <td>unsigned integer</td>
-        <td>UDP expected payload size</td>
-    </tr>
-    <tr>
-        <td>16</td>
-        <td>4</td>
-        <td>unsigned integer</td>
-        <td>Number of I/Q samples in one hardware block</td>
-    </tr>
-    <tr>
-        <td>20</td>
-        <td>2</td>
-        <td>unsigned integer</td>
-        <td>Number of hardware blocks in the frame</td>
-    </tr>
-    <tr>
-        <td>22</td>
-        <td>4</td>
-        <td>unsigned integer</td>
-        <td>total number of bytes in the frame</td>
-    </tr>
-    <tr>
-        <td>26</td>
-        <td>4</td>
-        <td>unsigned integer</td>
-        <td>Seconds of Unix timestamp at the beginning of the sending processing</td>
-    </tr>
-    <tr>
-        <td>30</td>
-        <td>4</td>
-        <td>unsigned integer</td>
-        <td>Microseconds of Unix timestamp at the beginning of the sending processing</td>
-    </tr>
-    <tr>
-        <td>34</td>
-        <td>8</td>
-        <td>unsigned integer</td>
-        <td>64 bit CRC of the above</td>
-    </tr>
-    <tr>
-        <td>42</td>
-        <td>8</td>
-        <td>unsigned integer</td>
-        <td>64 bit CRC of the data that follows. Only in the compressed case for now.</td>
-    </tr>
-</table>
-
-Total size is 42 bytes including the 8 bytes CRC.
-
 <h1>GNUradio supoort</h1>
 
-Source blocks are available in the _gr-sdrdaemon_ and _gr-sdrdaemonfec_ subdirectories depending on the FEC flavour or not. These subdirectories are complete OOT modules that can be built independently following GNUradio standards. Please refer to the documentation found in these directories for further information.
+Source block is available in the __gr-sdrdaemonsource_ subdirectory. This subdirectory is a complete OOT module that can be built independently following GNUradio standards. Please refer to the documentation found in this directory for further information.
 
 <h1>License</h1>
 
@@ -591,60 +474,3 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along
 with this program; if not, see http://www.gnu.org/licenses/gpl-2.0.html
-
-<h1>Possible dribble use with care</h1>
-
-This refers to sdrdaemon and not to sdrdaemonrx nor sdrdaemontx.
-
-<h2>I/Q data blocks</h2>
-
-When the stream is uncompressed UDP blocks of the payload size are stuffed with complete I/Q samples leaving a possible unused gap of less than an I/Q sample at the end of the block. The last block is filled only with the remainder samples. The number of maximally filled blocks and remainder samples in the last block is given in the "meta" data. Of course as the data stream is uncompressed these values can also be calculated from the total number of samples and the payload size.
-
-When the stream is compressed UDP blocks are stuffed completely with bytes of the compressed stream. The last block being filled only with the remainder bytes. The number of full blocks and remainder bytes is given in the "meta" block and these values cannot be calculated otherwise.
-
-<h2>Summary diagrams</h2>
-
-</h3>Uncompressed stream</h3>
-
-<pre>
-hardware block (2 byte I or Q samples):
-|I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q|
-
-UDP block (22 bytes):
-|xxxxxxxxxxxxxxxxxxxxxx|
-
-Frame:
-|Meta:xxxxxxxxxxxxxxxxx|I/Q:I/Q:I/Q:I/Q:I/Q:xx|I/Q:I/Q:I/Q:I/Q:I/Q:xx|I/Q:I/Q:I/Q:xxxxxxxxxx|
-
-Number of samples in a hardware block: 13
-Number of blocks in a frame..........:  1 (always if uncompressed)
-Number of bytes in a frame...........: 52 (4 * 13)
-Complete blocks......................:  2 (calculated)
-Remainder samples....................:  3 (calculated)
-</pre>
-
-</h3>Compressed stream</h3>
-
-<pre>
-2 hardware blocks (2 byte I or Q samples) to be sent in one frame:
-|I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q|
-|I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q:I/Q|
-
-compressed block:
-|yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy|
-
-UDP block (22 bytes):
-|xxxxxxxxxxxxxxxxxxxxxx|
-
-Frame:
-|Meta:xxxxxxxxxxxxxxxxx|yyyyyyyyyyyyyyyyyyyyyy|yyyyyyyyyyyyyyyyyyyyyy|yyyyyyyyyyyyyyyyy:xxxx|
-
-Number of samples in a hardware block: 13
-Number of blocks in a frame..........:  2
-Number of bytes in a frame...........: 61 (2 * 22 + 17)
-Complete blocks......................:  2 (calculated)
-Remainder bytes......................: 17 (calculated)
-</pre>
-
-
-

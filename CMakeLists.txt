@@ -173,34 +173,6 @@ set(LIBTEST_LIBRARIES    ${LIBNANOMSG_LIBRARIES})
 # Compiler flags.
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -std=c++11 -O3 -ffast-math -ftree-vectorize ${EXTRA_FLAGS}")
 
-set(sdmnbase_SOURCES
-    sdmnbase/CRC64.cpp
-    sdmnbase/Decimators.cpp
-    sdmnbase/Downsampler.cpp
-    sdmnbase/HBFilterTraits.cpp
-    sdmnbase/DeviceSource.cpp
-    sdmnbase/UDPSink.cpp
-    sdmnbase/UDPSinkUncompressed.cpp
-    sdmnbase/UDPSinkLZ4.cpp
-    sdmnbase/UDPSocket.cpp
-)
-
-set(sdmnbase_HEADERS
-    include/CRC64.h
-    include/DataBuffer.h
-    include/Decimators.h
-    include/Downsampler.h
-    include/HBFilterTraits.h
-    include/IntHalfbandFilter.h
-    include/parsekv.h
-    include/DeviceSource.h
-    include/UDPSink.h
-    include/UDPSinkUncompressed.h
-    include/UDPSinkLZ4.h
-    include/UDPSocket.h
-    include/util.h
-)
-
 set(sdmnrxbase_SOURCES
     sdmnbase/CRC64.cpp
     sdmnbase/Decimators.cpp
@@ -299,16 +271,6 @@ set(sdmndevicetx_HEADERS
     sdmnbase/HackRFSink.h
 )
 
-set(sdmnbase_SOURCES
-    ${sdmnbase_SOURCES}
-    ${sdmndevicerx_SOURCES}
-)    
-
-set(sdmnbase_HEADERS
-    ${sdmnbase_HEADERS}
-    ${sdmndevicerx_HEADERS}
-)
-
 set(sdmnrxbase_SOURCES
     ${sdmnrxbase_SOURCES}
     ${sdmndevicerx_SOURCES}
@@ -344,26 +306,12 @@ include_directories(
 
 ### Libraries
 
-add_library(sdmnbase STATIC
-    ${sdmnbase_SOURCES}
-)
-
 add_library(sdmnrxbase STATIC
     ${sdmnrxbase_SOURCES}
 )
 
 add_library(sdmntxbase STATIC
     ${sdmntxbase_SOURCES}
-)
-
-target_link_libraries(sdmnbase 
-    cm256cc
-    airspy
-    bladerf
-    hackrf
-    rtlsdr
-    ${LZ4_LIBRARIES}
-    ${LIBNANOMSG_LIBRARIES}
 )
 
 target_link_libraries(sdmnrxbase 
@@ -382,7 +330,6 @@ target_link_libraries(sdmntxbase
 )
 
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DHAS_RTLSDR")
-target_compile_definitions(sdmnbase PUBLIC -DHAS_AIRSPY -DHAS_BLADERF -DHAS_HACKRF -DHAS_RTLSDR)
 target_compile_definitions(sdmnrxbase PUBLIC -DHAS_AIRSPY -DHAS_BLADERF -DHAS_HACKRF -DHAS_RTLSDR)
 target_compile_definitions(sdmntxbase PUBLIC -DHAS_HACKRF)
 
@@ -390,10 +337,6 @@ target_compile_definitions(sdmntxbase PUBLIC -DHAS_HACKRF)
 
 add_executable(sdrdmnctl
     sdrdmnctl.cpp
-)
-
-add_executable(sdrdaemon
-    sdrdaemon.cpp
 )
 
 add_executable(sdrdaemonrx
@@ -410,12 +353,6 @@ target_link_libraries(sdrdmnctl
     ${EXTRA_LIBS}
 )
 
-target_link_libraries(sdrdaemon
-    sdmnbase
-    ${CMAKE_THREAD_LIBS_INIT}
-    ${EXTRA_LIBS}
-)
-
 target_link_libraries(sdrdaemonrx
     sdmnrxbase
     ${CMAKE_THREAD_LIBS_INIT}
@@ -428,21 +365,15 @@ target_link_libraries(sdrdaemontx
     ${EXTRA_LIBS}
 )
 
-target_compile_definitions(sdrdaemon PUBLIC -DHAS_AIRSPY -DHAS_BLADERF -DHAS_HACKRF -DHAS_RTLSDR)
 target_compile_definitions(sdrdaemonrx PUBLIC -DHAS_AIRSPY -DHAS_BLADERF -DHAS_HACKRF -DHAS_RTLSDR)
 target_compile_definitions(sdrdaemontx PUBLIC -DHAS_HACKRF)
 
-install(TARGETS sdrdaemon sdrdaemonrx sdrdaemontx sdrdmnctl DESTINATION bin)
-install(TARGETS sdmnbase sdmnrxbase sdmntxbase DESTINATION lib)
+install(TARGETS sdrdaemonrx sdrdaemontx sdrdmnctl DESTINATION bin)
+install(TARGETS sdmnrxbase sdmntxbase DESTINATION lib)
 
 else(BUILD_DEBIAN)   ### Normal build #################################################################
 
 # Base sources
-
-set(sdmnbase_SOURCES
-    ${sdmnbase_SOURCES}
-    ${sdmnbase_HEADERS}
-)
 
 set(sdmnrxbase_SOURCES
     ${sdmnrxbase_SOURCES}
@@ -466,16 +397,8 @@ set(sdmntest_HEADERS
 
 # Libraries
 
-add_library(sdmnbase STATIC
-    ${sdmnbase_SOURCES}
-)
-
 add_library(sdmntest STATIC
     ${sdmntest_SOURCES}
-)
-
-add_executable(sdrdaemon
-    sdrdaemon.cpp
 )
 
 if (HAS_SSSE3 OR HAS_NEON)
@@ -627,16 +550,6 @@ target_link_libraries(sdmntest
     ${LIBTEST_LIBRARIES}
 )
 
-target_link_libraries(sdmnbase ${LZ4_LIBRARIES})
-
-target_link_libraries(sdrdaemon
-    sdmnbase
-    ${DEVICE_LIBRARIES}
-    sdmntest
-    ${CMAKE_THREAD_LIBS_INIT}
-    ${EXTRA_LIBS}
-)
-
 if (HAS_SSSE3 OR HAS_NEON)
     target_link_libraries(sdmnrxbase ${CM256CC_LIBRARIES})
     
@@ -669,11 +582,11 @@ target_link_libraries(sdrdmnctl
 )
 
 if (HAS_SSSE3 OR HAS_NEON)
-    install(TARGETS sdrdaemon sdrdaemonrx sdrdaemontx sdrdmnctl DESTINATION bin)
-    install(TARGETS sdmnbase sdmnrxbase sdmntxbase ${DEVICE_TARGETS} sdmntest DESTINATION lib${LIB_SUFFIX})
+    install(TARGETS sdrdaemonrx sdrdaemontx sdrdmnctl DESTINATION bin)
+    install(TARGETS sdmnrxbase sdmntxbase ${DEVICE_TARGETS} sdmntest DESTINATION lib${LIB_SUFFIX})
 else()
-    install(TARGETS sdrdaemon sdrdmnctl DESTINATION bin)
-    install(TARGETS sdmnbase ${DEVICE_TARGETS} sdmntest DESTINATION lib${LIB_SUFFIX})
+    install(TARGETS sdrdmnctl DESTINATION bin)
+    install(TARGETS ${DEVICE_TARGETS} sdmntest DESTINATION lib${LIB_SUFFIX})
 endif()
 
 endif(BUILD_DEBIAN)

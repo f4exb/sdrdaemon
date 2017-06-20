@@ -478,7 +478,7 @@ add_executable(sdrdaemon
     sdrdaemon.cpp
 )
 
-if((HAS_SSSE3 OR HAS_NEON) AND CM256CC_FOUND)
+if (HAS_SSSE3 OR HAS_NEON)
     message(STATUS "SDRdaemonRx with SIMD instructions enabled")
     add_library(sdmnrxbase STATIC
         ${sdmnrxbase_SOURCES}
@@ -505,14 +505,10 @@ add_executable(sdrdmnctl
 include_directories(
     ${CMAKE_SOURCE_DIR}/include
     ${LIBNANOMSG_INCLUDE_DIR}
+    ${CM256CC_INCLUDE_DIR}
     ${EXTRA_INCLUDES}
 )
 
-if (CM256CC_FOUND)
-include_directories(
-    ${CM256CC_INCLUDE_DIR}
-)
-endif()
 
 set(DEVICE_LIBRARIES "")
 set(DEVICE_TARGETS "")
@@ -641,7 +637,7 @@ target_link_libraries(sdrdaemon
     ${EXTRA_LIBS}
 )
 
-if((HAS_SSSE3 OR HAS_NEON) AND CM256CC_FOUND)
+if (HAS_SSSE3 OR HAS_NEON)
     target_link_libraries(sdmnrxbase ${CM256CC_LIBRARIES})
     
     target_link_libraries(sdrdaemonrx
@@ -672,7 +668,7 @@ target_link_libraries(sdrdmnctl
     ${EXTRA_LIBS}
 )
 
-if((HAS_SSSE3 OR HAS_NEON) AND CM256CC_FOUND)
+if (HAS_SSSE3 OR HAS_NEON)
     install(TARGETS sdrdaemon sdrdaemonrx sdrdaemontx sdrdmnctl DESTINATION bin)
     install(TARGETS sdmnbase sdmnrxbase sdmntxbase ${DEVICE_TARGETS} sdmntest DESTINATION lib${LIB_SUFFIX})
 else()

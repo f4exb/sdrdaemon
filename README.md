@@ -76,16 +76,16 @@ Branches:
 
 <h3>OpenSUSE</h3>
 
-in particular if you run the aarch64 version with the RPi3. Performance in a aarch64 (ARM 64 bits amrv8) is considerably better than in an armv7 system. This is particularly true with `sdradaemontx`. Use gcc version 6 to get automatic vectorization.
+in particular if you run the aarch64 version with the RPi3. Performance in an aarch64 (ARM 64 bits amrv8) is considerably better than in an armv7 system. This is particularly true with `sdradaemontx`. Use gcc version 6 to get automatic vectorization.
 
   - `sudo zypper install cmake gcc6 gcc6-c++ libusb-1_0-devel boost-devel liblz4-devel fftw3-devel`
 
-Do one in the shell where you compile:
+Do once in the shell where you compile:
 
   - `export CC=/usr/bin/gcc-6`
   - `export CXX=/usr/bin/g++-6`
 
-You need to compile and install libnanomsg:
+You will need to compile and install libnanomsg because it is not available as a package:
 
   - `git clone https://github.com/ZewoGraveyard/libnanomsg.git`
   - `cd libnanomsg`
@@ -97,7 +97,7 @@ You need to compile and install libnanomsg:
 
 You have to install [CM256cc](https://github.com/f4exb/cm256cc). You will then have to specify the include and library paths on the cmake command line. Say if you install cm256cc in `/opt/install/cm256cc` you will have to add `-DCM256CC_INCLUDE_DIR=/opt/install/cm256cc/include/cm256cc -DCM256CC_LIBRARIES=/opt/install/cm256cc/lib/libcm256cc.so` to the cmake commands.
 
-The GNUradio source block supporting FEC is located in the `gr-sdrdaemonfec` subdirectory.
+The GNUradio standard source block (supporting FEC) is located in the `gr-sdrdaemonfec` subdirectory.
 
 `sdrdaemonrx` binary recognizes the configuration commmand `fecblk` to specify the number of FEC blocks. When `fecblk=0` is specified in the commands and hence no FEC blocks are added. 
 

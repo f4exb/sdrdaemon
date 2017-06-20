@@ -39,8 +39,6 @@
 #include "util.h"
 #include "DataBuffer.h"
 #include "Downsampler.h"
-#include "UDPSinkUncompressed.h"
-#include "UDPSinkLZ4.h"
 #include "UDPSinkFEC.h"
 
 #ifdef HAS_RTLSDR

@@ -63,7 +63,7 @@ void SDRdaemonFECBuffer::printMeta(MetaDataFEC *metaData)
             << "|" << std::endl;
 }
 
-void SDRdaemonFECBuffer::getSlotData(uint8_t *data, std::size_t& dataLength)
+void SDRdaemonFECBuffer::getSlotData(uint8_t *data, uint32_t& dataLength)
 {
     dataLength = (nbOriginalBlocks - 1) * samplesPerBlock * sizeof(Sample);
     memcpy((void *) data, (const void *) &m_decoderSlot.m_frame.m_blocks[1], dataLength); // skip block 0
@@ -101,7 +101,7 @@ void SDRdaemonFECBuffer::initDecodeSlot()
     memset((void *) &m_decoderSlot.m_frame, 0, sizeof(BufferFrame0));
 }
 
-bool SDRdaemonFECBuffer::writeAndRead(uint8_t *array, std::size_t length, uint8_t *data, int& dataLength)
+bool SDRdaemonFECBuffer::writeAndRead(uint8_t *array, std::size_t length, uint8_t *data, uint32_t& dataLength)
 {
     assert(length == udpSize);
 

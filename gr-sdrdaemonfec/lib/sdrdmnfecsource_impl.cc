@@ -213,7 +213,7 @@ void sdrdmnfec_source_impl::handle_read(const boost::system::error_code& error, 
         {
             // otherwise, copy received data into local buffer for
             // copying later.
-            std::size_t dataRead;
+            uint32_t dataRead;
             d_sdrdmnbuf.writeAndRead((uint8_t *) d_rxbuf, bytes_transferred, (uint8_t *) d_residbuf + d_residual, dataRead);
 //            std::cerr << "sdrdmnfec_source_impl::handle_read:"
 //                    << " d_residual: " << d_residual

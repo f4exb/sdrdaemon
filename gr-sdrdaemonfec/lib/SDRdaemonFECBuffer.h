@@ -95,7 +95,7 @@ public:
 	SDRdaemonFECBuffer();
 	~SDRdaemonFECBuffer();
 
-	bool writeAndRead(uint8_t *array, std::size_t length, uint8_t *data, int& dataLength);
+	bool writeAndRead(uint8_t *array, std::size_t length, uint8_t *data, uint32_t& dataLength);
 	const MetaDataFEC& getCurrentMeta() const { return m_currentMeta; }
     const MetaDataFEC& getOutputMeta() const { return m_outputMeta; }
 	int getCurNbBlocks() const { return m_curNbBlocks; }
@@ -131,7 +131,7 @@ private:
         bool                 m_metaRetrieved;
     };
 
-    void getSlotData(uint8_t *data, std::size_t& dataLength);
+    void getSlotData(uint8_t *data, uint32_t& dataLength);
     void printMeta(MetaDataFEC *metaData);
     void initDecodeSlot();
 

@@ -29,13 +29,13 @@
 #include "parsekv.h"
 #include "UDPSource.h"
 
-#define FLAG_FREQ     = 0x01
-#define FLAG_SRATE    = 0x02
-#define FLAG_PWIDLE   = 0x04
-#define FLAG_VGAIN    = 0x08
-#define FLAG_ANTBIAS  = 0x10
-#define FLAG_EXTAMP   = 0x20
-#define FLAG_BWFILTER = 0x40
+#define FLAG_FREQ     0x01
+#define FLAG_SRATE    0x02
+#define FLAG_PWIDLE   0x04
+#define FLAG_VGAIN    0x08
+#define FLAG_ANTBIAS  0x10
+#define FLAG_EXTAMP   0x20
+#define FLAG_BWFILTER 0x40
 
 HackRFSink *HackRFSink::m_this = 0;
 const std::vector<int> HackRFSink::m_vgains({0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52, 54, 56, 58, 60, 62});
@@ -338,6 +338,7 @@ bool HackRFSink::configure(parsekv::pairs_type& m)
     uint32_t bandwidth = 2500000;
     bool extAmp = false;
     bool antBias = false;
+    float amplitude = 0.0f;
     std::uint32_t changeFlags = 0;
 
 	if (m.find("srate") != m.end())

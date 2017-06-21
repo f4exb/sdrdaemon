@@ -317,6 +317,7 @@ Note that these options can be used both as the initial configuration as the arg
   - `bwfilter=<x>` RF (IF) filter bandwidth in MHz. Actual value is taken as the closest to the following values: `1.75, 2.5, 3.5, 5, 5.5, 6, 7,  8, 9, 10, 12, 14, 15, 20, 24, 28, list`. `list` lists valid values and exits. (default `2.5`)
   - `extamp=<int>` Turn on (1) or off (0) the extra amplifier (default 0: off)
   - `antbias=<int>` Turn on (1) or off (0) the antenna bias for remote LNA (default 0: off)
+  - `pwidle=<float>` (Tx only) Value in negative dB of I/Q constant carrier power when idle (default 0: silent)
 
 <h3>Airspy</h3>
 

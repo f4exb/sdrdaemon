@@ -151,6 +151,7 @@ void usage()
             "  bwfilter=<int> Filter bandwidth in MHz. 'list' to just get a list of valid values: (default 2.5)\n"
             "  extamp=<int>   1: Enable 0: disable extra RF amplifier (default 0: disabled)\n"
             "  antbias=<int>  1: Enable 0: disable antemma bias (default 0: disabled)\n"
+            "  pwidle=<float> Value in negative dB of I/Q constant carrier power when idle (default 0: silent)\n"
             "\n"
 #endif
             "Configuration options for the File sink\n"

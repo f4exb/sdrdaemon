@@ -84,7 +84,8 @@ private:
                    bool ext_amp,
                    bool bias_ant,
                    int vga_gain,
-                   uint32_t bandwidth
+                   uint32_t bandwidth,
+                   float amplitude
     );
 
     void callback(char* buf, int len);
@@ -99,6 +100,7 @@ private:
     uint32_t m_bandwidth;
     bool m_extAmp;
     bool m_biasAnt;
+    float m_amplitude; //!< idle carrier amplitude
     bool m_running;
     std::thread *m_thread;
     static HackRFSink *m_this;

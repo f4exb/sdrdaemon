@@ -29,6 +29,14 @@
 #include "parsekv.h"
 #include "UDPSource.h"
 
+#define FLAG_FREQ     = 0x01
+#define FLAG_SRATE    = 0x02
+#define FLAG_PWIDLE   = 0x04
+#define FLAG_VGAIN    = 0x08
+#define FLAG_ANTBIAS  = 0x10
+#define FLAG_EXTAMP   = 0x20
+#define FLAG_BWFILTER = 0x40
+
 HackRFSink *HackRFSink::m_this = 0;
 const std::vector<int> HackRFSink::m_vgains({0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52, 54, 56, 58, 60, 62});
 const std::vector<int> HackRFSink::m_bwfilt({1750000, 2500000, 3500000, 5000000, 5500000, 6000000, 7000000,  8000000, 9000000, 10000000, 12000000, 14000000, 15000000, 20000000, 24000000, 28000000});
@@ -43,6 +51,7 @@ HackRFSink::HackRFSink(int dev_index) :
     m_bandwidth(2500000),
     m_extAmp(false),
     m_biasAnt(false),
+    m_amplitude(0.0),
     m_running(false),
     m_thread(0),
     m_iqSamplesIndex(0)
@@ -180,6 +189,7 @@ void HackRFSink::print_specific_parms()
     fprintf(stderr, "Bandwidth          %d Hz\n", m_bandwidth);
     fprintf(stderr, "External Amp       %s\n", m_extAmp ? "enabled" : "disabled");
     fprintf(stderr, "Bias ant           %s\n", m_biasAnt ? "enabled" : "disabled");
+    fprintf(stderr, "Idle amplitude     %f\n", m_amplitude);
 }
 
 bool HackRFSink::configure(uint32_t changeFlags,
@@ -188,7 +198,8 @@ bool HackRFSink::configure(uint32_t changeFlags,
         bool ext_amp,
         bool bias_ant,
         int vga_gain,
-        uint32_t bandwidth
+        uint32_t bandwidth,
+        float amplitude
 )
 {
     hackrf_error rc;
@@ -197,7 +208,7 @@ bool HackRFSink::configure(uint32_t changeFlags,
         return false;
     }
 
-    if (changeFlags & 0x1)
+    if (changeFlags & FLAG_FREQ)
     {
     	m_frequency = frequency;
 
@@ -216,7 +227,7 @@ bool HackRFSink::configure(uint32_t changeFlags,
         }
     }
 
-    if (changeFlags & 0x2)
+    if (changeFlags & FLAG_SRATE)
     {
         rc = (hackrf_error) hackrf_set_sample_rate_manual(m_dev, sample_rate, 1);
 
@@ -234,7 +245,12 @@ bool HackRFSink::configure(uint32_t changeFlags,
         }
     }
 
-    if (changeFlags & 0x8)
+    if (changeFlags & FLAG_PWIDLE)
+    {
+        m_amplitude = amplitude;
+    }
+
+    if (changeFlags & FLAG_VGAIN)
     {
         m_vgaGain = vga_gain;
 
@@ -253,7 +269,7 @@ bool HackRFSink::configure(uint32_t changeFlags,
         }
     }
 
-    if (changeFlags & 0x10)
+    if (changeFlags & FLAG_ANTBIAS)
     {
         m_biasAnt = bias_ant;
 
@@ -272,7 +288,7 @@ bool HackRFSink::configure(uint32_t changeFlags,
         }
     }
 
-    if (changeFlags & 0x20)
+    if (changeFlags & FLAG_EXTAMP)
     {
         m_extAmp = ext_amp;
 
@@ -291,7 +307,7 @@ bool HackRFSink::configure(uint32_t changeFlags,
         }
     }
 
-    if (changeFlags & 0x40)
+    if (changeFlags & FLAG_BWFILTER)
     {
         m_bandwidth = bandwidth;
         uint32_t hackRFBandwidth = hackrf_compute_baseband_filter_bw_round_down_lt(m_bandwidth + 1); // +1 so the round down to lower than yields desired bandwidth
@@ -335,7 +351,7 @@ bool HackRFSink::configure(parsekv::pairs_type& m)
 		}
 		else
 		{
-	        changeFlags |= 0x2;
+	        changeFlags |= FLAG_SRATE;
 		}
 	}
 
@@ -350,7 +366,7 @@ bool HackRFSink::configure(parsekv::pairs_type& m)
 		}
 		else
 		{
-	        changeFlags |= 0x1;
+	        changeFlags |= FLAG_FREQ;
 		}
 	}
 
@@ -369,7 +385,7 @@ bool HackRFSink::configure(parsekv::pairs_type& m)
 		}
 		else
 		{
-	        changeFlags |= 0x8;
+	        changeFlags |= FLAG_VGAIN;
 		}
 	}
 
@@ -420,14 +436,14 @@ bool HackRFSink::configure(parsekv::pairs_type& m)
 	{
 		std::cerr << "HackRFSink::configure: extamp: " << m["extamp"] << std::endl;
 		extAmp = m["extamp"] == "1";
-        changeFlags |= 0x20;
+        changeFlags |= FLAG_EXTAMP;
 	}
 
 	if (m.find("antbias") != m.end())
 	{
 		std::cerr << "HackRFSink::configure: antbias: " << m["antbias"] << std::endl;
 		antBias = m["antbias"] == "1";
-        changeFlags |= 0x10;
+        changeFlags |= FLAG_ANTBIAS;
 	}
 
     if (m.find("ppmp") != m.end())
@@ -440,7 +456,7 @@ bool HackRFSink::configure(parsekv::pairs_type& m)
 		if (*e == '\0' && errno == 0) // Conversion to float OK
 		{
 			m_ppm = ppm;
-			changeFlags |= 0x1;
+			changeFlags |= FLAG_FREQ;
 		}
 	}
     else if (m.find("ppmn") != m.end())
@@ -453,7 +469,7 @@ bool HackRFSink::configure(parsekv::pairs_type& m)
 		if (*e == '\0' && errno == 0) // Conversion to float OK
 		{
 			m_ppm = -ppm;
-			changeFlags |= 0x1;
+			changeFlags |= FLAG_FREQ;
 		}
 	}
 
@@ -472,6 +488,24 @@ bool HackRFSink::configure(parsekv::pairs_type& m)
 		}
 	}
 
+    if (m.find("pwidle") != m.end())
+    {
+        std::string gain_str = m["pwidle"];
+        std::cerr << "HackRFSink::configure(m): pwidle: " << gain_str << std::endl;
+        int dbn = atoi(m["pwidle"].c_str());
+
+        if (dbn < 0)
+        {
+            m_error = "Invalid peak power";
+            return false;
+        }
+
+        amplitude = db2A(-dbn);
+
+        changeFlags |= FLAG_PWIDLE;
+    } // idle gain
+
+
     m_confFreq = frequency;
 	double tuner_freq;
 
@@ -479,7 +513,7 @@ bool HackRFSink::configure(parsekv::pairs_type& m)
 	tuner_freq = frequency;
 	tuner_freq += tuner_freq * m_ppm * 1e-6;
 
-    return configure(changeFlags, sampleRate, tuner_freq, extAmp, antBias, vgaGain, bandwidth);
+    return configure(changeFlags, sampleRate, tuner_freq, extAmp, antBias, vgaGain, bandwidth, amplitude);
 }
 
 bool HackRFSink::start(DataBuffer<IQSample> *buf, std::atomic_bool *stop_flag)
@@ -634,7 +668,7 @@ void HackRFSink::callback(char* buf, int len)
 
     for (; i < len/2; i++)
     {
-        buf[2*i]     = 8;
+        buf[2*i]     = (int) (128 * m_amplitude);
         buf[2*i+1]   = 0;
     }
 }

@@ -29,7 +29,7 @@ make install
 
 ### Usage
 
-open apps/sdrdaemonfec_rx.grc example flow graph in GNU Radio Companion.
+open apps/sdrdaemonsource_test.grc example flow graph in GNU Radio Companion.
 
 
 ### Demos

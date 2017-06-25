@@ -34,7 +34,7 @@ Transmitters:
 
 SDRdaemon programs can be used conveniently along with SDRangel (found in this Github repo: https://github.com/f4exb/sdrangel) as the client application. So in this remote type of configuration you will need both an angel and a daemon :-)
 
-GNUradio is also supported with a specific `sdrdaemonsource`source block for Rx devices provided in the `gr-sdrdaemon` OOT module. The `sdrdaemonsink` sink block for Tx devices is an empty shell at the moment.
+GNUradio is also supported with a specific `sdrdaemonsource`source block for Rx devices provided in the `gr-sdrdaemon` OOT module. The `sdrdaemonsink` sink block for Tx devices does not exist at the moment.
 
 SDRdaemon package requires:
 

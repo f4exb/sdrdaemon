@@ -342,11 +342,12 @@ bool RtlSdrSource::configure(std::uint32_t changeFlags,
 		m_block_length -= m_block_length % 512;
     }
 
-    // reset buffer to start streaming
-    if (rtlsdr_reset_buffer(m_dev) < 0) {
-        m_error = "rtlsdr_reset_buffer failed";
-        return false;
-    }
+    // Not possible in async mode. Moved to the runner.
+//    // reset buffer to start streaming
+//    if (rtlsdr_reset_buffer(m_dev) < 0) {
+//        m_error = "rtlsdr_reset_buffer failed";
+//        return false;
+//    }
 
     return true;
 }
@@ -545,6 +546,12 @@ void RtlSdrSource::get_device_names(std::vector<std::string>& devices)
 
 void RtlSdrSource::readerThreadEntryPoint()
 {
+    // reset buffer to start streaming
+    if (rtlsdr_reset_buffer(m_this->m_dev) < 0)
+    {
+        std::cerr << "RtlSdrSource::readerThreadEntryPoint: rtlsdr_reset_buffer failed" << std::endl;
+        return;
+    }
 
     rtlsdr_read_async(m_this->m_dev, rtlsdrCallback, 0,
                           RTLSDR_ASYNC_BUF_NUMBER,

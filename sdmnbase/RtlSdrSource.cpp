@@ -36,7 +36,6 @@ RtlSdrSource *RtlSdrSource::m_this = 0;
 // Open RTL-SDR device.
 RtlSdrSource::RtlSdrSource(int dev_index) :
     m_dev(0),
-    m_block_length(default_block_length),
     m_thread(0)
 {
     int r;
@@ -88,7 +87,6 @@ bool RtlSdrSource::configure(parsekv::pairs_type& m)
     int32_t  ppm = 0;
     bool ppmp = false;
     int tuner_gain = INT_MIN;
-    int block_length =  default_block_length;
     bool agcmode = false;
     int fcpos = 2; // default is center
     std::uint32_t changeFlags = 0;
@@ -200,14 +198,6 @@ bool RtlSdrSource::configure(parsekv::pairs_type& m)
 		changeFlags |= 0x10;
 	}
 
-	if (m.find("blklen") != m.end())
-	{
-		std::cerr << "RtlSdrSource::configure(m): blklen: " << m["blklen"] << std::endl;
-		block_length = atoi(m["blklen"].c_str());
-
-		changeFlags |= 0x20;
-	}
-
 	if (m.find("fcpos") != m.end())
 	{
 		std::cerr << "RtlSdrSource::configure(m): fcpos: " << m["fcpos"] << std::endl;
@@ -255,7 +245,7 @@ bool RtlSdrSource::configure(parsekv::pairs_type& m)
 		tuner_freq = frequency;
 	}
 
-	return configure(changeFlags, sample_rate, tuner_freq, ppm, tuner_gain, block_length, agcmode);
+	return configure(changeFlags, sample_rate, tuner_freq, ppm, tuner_gain, agcmode);
 }
 
 // Configure RTL-SDR tuner and prepare for streaming.
@@ -264,7 +254,6 @@ bool RtlSdrSource::configure(std::uint32_t changeFlags,
 		std::uint32_t frequency,
 		std::int32_t  ppm,
         int tuner_gain,
-        int block_length,
         bool agcmode)
 {
     int r;
@@ -332,22 +321,6 @@ bool RtlSdrSource::configure(std::uint32_t changeFlags,
 			return false;
 		}
     }
-
-    if (changeFlags & 0x20)
-    {
-	   // set block length
-		m_block_length = (block_length < 512) ? 512 :
-						 (block_length > 512 * 512) ? 512 * 512 :
-						 block_length;
-		m_block_length -= m_block_length % 512;
-    }
-
-    // Not possible in async mode. Moved to the runner.
-//    // reset buffer to start streaming
-//    if (rtlsdr_reset_buffer(m_dev) < 0) {
-//        m_error = "rtlsdr_reset_buffer failed";
-//        return false;
-//    }
 
     return true;
 }
@@ -429,28 +402,6 @@ bool RtlSdrSource::stop()
     return true;
 }
 
-//void RtlSdrSource::run()
-//{
-//    IQSampleVector iqsamples;
-//    void *msgBuf = 0;
-//
-//    while (!m_this->m_stop_flag->load() && get_samples(&iqsamples))
-//    {
-//        m_this->m_buf->push(move(iqsamples));
-//
-//        int len = nn_recv(m_this->m_nnReceiver, &msgBuf, NN_MSG, NN_DONTWAIT);
-//
-//        if ((len > 0) && msgBuf)
-//        {
-//            std::string msg((char *) msgBuf, len);
-//            std::cerr << "RtlSdrSource::run: received: " << msg << std::endl;
-//            m_this->DeviceSource::configure(msg);
-//            nn_freemsg(msgBuf);
-//            msgBuf = 0;
-//        }
-//    }
-//}
-
 void RtlSdrSource::run()
 {
     IQSampleVector iqsamples;
@@ -479,46 +430,6 @@ void RtlSdrSource::run()
     readerTrhead->join();
     delete readerTrhead;
 }
-
-// Fetch a bunch of samples from the device.
-bool RtlSdrSource::get_samples(IQSampleVector *samples)
-{
-    int r, n_read;
-
-    if (!m_this->m_dev) {
-        return false;
-    }
-
-    if (!samples) {
-        return false;
-    }
-
-    std::vector<uint8_t> buf(2 * m_this->m_block_length);
-
-    r = rtlsdr_read_sync(m_this->m_dev, buf.data(), 2 * m_this->m_block_length, &n_read);
-
-    if (r < 0)
-    {
-        m_this->m_error = "rtlsdr_read_sync failed";
-        return false;
-    }
-
-    if (n_read != 2 * m_this-> m_block_length)
-    {
-        m_this->m_error = "short read, samples lost";
-        return false;
-    }
-
-    samples->resize(m_this->m_block_length);
-
-    for (int i = 0; i < m_this->m_block_length; i++)
-    {
-        (*samples)[i]   = IQSample(buf[2*i] - 128, buf[2*i+1] - 128);
-    }
-
-    return true;
-}
-
 
 // Return a list of supported devices.
 void RtlSdrSource::get_device_names(std::vector<std::string>& devices)

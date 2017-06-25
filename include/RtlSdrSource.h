@@ -30,8 +30,6 @@ class RtlSdrSource : public DeviceSource
 {
 public:
 
-    static const int default_block_length = 4096;
-
     /** Open RTL-SDR device. */
     RtlSdrSource(int dev_index);
 
@@ -75,7 +73,6 @@ private:
      * frequency    :: desired center frequency in Hz.
      * ppm          :: LO PPM correction.
      * tuner_gain   :: desired tuner gain in 0.1 dB, or INT_MIN for auto-gain.
-     * block_length :: preferred number of samples per block.
      *
      * Return true for success, false if an error occurred.
      */
@@ -84,7 +81,6 @@ private:
                    std::uint32_t frequency,
 				   std::int32_t  ppm,
                    int tuner_gain,
-                   int block_length=default_block_length,
                    bool agcmode=false);
 
     /** Return a list of supported tuner gain settings in units of 0.1 dB. */
@@ -105,7 +101,6 @@ private:
     static void readerThreadEntryPoint();
 
     struct rtlsdr_dev * m_dev;
-    int                 m_block_length;
     std::vector<int>    m_gains;
     std::string         m_gainsStr;
     bool                m_confAgc;

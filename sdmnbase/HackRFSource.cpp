@@ -619,30 +619,12 @@ void HackRFSource::callback(const char* buf, int len)
 {
     IQSampleVector iqsamples;
 
-    if (m_decim == 0) // no decimation will take place
-    {
-		iqsamples.resize(len/4);
+    iqsamples.resize(len/2);
 
-		for (int i = 0; i < len/4; i++)
-		{
-			// pack 8 bit samples onto 16 bit samples vector
-			// invert I and Q because of the little Indians
-			int16_t re_0 = buf[4*i];
-			int16_t im_0 = buf[4*i+1];
-			int16_t re_1 = buf[4*i+2];
-			int16_t im_1 = buf[4*i+3];
-			iqsamples[i] = IQSample((im_0<<8) | (re_0 & 0xFF), (im_1<<8) | (re_1 & 0xFF));
-		}
-    }
-    else // as decimation will take place store samples in 16 bit slots
+    for (int i = 0; i < len/4; i++)
     {
-		iqsamples.resize(len/2);
-
-		for (int i = 0; i < len/4; i++)
-		{
-			iqsamples[2*i]   = IQSample(buf[4*i],   buf[4*i+1]);
-			iqsamples[2*i+1] = IQSample(buf[4*i+2], buf[4*i+3]);
-		}
+        iqsamples[2*i]   = IQSample(buf[4*i],   buf[4*i+1]);
+        iqsamples[2*i+1] = IQSample(buf[4*i+2], buf[4*i+3]);
     }
 
     m_buf->push(move(iqsamples));

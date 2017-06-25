@@ -303,7 +303,6 @@ Note that these options can be used both as the initial configuration as the arg
   - `srate=<int>` Device sample rate. valid values in the [225001, 300000], [900001, 3200000] ranges. (default `1000000`)
   - `ppmp=<int>` Argument is positive. Positive LO correction in ppm. LO is corrected by this value in ppm
   - `ppmn=<int>` Argument is positive. Negative LO correction in ppm. LO is corrected by minus this value in ppm. If `ppmp` is also specified `ppmp` takes precedence.
-  - `blklen=<int>` Device read buffer length in number of samples (default 64kS)
   - `agc` Activates device AGC (default off)
 
 <h3>HackRF</h3>

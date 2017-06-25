@@ -24,6 +24,13 @@
 
 #include <gnuradio/io_signature.h>
 #include "sdrdaemonsource_impl.h"
+#include <gnuradio/math.h>
+#include <stdexcept>
+#include <errno.h>
+#include <stdio.h>
+#include <string.h>
+
+#include <iostream>
 
 namespace gr {
   namespace sdrdaemon {
@@ -31,22 +38,16 @@ namespace gr {
     const int sdrdaemonsource_impl::BUF_SIZE_PAYLOADS = 512;
 
     sdrdaemonsource::sptr
-    sdrdaemonsource::make(std::size_t itemsize,
-            const std::string &ipaddr,
-            int port,
-            int payload_size)
+    sdrdaemonsource::make(std::size_t itemsize, const std::string &host, int port, int payload_size)
     {
       return gnuradio::get_initial_sptr
-        (new sdrdaemonsource_impl(itemsize, ipaddr, port, payload_size));
+        (new sdrdaemonsource_impl(itemsize, host, port, payload_size));
     }
 
     /*
      * The private constructor
      */
-    sdrdaemonsource_impl::sdrdaemonsource_impl(size_t itemsize,
-            const std::string &host,
-            int port,
-            int payload_size)
+    sdrdaemonsource_impl::sdrdaemonsource_impl(std::size_t itemsize, const std::string &host, int port, int payload_size)
       : gr::sync_block("sdrdaemonsource",
               gr::io_signature::make(0, 0, 0),
               gr::io_signature::make(1, 1, itemsize)),
@@ -78,6 +79,7 @@ namespace gr {
         delete[] d_rxbuf;
         delete[] d_residbuf;
     }
+
 
     void sdrdaemonsource_impl::connect(const std::string &host, int port)
     {
@@ -180,7 +182,6 @@ namespace gr {
         return d_sdrdmnbuf.getAvgNbRecovery();
     }
 
-
     void sdrdaemonsource_impl::start_receive()
     {
         d_socket->async_receive_from(
@@ -230,8 +231,8 @@ namespace gr {
         start_receive();
     }
 
-    int
-    sdrdaemonsource_impl::work(int noutput_items,
+
+    int sdrdaemonsource_impl::work(int noutput_items,
         gr_vector_const_void_star &input_items,
         gr_vector_void_star &output_items)
     {

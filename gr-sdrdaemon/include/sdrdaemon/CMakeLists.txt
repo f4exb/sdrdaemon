@@ -22,6 +22,5 @@
 ########################################################################
 install(FILES
     api.h
-    sdrdaemonsource.h
-    sdrdaemonsink.h DESTINATION include/sdrdaemon
+    sdrdaemonsource.h DESTINATION include/sdrdaemon
 )

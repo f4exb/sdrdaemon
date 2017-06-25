@@ -25,8 +25,9 @@
 #include <boost/format.hpp>
 #include <gnuradio/thread/thread.h>
 
-#include <sdrdaemon/sdrdaemonsource.h>
 #include "SDRdaemonFECBuffer.h"
+
+#include <sdrdaemon/sdrdaemonsource.h>
 
 namespace gr {
   namespace sdrdaemon {
@@ -63,7 +64,7 @@ namespace gr {
         void run_io_service() { d_io_service.run(); }
 
      public:
-      sdrdaemonsource_impl(std::size_t itemsize, const std::string &host, int port,  int payload_size);
+      sdrdaemonsource_impl(std::size_t itemsize, const std::string &host, int port, int payload_size);
       ~sdrdaemonsource_impl();
 
       void connect(const std::string &host, int port);

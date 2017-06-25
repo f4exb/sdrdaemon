@@ -75,10 +75,11 @@ endif()
 ########################################################################
 # Specific dependencies
 ########################################################################
+#find_package(LZ4 131 # not yet
 find_package(CM256 REQUIRED)
 
-if (HAS_SSSE3 OR HAS_NEON)
-    message(STATUS "gr-sdaemon with SIMD instructions enabled")
+if((HAS_SSSE3 OR HAS_NEON) AND CM256_FOUND)
+    message(STATUS "gr-sdaemonfec with SIMD instructions enabled")
 endif()
 
 ########################################################################
@@ -92,7 +93,6 @@ link_directories(${Boost_LIBRARY_DIRS})
 list(APPEND sdrdaemon_sources
     SDRdaemonFECBuffer.cpp
     sdrdaemonsource_impl.cc
-    sdrdaemonsink_impl.cc
 )
 
 set(sdrdaemon_sources "${sdrdaemon_sources}" PARENT_SCOPE)
@@ -102,8 +102,9 @@ if(NOT sdrdaemon_sources)
 endif(NOT sdrdaemon_sources)
 
 add_library(gnuradio-sdrdaemon SHARED ${sdrdaemon_sources})
+
 target_include_directories(gnuradio-sdrdaemon PUBLIC ${CM256_INCLUDE_DIR})
-target_link_libraries(gnuradio-sdrdaemon ${Boost_LIBRARIES} ${GNURADIO_ALL_LIBRARIES})
+target_link_libraries(gnuradio-sdrdaemon ${Boost_LIBRARIES} ${GNURADIO_ALL_LIBRARIES} ${CM256_LIBRARIES})
 set_target_properties(gnuradio-sdrdaemon PROPERTIES DEFINE_SYMBOL "gnuradio_sdrdaemon_EXPORTS")
 
 if(APPLE)

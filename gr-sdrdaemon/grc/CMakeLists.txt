@@ -18,6 +18,5 @@
 # Boston, MA 02110-1301, USA.
 
 install(FILES
-    sdrdaemon_sdrdaemonsource.xml
-    sdrdaemon_sdrdaemonsink.xml DESTINATION share/gnuradio/grc/blocks
+    sdrdaemon_sdrdaemonsource.xml DESTINATION share/gnuradio/grc/blocks
 )

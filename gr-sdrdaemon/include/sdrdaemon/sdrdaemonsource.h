@@ -39,17 +39,22 @@ namespace gr {
       typedef boost::shared_ptr<sdrdaemonsource> sptr;
 
       /*!
-      * \brief SDRDaemon Source Constructor
-      *
-      * \param itemsize The size (in bytes) of the item datatype
-      * \param host The name or IP address of the transmitting host; can be
-      * NULL, None, or "0.0.0.0" to allow reading from any
-      * interface on the host
-      * \param port The port number on which to receive data; use 0 to
-      * have the system assign an unused port number
-      * \param payload_size UDP payload size by default set to 512
-      */
-      static sptr make(std::size_t itemsize, const std::string &host, int port,  int payload_size);
+       * \brief Return a shared_ptr to a new instance of sdrdaemon::sdrdaemonsource.
+       *
+       * To avoid accidental use of raw pointers, sdrdaemon::sdrdaemonsource's
+       * constructor is in a private implementation
+       * class. sdrdaemon::sdrdaemonsource::make is the public interface for
+       * creating new instances.
+       *
+       * \param itemsize The size (in bytes) of the item datatype
+       * \param host The name or IP address of the transmitting host; can be
+       * NULL, None, or "0.0.0.0" to allow reading from any
+       * interface on the host
+       * \param port The port number on which to receive data; use 0 to
+       * have the system assign an unused port number
+       * \param payload_size UDP payload size by default set to 512
+       */
+      static sptr make(std::size_t itemsize, const std::string &host, int port, int payload_size = 512);
 
       /*! \brief Change the connection to a new destination
       *

@@ -46,7 +46,7 @@
     </param>
     <param>
       <key>id</key>
-      <value>sdrdaemosource_test</value>
+      <value>sdrdaemonsource_test</value>
     </param>
     <param>
       <key>max_nouts</key>
@@ -85,7 +85,7 @@
     <key>variable_function_probe</key>
     <param>
       <key>block_id</key>
-      <value>sdrdmn_source</value>
+      <value>sdrdaemonsource</value>
     </param>
     <param>
       <key>comment</key>
@@ -128,7 +128,7 @@
     <key>variable_function_probe</key>
     <param>
       <key>block_id</key>
-      <value>sdrdmn_source</value>
+      <value>sdrdaemonsource</value>
     </param>
     <param>
       <key>comment</key>
@@ -171,7 +171,7 @@
     <key>variable_function_probe</key>
     <param>
       <key>block_id</key>
-      <value>sdrdmn_source</value>
+      <value>sdrdaemonsource</value>
     </param>
     <param>
       <key>comment</key>
@@ -214,7 +214,7 @@
     <key>variable_function_probe</key>
     <param>
       <key>block_id</key>
-      <value>sdrdmn_source</value>
+      <value>sdrdaemonsource</value>
     </param>
     <param>
       <key>comment</key>
@@ -284,7 +284,7 @@
     <key>variable_function_probe</key>
     <param>
       <key>block_id</key>
-      <value>sdrdmn_source</value>
+      <value>sdrdaemonsource</value>
     </param>
     <param>
       <key>comment</key>
@@ -428,7 +428,7 @@
     <key>variable_function_probe</key>
     <param>
       <key>block_id</key>
-      <value>sdrdmn_source</value>
+      <value>sdrdaemonsource</value>
     </param>
     <param>
       <key>comment</key>
@@ -471,7 +471,7 @@
     <key>variable_function_probe</key>
     <param>
       <key>block_id</key>
-      <value>sdrdmn_source</value>
+      <value>sdrdaemonsource</value>
     </param>
     <param>
       <key>comment</key>
@@ -615,7 +615,7 @@
     <key>variable_function_probe</key>
     <param>
       <key>block_id</key>
-      <value>sdrdmn_source</value>
+      <value>sdrdaemonsource</value>
     </param>
     <param>
       <key>comment</key>
@@ -674,7 +674,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1080, 240)</value>
+      <value>(1032, 208)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -929,7 +929,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(8, 324)</value>
+      <value>(16, 324)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -937,11 +937,11 @@
     </param>
     <param>
       <key>id</key>
-      <value>sdrdmn_source</value>
+      <value>sdrdaemonsource</value>
     </param>
     <param>
       <key>ipaddr</key>
-      <value>ip</value>
+      <value>127.0.0.1</value>
     </param>
     <param>
       <key>maxoutbuf</key>
@@ -987,7 +987,7 @@
     <sink_key>0</sink_key>
   </connection>
   <connection>
-    <source_block_id>sdrdmn_source</source_block_id>
+    <source_block_id>sdrdaemonsource</source_block_id>
     <sink_block_id>blocks_interleaved_short_to_complex_0</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>

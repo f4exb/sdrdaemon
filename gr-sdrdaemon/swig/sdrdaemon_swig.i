@@ -9,11 +9,8 @@
 
 %{
 #include "sdrdaemon/sdrdaemonsource.h"
-#include "sdrdaemon/sdrdaemonsink.h"
 %}
 
 
 %include "sdrdaemon/sdrdaemonsource.h"
 GR_SWIG_BLOCK_MAGIC2(sdrdaemon, sdrdaemonsource);
-%include "sdrdaemon/sdrdaemonsink.h"
-GR_SWIG_BLOCK_MAGIC2(sdrdaemon, sdrdaemonsink);

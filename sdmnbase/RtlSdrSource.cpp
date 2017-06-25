@@ -28,6 +28,9 @@
 #include "util.h"
 #include "parsekv.h"
 
+#define RTLSDR_ASYNC_BUF_NUMBER 12
+#define RTLSDR_DATA_LEN         (16*16384)   /* 256k */
+
 RtlSdrSource *RtlSdrSource::m_this = 0;
 
 // Open RTL-SDR device.
@@ -425,15 +428,37 @@ bool RtlSdrSource::stop()
     return true;
 }
 
+//void RtlSdrSource::run()
+//{
+//    IQSampleVector iqsamples;
+//    void *msgBuf = 0;
+//
+//    while (!m_this->m_stop_flag->load() && get_samples(&iqsamples))
+//    {
+//        m_this->m_buf->push(move(iqsamples));
+//
+//        int len = nn_recv(m_this->m_nnReceiver, &msgBuf, NN_MSG, NN_DONTWAIT);
+//
+//        if ((len > 0) && msgBuf)
+//        {
+//            std::string msg((char *) msgBuf, len);
+//            std::cerr << "RtlSdrSource::run: received: " << msg << std::endl;
+//            m_this->DeviceSource::configure(msg);
+//            nn_freemsg(msgBuf);
+//            msgBuf = 0;
+//        }
+//    }
+//}
+
 void RtlSdrSource::run()
 {
     IQSampleVector iqsamples;
     void *msgBuf = 0;
 
-    while (!m_this->m_stop_flag->load() && get_samples(&iqsamples))
-    {
-        m_this->m_buf->push(move(iqsamples));
+    std::thread *readerTrhead = new std::thread(readerThreadEntryPoint);
 
+    while (!m_this->m_stop_flag->load())
+    {
         int len = nn_recv(m_this->m_nnReceiver, &msgBuf, NN_MSG, NN_DONTWAIT);
 
         if ((len > 0) && msgBuf)
@@ -444,7 +469,14 @@ void RtlSdrSource::run()
             nn_freemsg(msgBuf);
             msgBuf = 0;
         }
+
+        usleep(200000);
     }
+
+    rtlsdr_cancel_async(m_this->m_dev);
+
+    readerTrhead->join();
+    delete readerTrhead;
 }
 
 // Fetch a bunch of samples from the device.
@@ -509,6 +541,27 @@ void RtlSdrSource::get_device_names(std::vector<std::string>& devices)
             devices.push_back(name_ostr.str());
         }
     }
+}
+
+void RtlSdrSource::readerThreadEntryPoint()
+{
+
+    rtlsdr_read_async(m_this->m_dev, rtlsdrCallback, 0,
+                          RTLSDR_ASYNC_BUF_NUMBER,
+                          RTLSDR_DATA_LEN);
+}
+
+void RtlSdrSource::rtlsdrCallback(unsigned char *buf, uint32_t len, void *ctx __attribute__((unused)))
+{
+    IQSampleVector samples;
+    samples.resize(len/2);
+
+    for (unsigned int i = 0; i < len/2; i++)
+    {
+        samples[i] = IQSample(buf[2*i] - 128, buf[2*i+1] - 128);
+    }
+
+    m_this->m_buf->push(move(samples));
 }
 
 /* end */

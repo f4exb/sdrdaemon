@@ -100,8 +100,9 @@ private:
      * Return true for success, false if an error occurred.
      */
     static bool get_samples(IQSampleVector *samples);
-
+    static void rtlsdrCallback(unsigned char *buf, uint32_t len, void *ctx);
     static void run();
+    static void readerThreadEntryPoint();
 
     struct rtlsdr_dev * m_dev;
     int                 m_block_length;

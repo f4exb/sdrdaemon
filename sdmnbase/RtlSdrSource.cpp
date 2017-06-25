@@ -460,9 +460,9 @@ bool RtlSdrSource::get_samples(IQSampleVector *samples)
         return false;
     }
 
-    std::vector<uint8_t> buf(4 * m_this->m_block_length);
+    std::vector<uint8_t> buf(2 * m_this->m_block_length);
 
-    r = rtlsdr_read_sync(m_this->m_dev, buf.data(), 4 * m_this->m_block_length, &n_read);
+    r = rtlsdr_read_sync(m_this->m_dev, buf.data(), 2 * m_this->m_block_length, &n_read);
 
     if (r < 0)
     {
@@ -470,37 +470,16 @@ bool RtlSdrSource::get_samples(IQSampleVector *samples)
         return false;
     }
 
-    if (n_read != 4 * m_this-> m_block_length)
+    if (n_read != 2 * m_this-> m_block_length)
     {
         m_this->m_error = "short read, samples lost";
         return false;
     }
 
-	if (m_this->m_decim == 0) // no decimation will take place
-	{
-	    samples->resize(m_this->m_block_length);
-
-		for (int i = 0; i < m_this->m_block_length; i++)
-		{
-			// pack 8 bit samples onto 16 bit samples vector
-			// invert I and Q because of the little Indians
-			int16_t re_0 = buf[4*i] - 128;
-			int16_t im_0 = buf[4*i+1] - 128;
-			int16_t re_1 = buf[4*i+2] - 128;
-			int16_t im_1 = buf[4*i+3] - 128;
-			(*samples)[i] = IQSample((im_0<<8) | (re_0 & 0xFF), (im_1<<8) | (re_1 & 0xFF));
-    	}
-	}
-   	else // as decimation will take place store samples in 16 bit slots
-	{
-	    samples->resize(2 * m_this->m_block_length);
-
-		for (int i = 0; i < m_this->m_block_length; i++)
-		{
-			(*samples)[2*i]   = IQSample(buf[4*i]   - 128, buf[4*i+1] - 128);
-			(*samples)[2*i+1] = IQSample(buf[4*i+2] - 128, buf[4*i+3] - 128);
-		}
-	}
+    for (int i = 0; i < m_this->m_block_length; i++)
+    {
+        (*samples)[i] = IQSample(buf[2*i]   - 128, buf[2*i+1] - 128);
+    }
 
     return true;
 }

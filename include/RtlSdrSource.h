@@ -30,7 +30,7 @@ class RtlSdrSource : public DeviceSource
 {
 public:
 
-    static const int default_block_length = 65536;
+    static const int default_block_length = 4096;
 
     /** Open RTL-SDR device. */
     RtlSdrSource(int dev_index);

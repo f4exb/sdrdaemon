@@ -333,10 +333,10 @@ bool RtlSdrSource::configure(std::uint32_t changeFlags,
     if (changeFlags & 0x20)
     {
 	   // set block length
-		m_block_length = (block_length < 4096) ? 4096 :
+		m_block_length = (block_length < 1024) ? 1024 :
 						 (block_length > 1024 * 1024) ? 1024 * 1024 :
 						 block_length;
-		m_block_length -= m_block_length % 4096;
+		m_block_length -= m_block_length % 1024;
     }
 
     // reset buffer to start streaming

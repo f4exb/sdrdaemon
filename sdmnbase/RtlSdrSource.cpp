@@ -476,9 +476,11 @@ bool RtlSdrSource::get_samples(IQSampleVector *samples)
         return false;
     }
 
+    samples->resize(m_this->m_block_length);
+
     for (int i = 0; i < m_this->m_block_length; i++)
     {
-        (*samples)[i] = IQSample(buf[2*i]   - 128, buf[2*i+1] - 128);
+        (*samples)[i]   = IQSample(buf[2*i] - 128, buf[2*i+1] - 128);
     }
 
     return true;

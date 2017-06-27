@@ -220,7 +220,7 @@ bool HackRFSource::configure(uint32_t changeFlags,
         }
         else
         {
-            std::cerr << "HackRFSource::configure: center frequency set to: " << m_frequency << " Hz";
+            std::cerr << "HackRFSource::configure: center frequency set to: " << m_frequency << " Hz" << std::endl;
         }
     }
 
@@ -240,7 +240,7 @@ bool HackRFSource::configure(uint32_t changeFlags,
         }
         else
         {
-            std::cerr << "HackRFSource::configure: sample rate set to: " << m_sampleRate << " Hz";
+            std::cerr << "HackRFSource::configure: sample rate set to: " << m_sampleRate << " Hz" << std::endl;
         }
     }
 
@@ -260,7 +260,7 @@ bool HackRFSource::configure(uint32_t changeFlags,
         }
         else
         {
-            std::cerr << "HackRFSource::configure: LNA gain set to: " << m_lnaGain << " dB";
+            std::cerr << "HackRFSource::configure: LNA gain set to: " << m_lnaGain << " dB" << std::endl;
         }
     }
 
@@ -280,7 +280,7 @@ bool HackRFSource::configure(uint32_t changeFlags,
         }
         else
         {
-            std::cerr << "HackRFSource::configure: VGA gain set to: " << m_vgaGain << " dB";
+            std::cerr << "HackRFSource::configure: VGA gain set to: " << m_vgaGain << " dB" << std::endl;
         }
     }
 
@@ -300,7 +300,7 @@ bool HackRFSource::configure(uint32_t changeFlags,
         }
         else
         {
-            std::cerr << "HackRFSource::configure: bias antenna set to: " << m_biasAnt;
+            std::cerr << "HackRFSource::configure: bias antenna set to: " << m_biasAnt << std::endl;
         }
     }
 
@@ -320,7 +320,7 @@ bool HackRFSource::configure(uint32_t changeFlags,
         }
         else
         {
-            std::cerr << "HackRFSource::configure: extra amplifier set to: " << m_extAmp;
+            std::cerr << "HackRFSource::configure: extra amplifier set to: " << m_extAmp << std::endl;
         }
     }
 
@@ -340,7 +340,7 @@ bool HackRFSource::configure(uint32_t changeFlags,
         }
         else
         {
-            std::cerr << "HackRFSource::configure: bandwidth set to: " << hackRFBandwidth << " Hz";
+            std::cerr << "HackRFSource::configure: bandwidth set to: " << hackRFBandwidth << " Hz" << std::endl;
         }
     }
 

@@ -215,7 +215,12 @@ bool HackRFSource::configure(uint32_t changeFlags,
             std::ostringstream err_ostr;
             err_ostr << "Could not set center frequency to " << m_frequency << " Hz";
             m_error = err_ostr.str();
+            std::cerr << "HackRFSource::configure: " + m_error << std::endl;
             return false;
+        }
+        else
+        {
+            std::cerr << "HackRFSource::configure: center frequency set to: " << m_frequency << " Hz";
         }
     }
 
@@ -228,13 +233,14 @@ bool HackRFSource::configure(uint32_t changeFlags,
         if (rc != HACKRF_SUCCESS)
         {
             std::ostringstream err_ostr;
-            err_ostr << "Could not set center sample rate to " << m_sampleRate << " Hz";
+            err_ostr << "Could not set sample rate to " << m_sampleRate << " Hz";
             m_error = err_ostr.str();
+            std::cerr << "HackRFSource::configure: " + m_error << std::endl;
             return false;
         }
         else
         {
-            m_sampleRate = sample_rate;
+            std::cerr << "HackRFSource::configure: sample rate set to: " << m_sampleRate << " Hz";
         }
     }
 
@@ -249,7 +255,12 @@ bool HackRFSource::configure(uint32_t changeFlags,
             std::ostringstream err_ostr;
             err_ostr << "Could not set LNA gain to " << m_lnaGain << " dB";
             m_error = err_ostr.str();
+            std::cerr << "HackRFSource::configure: " + m_error << std::endl;
             return false;
+        }
+        else
+        {
+            std::cerr << "HackRFSource::configure: LNA gain set to: " << m_lnaGain << " dB";
         }
     }
 
@@ -264,7 +275,12 @@ bool HackRFSource::configure(uint32_t changeFlags,
             std::ostringstream err_ostr;
             err_ostr << "Could not set VGA gain to " << m_vgaGain << " dB";
             m_error = err_ostr.str();
+            std::cerr << "HackRFSource::configure: " + m_error << std::endl;
             return false;
+        }
+        else
+        {
+            std::cerr << "HackRFSource::configure: VGA gain set to: " << m_vgaGain << " dB";
         }
     }
 
@@ -279,7 +295,12 @@ bool HackRFSource::configure(uint32_t changeFlags,
             std::ostringstream err_ostr;
             err_ostr << "Could not set bias antenna to " << m_biasAnt;
             m_error = err_ostr.str();
+            std::cerr << "HackRFSource::configure: " + m_error << std::endl;
             return false;
+        }
+        else
+        {
+            std::cerr << "HackRFSource::configure: bias antenna set to: " << m_biasAnt;
         }
     }
 
@@ -294,7 +315,12 @@ bool HackRFSource::configure(uint32_t changeFlags,
             std::ostringstream err_ostr;
             err_ostr << "Could not set extra amplifier to " << m_extAmp;
             m_error = err_ostr.str();
+            std::cerr << "HackRFSource::configure: " + m_error << std::endl;
             return false;
+        }
+        else
+        {
+            std::cerr << "HackRFSource::configure: extra amplifier set to: " << m_extAmp;
         }
     }
 
@@ -309,7 +335,12 @@ bool HackRFSource::configure(uint32_t changeFlags,
             std::ostringstream err_ostr;
             err_ostr << "Could not set bandwidth to " << hackRFBandwidth << " Hz (" << m_bandwidth << " Hz requested)";
             m_error = err_ostr.str();
+            std::cerr << "HackRFSource::configure: " + m_error << std::endl;
             return false;
+        }
+        else
+        {
+            std::cerr << "HackRFSource::configure: bandwidth set to: " << hackRFBandwidth << " Hz";
         }
     }
 

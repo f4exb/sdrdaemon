@@ -663,10 +663,10 @@ void HackRFSource::callback(const char* buf, int len)
 
     iqsamples.resize(len/2);
 
-    for (int i = 0; i < len/4; i++)
+    for (int i = 0; i < len/2; i++)
     {
-        iqsamples[2*i]   = IQSample(buf[4*i],   buf[4*i+1]);
-        iqsamples[2*i+1] = IQSample(buf[4*i+2], buf[4*i+3]);
+        iqsamples[i]   = IQSample(buf[2*i],   buf[2*i+1]);
+//        iqsamples[2*i+1] = IQSample(buf[4*i+2], buf[4*i+3]);
     }
 
     m_buf->push(move(iqsamples));

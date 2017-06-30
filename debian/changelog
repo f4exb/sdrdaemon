@@ -1,3 +1,9 @@
+sdrdaemon (3.1.1-1) unstable; urgency=medium
+
+  * Fixed HacrRF Rx by using signed char for the HackRF samples
+
+ -- Edouard Griffiths, F4EXB <f4exb06@gmail.com>  Fri, 30 Jun 2017 08:14:18 +0200
+
 sdrdaemon (3.1.0-1) unstable; urgency=medium
 
   * Removed sdrdaemon from the build and liblz4 dependency

@@ -89,7 +89,7 @@ private:
                    uint32_t bandwidth
     );
 
-    void callback(const char* buf, int len);
+    void callback(const signed char* buf, int len);
     static int rx_callback(hackrf_transfer* transfer);
     static void run(hackrf_device* dev, std::atomic_bool *stop_flag);
 

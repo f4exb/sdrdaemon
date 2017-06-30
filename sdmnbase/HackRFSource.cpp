@@ -651,13 +651,13 @@ int HackRFSource::rx_callback(hackrf_transfer* transfer)
 
     if (m_this)
     {
-        m_this->callback((char *) transfer->buffer, bytes_to_write);
+        m_this->callback((signed char *) transfer->buffer, bytes_to_write);
     }
 
     return 0;
 }
 
-void HackRFSource::callback(const char* buf, int len)
+void HackRFSource::callback(const signed char* buf, int len)
 {
     IQSampleVector iqsamples;
 

@@ -179,7 +179,7 @@ void usage()
             "  blklen=<int>   Set read buffer size in seconds (default RTL-SDR default)\n"
             "  ppmp=<int>     Set LO correction in positive PPM. Takes precedence over ppmn parameter (default 0)\n"
             "  ppmn=<int>     Set LO correction in negative PPM (default 0)\n"
-            "  agc            Enable RTL AGC mode (default disabled)\n"
+            "  agc=<int>      1: Enable 0: disable RTL AGC mode (default 0: disabled)\n"
             "\n"
 #endif
 #ifdef HAS_HACKRF
@@ -208,9 +208,9 @@ void usage()
             "  lgain=<int>    LNA gain in dB. 'list' to just get a list of valid values: (default 8)\n"
             "  mgain=<int>    Mixer gain in dB. 'list' to just get a list of valid values: (default 8)\n"
             "  vgain=<int>    VGA gain in dB. 'list' to just get a list of valid values: (default 8)\n"
-            "  antbias        Enable antemma bias (default disabled)\n"
-            "  lagc           Enable LNA AGC (default disabled)\n"
-            "  magc           Enable mixer AGC (default disabled)\n"
+            "  antbias=<int>  1: Enable 0: disable antemma bias (default 0: disabled)\n"
+            "  lagc=<int>     1: Enable 0: disable  LNA AGC (default 0: disabled)\n"
+            "  magc=<int>     1: Enable 0: disable  mixer AGC (default 0: disabled)\n"
             "\n"
 #endif
 #ifdef HAS_BLADERF

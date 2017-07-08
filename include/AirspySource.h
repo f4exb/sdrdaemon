@@ -73,24 +73,24 @@ private:
      * changeFlags     :: horrible hack to notify which fields have changed
      * sampleRateIndex :: desired sample rate index in the sample rates enumeration list.
      * frequency       :: desired center frequency in Hz.
-     * bias_ant        :: antenna bias
+     * bias_ant        :: antenna bias (1: on, 0: off)
      * lna_gain        :: desired LNA gain: 0 to 14 dB.
      * mix_gain        :: desired mixer gain: 0 to 15 dB.
      * vga_gain        :: desired VGA gain: 0 to 15 dB
-     * lna_agc         :: LNA AGC
-     * mix_agc         :: Mixer AGC
+     * lna_agc         :: LNA AGC (1: on, 0: off)
+     * mix_agc         :: Mixer AGC (1: on, 0: off)
      *
      * Return true for success, false if an error occurred.
      */
     bool configure(std::uint32_t changeFlags,
                    int sampleRateIndex,
                    uint32_t frequency,
-                   bool bias_ant,
+                   int bias_ant,
                    int lna_gain,
                    int mix_gain,
                    int vga_gain,
-                   bool lna_agc,
-                   bool mix_agc
+                   int lna_agc,
+                   int mix_agc
     );
 
     void callback(const short* buf, int len);

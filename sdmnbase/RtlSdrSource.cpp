@@ -87,7 +87,7 @@ bool RtlSdrSource::configure(parsekv::pairs_type& m)
     int32_t  ppm = 0;
     bool ppmp = false;
     int tuner_gain = INT_MIN;
-    bool agcmode = false;
+    int agcmode = 0;
     int fcpos = 2; // default is center
     std::uint32_t changeFlags = 0;
 
@@ -193,7 +193,7 @@ bool RtlSdrSource::configure(parsekv::pairs_type& m)
 	if (m.find("agc") != m.end())
 	{
 		std::cerr << "RtlSdrSource::configure(m): agc" << std::endl;
-		agcmode = true;
+		agcmode = atoi(m["agc"].c_str());
 
 		changeFlags |= 0x10;
 	}
@@ -254,7 +254,7 @@ bool RtlSdrSource::configure(std::uint32_t changeFlags,
 		std::uint32_t frequency,
 		std::int32_t  ppm,
         int tuner_gain,
-        bool agcmode)
+        int agcmode)
 {
     int r;
 
@@ -315,7 +315,7 @@ bool RtlSdrSource::configure(std::uint32_t changeFlags,
     if (changeFlags & 0x10)
     {
 		// set RTL AGC mode
-		r = rtlsdr_set_agc_mode(m_dev, int(agcmode));
+		r = rtlsdr_set_agc_mode(m_dev, agcmode);
 		if (r < 0) {
 			m_error = "rtlsdr_set_agc_mode failed";
 			return false;

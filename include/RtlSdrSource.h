@@ -81,7 +81,7 @@ private:
                    std::uint32_t frequency,
 				   std::int32_t  ppm,
                    int tuner_gain,
-                   bool agcmode=false);
+                   int agcmode=0);
 
     /** Return a list of supported tuner gain settings in units of 0.1 dB. */
     std::vector<int> get_tuner_gains();

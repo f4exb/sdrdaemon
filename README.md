@@ -303,7 +303,7 @@ Note that these options can be used both as the initial configuration as the arg
   - `srate=<int>` Device sample rate. valid values in the [225001, 300000], [900001, 3200000] ranges. (default `1000000`)
   - `ppmp=<int>` Argument is positive. Positive LO correction in ppm. LO is corrected by this value in ppm
   - `ppmn=<int>` Argument is positive. Negative LO correction in ppm. LO is corrected by minus this value in ppm. If `ppmp` is also specified `ppmp` takes precedence.
-  - `agc` Activates device AGC (default off)
+  - `agc=<int>` Turn on (1) or off (0) the device AGC (default 0: off)
 
 <h3>HackRF</h3>
 
@@ -327,9 +327,9 @@ Note that these options can be used both as the initial configuration as the arg
   - `lgain=<x>` LNA gain in dB. Valid values are: `0, 1, 2, 3, 4, 5, 6, 7, 8 ,9 ,10, 11 12, 13, 14, list`. `list` lists valid values and exits. (default `8`)
   - `mgain=<x>` Mixer gain in dB. Valid values are: `0, 1, 2, 3, 4, 5, 6, 7, 8 ,9 ,10, 11 12, 13, 14, 15, list`. `list` lists valid values and exits. (default `8`)
   - `vgain=<x>` VGA gain in dB. Valid values are: `0, 1, 2, 3, 4, 5, 6, 7, 8 ,9 ,10, 11 12, 13, 14, 15, list`. `list` lists valid values and exits. (default `0`)  
-  - `antbias` Turn on the antenna bias for remote LNA (default off)
-  - `lagc` Turn on the LNA AGC (default off)
-  - `magc` Turn on the mixer AGC (default off)
+  - `antbias=<int>` Turn on (1) or off (0) the antenna bias for remote LNA (default 0: off)
+  - `lagc=<int>` Turn on (1) or off (0) the LNA AGC (default 0: off)
+  - `magc=<int>` Turn on (1) or off (0) the mixer AGC (default 0: off)
 
 <h3>BladeRF</h3>
 

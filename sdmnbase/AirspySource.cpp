@@ -243,12 +243,12 @@ void AirspySource::print_specific_parms()
 bool AirspySource::configure(std::uint32_t changeFlags,
         int sampleRateIndex,
         uint32_t frequency,
-        bool bias_ant,
+        int bias_ant,
         int lna_gain,
         int mix_gain,
         int vga_gain,
-        bool lna_agc,
-        bool mix_agc
+        int lna_agc,
+        int mix_agc
 )
 {
     airspy_error rc;
@@ -390,9 +390,9 @@ bool AirspySource::configure(parsekv::pairs_type& m)
     int lnaGain = 8;
     int mixGain = 8;
     int vgaGain = 0;
-    bool antBias = false;
-    bool lnaAGC = false;
-    bool mixAGC = false;
+    int antBias = 0;
+    int lnaAGC = 0;
+    int mixAGC = 0;
     int fcpos = 2; // default centered
     std::uint32_t changeFlags = 0;
 
@@ -512,21 +512,21 @@ bool AirspySource::configure(parsekv::pairs_type& m)
 	if (m.find("antbias") != m.end())
 	{
 		std::cerr << "AirspySource::configure: antbias" << std::endl;
-		antBias = true;
+		antBias = atoi(m["antbias"].c_str());
         changeFlags |= 0x20;
 	}
 
 	if (m.find("lagc") != m.end())
 	{
 		std::cerr << "AirspySource::configure: lagc" << std::endl;
-		lnaAGC = true;
+		lnaAGC = atoi(m["lagc"].c_str());
         changeFlags |= 0x40;
 	}
 
 	if (m.find("magc") != m.end())
 	{
 		std::cerr << "AirspySource::configure: magc" << std::endl;
-		mixAGC = true;
+		mixAGC = atoi(m["magc"].c_str());
         changeFlags |= 0x80;
 	}
 

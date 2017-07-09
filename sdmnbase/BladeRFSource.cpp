@@ -201,6 +201,7 @@ bool BladeRFSource::configure(parsekv::pairs_type& m)
 		if ((sample_rate < 48000) || (sample_rate > 40000000))
 		{
 			m_error = "Invalid sample rate";
+            std::cerr << "BladeRFSource::configure: " << m_error << std::endl;
 			return false;
 		}
 
@@ -220,6 +221,7 @@ bool BladeRFSource::configure(parsekv::pairs_type& m)
 		if ((frequency < m_minFrequency) || (frequency > 3800000000))
 		{
 			m_error = "Invalid frequency";
+            std::cerr << "BladeRFSource::configure: " << m_error << std::endl;
 			return false;
 		}
 
@@ -233,6 +235,7 @@ bool BladeRFSource::configure(parsekv::pairs_type& m)
 		if (strcasecmp(m["bw"].c_str(), "list") == 0)
 		{
 			m_error = "Available bandwidths (Hz): " + m_bwfiltStr;
+            std::cerr << "BladeRFSource::configure: " << m_error << std::endl;
 			return false;
 		}
 
@@ -241,6 +244,7 @@ bool BladeRFSource::configure(parsekv::pairs_type& m)
 		if (bandwidth < 0)
 		{
 			m_error = "Invalid bandwidth";
+            std::cerr << "BladeRFSource::configure: " << m_error << std::endl;
 			return false;
 		}
 
@@ -254,6 +258,7 @@ bool BladeRFSource::configure(parsekv::pairs_type& m)
 		if (strcasecmp(m["lgain"].c_str(), "list") == 0)
 		{
 			m_error = "Available LNA gains (dB): " + m_lnaGainsStr;
+            std::cerr << "BladeRFSource::configure: " << m_error << std::endl;
 			return false;
 		}
 
@@ -272,6 +277,7 @@ bool BladeRFSource::configure(parsekv::pairs_type& m)
 		if (i == m_lnaGains.size())
 		{
 			m_error = "Invalid LNA gain";
+            std::cerr << "BladeRFSource::configure: " << m_error << std::endl;
 			return false;
 		}
 
@@ -285,6 +291,7 @@ bool BladeRFSource::configure(parsekv::pairs_type& m)
 		if (strcasecmp(m["v1gain"].c_str(), "list") == 0)
 		{
 			m_error = "Available VGA1 gains (dB): " + m_vga1GainsStr;
+            std::cerr << "BladeRFSource::configure: " << m_error << std::endl;
 			return false;
 		}
 
@@ -293,6 +300,7 @@ bool BladeRFSource::configure(parsekv::pairs_type& m)
 		if (find(m_vga1Gains.begin(), m_vga1Gains.end(), vga1Gain) == m_vga1Gains.end())
 		{
 			m_error = "VGA1 gain not supported. Available gains (dB): " + m_vga1GainsStr;
+            std::cerr << "BladeRFSource::configure: " << m_error << std::endl;
 			return false;
 		}
 
@@ -306,6 +314,7 @@ bool BladeRFSource::configure(parsekv::pairs_type& m)
 		if (strcasecmp(m["v2gain"].c_str(), "list") == 0)
 		{
 			m_error = "Available VGA2 gains (dB): " + m_vga2GainsStr;
+            std::cerr << "BladeRFSource::configure: " << m_error << std::endl;
 			return false;
 		}
 
@@ -314,6 +323,7 @@ bool BladeRFSource::configure(parsekv::pairs_type& m)
 		if (find(m_vga2Gains.begin(), m_vga2Gains.end(), vga2Gain) == m_vga2Gains.end())
 		{
 			m_error = "VGA2 gain not supported. Available gains (dB): " + m_vga2GainsStr;
+            std::cerr << "BladeRFSource::configure: " << m_error << std::endl;
 			return false;
 		}
 
@@ -328,6 +338,7 @@ bool BladeRFSource::configure(parsekv::pairs_type& m)
 		if ((fcpos < 0) || (fcpos > 2))
 		{
 			m_error = "Invalid center frequency position";
+            std::cerr << "BladeRFSource::configure: " << m_error << std::endl;
 			return false;
 		}
 		else
@@ -346,6 +357,7 @@ bool BladeRFSource::configure(parsekv::pairs_type& m)
 		if ((log2Decim < 0) || (log2Decim > 6))
 		{
 			m_error = "Invalid log2 decimation factor";
+            std::cerr << "BladeRFSource::configure: " << m_error << std::endl;
 			return false;
 		}
 		else
@@ -387,8 +399,15 @@ bool BladeRFSource::configure(uint32_t changeFlags,
     {
         if (bladerf_set_sample_rate(m_dev, BLADERF_MODULE_RX, sample_rate, &m_actualSampleRate) < 0)
         {
-            m_error = "Cannot set sample rate";
+            std::ostringstream err_ostr;
+            err_ostr << "Could not set sample rate to " << m_actualSampleRate << " S/s";
+            m_error = err_ostr.str();
+            std::cerr << "BladeRFSource::configure(flags): " << m_error << std::endl;
             return false;
+        }
+        else
+        {
+            std::cerr << "BladeRFSource::configure(flags): sample rate set to " << m_actualSampleRate << " S/s" << std::endl;
         }
     }
 
@@ -396,8 +415,15 @@ bool BladeRFSource::configure(uint32_t changeFlags,
     {
         if (bladerf_set_frequency( m_dev, BLADERF_MODULE_RX, frequency ) != 0)
         {
-            m_error = "Cannot set Rx frequency";
+            std::ostringstream err_ostr;
+            err_ostr << "Could not set Rx frequency to " << frequency << " Hz";
+            m_error = err_ostr.str();
+            std::cerr << "BladeRFSource::configure(flags): " << m_error << std::endl;
             return false;
+        }
+        else
+        {
+            std::cerr << "BladeRFSource::configure(flags): Rx frequency set to " << frequency << " Hz" << std::endl;
         }
     }
 
@@ -405,8 +431,15 @@ bool BladeRFSource::configure(uint32_t changeFlags,
     {
         if (bladerf_set_bandwidth(m_dev, BLADERF_MODULE_RX, bandwidth, &m_actualBandwidth) < 0)
         {
-            m_error = "Cannot set Rx bandwidth";
+            std::ostringstream err_ostr;
+            err_ostr << "Could not set Rx bandwidth to " << m_actualBandwidth << " Hz";
+            m_error = err_ostr.str();
+            std::cerr << "BladeRFSource::configure(flags): " << m_error << std::endl;
             return false;
+        }
+        else
+        {
+            std::cerr << "BladeRFSource::configure(flags): Rx bandwidth set to " << m_actualBandwidth << " Hz" << std::endl;
         }
     }
 
@@ -414,8 +447,15 @@ bool BladeRFSource::configure(uint32_t changeFlags,
     {
         if (bladerf_set_lna_gain(m_dev, static_cast<bladerf_lna_gain>(lna_gainIndex)) != 0)
         {
-            m_error = "Cannot set LNA gain";
+            std::ostringstream err_ostr;
+            err_ostr << "Could not set LNA gain to " << lna_gainIndex << " index";
+            m_error = err_ostr.str();
+            std::cerr << "BladeRFSource::configure(flags): " << m_error << std::endl;
             return false;
+        }
+        else
+        {
+            std::cerr << "BladeRFSource::configure(flags): LNA gain set to " << lna_gainIndex << " index" << std::endl;
         }
     }
 
@@ -423,8 +463,15 @@ bool BladeRFSource::configure(uint32_t changeFlags,
     {
         if (bladerf_set_rxvga1(m_dev, vga1_gain) != 0)
         {
-            m_error = "Cannot set VGA1 gain";
+            std::ostringstream err_ostr;
+            err_ostr << "Could not set VGA1 gain to " << vga1_gain << " dB";
+            m_error = err_ostr.str();
+            std::cerr << "BladeRFSource::configure(flags): " << m_error << std::endl;
             return false;
+        }
+        else
+        {
+            std::cerr << "BladeRFSource::configure(flags): VGA1 gain set to " << vga1_gain << " dB" << std::endl;
         }
     }
 
@@ -432,8 +479,15 @@ bool BladeRFSource::configure(uint32_t changeFlags,
     {
         if (bladerf_set_rxvga2(m_dev, vga2_gain) != 0)
         {
-            m_error = "Cannot set VGA2 gain";
+            std::ostringstream err_ostr;
+            err_ostr << "Could not set VGA2 gain to " << vga2_gain << " dB";
+            m_error = err_ostr.str();
+            std::cerr << "BladeRFSource::configure(flags): " << m_error << std::endl;
             return false;
+        }
+        else
+        {
+            std::cerr << "BladeRFSource::configure(flags): VGA2 gain set to " << vga2_gain << " dB" << std::endl;
         }
     }
 

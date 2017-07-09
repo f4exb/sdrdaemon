@@ -268,7 +268,12 @@ bool AirspySource::configure(std::uint32_t changeFlags,
             std::ostringstream err_ostr;
             err_ostr << "Could not set center frequency to " << m_frequency << " Hz";
             m_error = err_ostr.str();
+            std::cerr << "AirspySource::configure(flags): " << m_error << std::endl;
             return false;
+        }
+        else
+        {
+            std::cerr << "AirspySource::configure(flags): center frequency set to " << m_frequency << " Hz" << std::endl;;
         }
     }
 
@@ -281,11 +286,13 @@ bool AirspySource::configure(std::uint32_t changeFlags,
             std::ostringstream err_ostr;
             err_ostr << "Could not set center sample rate to " << m_srates[sampleRateIndex] << " Hz";
             m_error = err_ostr.str();
+            std::cerr << "AirspySource::configure(flags): " << m_error << std::endl;
             return false;
         }
         else
         {
             m_sampleRate = m_srates[sampleRateIndex];
+            std::cerr << "AirspySource::configure(flags): sample rate set to " << m_sampleRate << " S/s" << std::endl;;
         }
     }
 
@@ -300,7 +307,12 @@ bool AirspySource::configure(std::uint32_t changeFlags,
             std::ostringstream err_ostr;
             err_ostr << "Could not set LNA gain to " << m_lnaGain << " dB";
             m_error = err_ostr.str();
+            std::cerr << "AirspySource::configure(flags): " << m_error << std::endl;
             return false;
+        }
+        else
+        {
+            std::cerr << "AirspySource::configure(flags): LNA gain set to " << m_lnaGain << " dB" << std::endl;;
         }
     }
 
@@ -315,7 +327,12 @@ bool AirspySource::configure(std::uint32_t changeFlags,
             std::ostringstream err_ostr;
             err_ostr << "Could not set mixer gain to " << m_mixGain << " dB";
             m_error = err_ostr.str();
+            std::cerr << "AirspySource::configure(flags): " << m_error << std::endl;
             return false;
+        }
+        else
+        {
+            std::cerr << "AirspySource::configure(flags): mixer gain set to " << m_mixGain << " dB" << std::endl;;
         }
     }
 
@@ -330,7 +347,12 @@ bool AirspySource::configure(std::uint32_t changeFlags,
             std::ostringstream err_ostr;
             err_ostr << "Could not set VGA gain to " << m_vgaGain << " dB";
             m_error = err_ostr.str();
+            std::cerr << "AirspySource::configure(flags): " << m_error << std::endl;
             return false;
+        }
+        else
+        {
+            std::cerr << "AirspySource::configure(flags): VGA gain set to " << m_vgaGain << " dB" << std::endl;;
         }
     }
 
@@ -345,7 +367,12 @@ bool AirspySource::configure(std::uint32_t changeFlags,
             std::ostringstream err_ostr;
             err_ostr << "Could not set bias antenna to " << m_biasAnt;
             m_error = err_ostr.str();
+            std::cerr << "AirspySource::configure(flags): " << m_error << std::endl;
             return false;
+        }
+        else
+        {
+            std::cerr << "AirspySource::configure(flags): Bias antenna set to " << m_biasAnt << std::endl;;
         }
     }
 
@@ -360,7 +387,12 @@ bool AirspySource::configure(std::uint32_t changeFlags,
             std::ostringstream err_ostr;
             err_ostr << "Could not set LNA AGC to " << m_lnaAGC;
             m_error = err_ostr.str();
+            std::cerr << "AirspySource::configure(flags): " << m_error << std::endl;
             return false;
+        }
+        else
+        {
+            std::cerr << "AirspySource::configure(flags): LNA AGC set to " << m_lnaAGC << std::endl;;
         }
     }
 
@@ -375,7 +407,12 @@ bool AirspySource::configure(std::uint32_t changeFlags,
             std::ostringstream err_ostr;
             err_ostr << "Could not set mixer AGC to " << m_mixAGC;
             m_error = err_ostr.str();
+            std::cerr << "AirspySource::configure(flags): " << m_error << std::endl;
             return false;
+        }
+        else
+        {
+            std::cerr << "AirspySource::configure(flags): mixer AGC set to " << m_mixAGC << std::endl;;
         }
     }
 
@@ -404,6 +441,7 @@ bool AirspySource::configure(parsekv::pairs_type& m)
 		if ((frequency < 24000000) || (frequency > 1800000000))
 		{
 			m_error = "Invalid frequency";
+            std::cerr << "AirspySource::configure: " << m_error << std::endl;
 			return false;
 		}
 
@@ -417,6 +455,7 @@ bool AirspySource::configure(parsekv::pairs_type& m)
 		if (strcasecmp(m["srate"].c_str(), "list") == 0)
 		{
 			m_error = "Available sample rates (Hz): " + m_sratesStr;
+            std::cerr << "AirspySource::configure: " << m_error << std::endl;
 			return false;
 		}
 
@@ -436,6 +475,7 @@ bool AirspySource::configure(parsekv::pairs_type& m)
 		{
 			m_error = "Invalid sample rate";
 			m_sampleRate = 0;
+            std::cerr << "AirspySource::configure: " << m_error << std::endl;
 			return false;
 		}
 
@@ -454,6 +494,7 @@ bool AirspySource::configure(parsekv::pairs_type& m)
 		if (strcasecmp(m["lgain"].c_str(), "list") == 0)
 		{
 			m_error = "Available LNA gains (dB): " + m_lgainsStr;
+            std::cerr << "AirspySource::configure: " << m_error << std::endl;
 			return false;
 		}
 
@@ -462,6 +503,7 @@ bool AirspySource::configure(parsekv::pairs_type& m)
 		if (find(m_lgains.begin(), m_lgains.end(), lnaGain) == m_lgains.end())
 		{
 			m_error = "LNA gain not supported. Available gains (dB): " + m_lgainsStr;
+            std::cerr << "AirspySource::configure: " << m_error << std::endl;
 			return false;
 		}
 
@@ -475,6 +517,7 @@ bool AirspySource::configure(parsekv::pairs_type& m)
 		if (strcasecmp(m["mgain"].c_str(), "list") == 0)
 		{
 			m_error = "Available mixer gains (dB): " + m_mgainsStr;
+            std::cerr << "AirspySource::configure: " << m_error << std::endl;
 			return false;
 		}
 
@@ -483,6 +526,7 @@ bool AirspySource::configure(parsekv::pairs_type& m)
 		if (find(m_mgains.begin(), m_mgains.end(), mixGain) == m_mgains.end())
 		{
 			m_error = "Mixer gain not supported. Available gains (dB): " + m_mgainsStr;
+            std::cerr << "AirspySource::configure: " << m_error << std::endl;
 			return false;
 		}
 
@@ -497,12 +541,14 @@ bool AirspySource::configure(parsekv::pairs_type& m)
 		if (strcasecmp(m["vgain"].c_str(), "list") == 0)
 		{
 			m_error = "Available VGA gains (dB): " + m_vgainsStr;
+            std::cerr << "AirspySource::configure: " << m_error << std::endl;
 			return false;
 		}
 
 		if (find(m_vgains.begin(), m_vgains.end(), vgaGain) == m_vgains.end())
 		{
 			m_error = "VGA gain not supported. Available gains (dB): " + m_vgainsStr;
+            std::cerr << "AirspySource::configure: " << m_error << std::endl;
 			return false;
 		}
 
@@ -511,22 +557,22 @@ bool AirspySource::configure(parsekv::pairs_type& m)
 
 	if (m.find("antbias") != m.end())
 	{
-		std::cerr << "AirspySource::configure: antbias" << std::endl;
 		antBias = atoi(m["antbias"].c_str());
+        std::cerr << "AirspySource::configure: antbias " << (antBias == 1 ? "on" : "off") << std::endl;
         changeFlags |= 0x20;
 	}
 
 	if (m.find("lagc") != m.end())
 	{
-		std::cerr << "AirspySource::configure: lagc" << std::endl;
 		lnaAGC = atoi(m["lagc"].c_str());
+        std::cerr << "AirspySource::configure: lagc " << (lnaAGC == 1 ? "on" : "off") << std::endl;
         changeFlags |= 0x40;
 	}
 
 	if (m.find("magc") != m.end())
 	{
-		std::cerr << "AirspySource::configure: magc" << std::endl;
 		mixAGC = atoi(m["magc"].c_str());
+        std::cerr << "AirspySource::configure: magc " << (mixAGC == 1 ? "on" : "off") << std::endl;
         changeFlags |= 0x80;
 	}
 
@@ -565,6 +611,7 @@ bool AirspySource::configure(parsekv::pairs_type& m)
 		if ((fcpos < 0) || (fcpos > 2))
 		{
 			m_error = "Invalid center frequency position";
+            std::cerr << "AirspySource::configure: " << m_error << std::endl;
 			return false;
 		}
 		else
@@ -583,6 +630,7 @@ bool AirspySource::configure(parsekv::pairs_type& m)
 		if ((log2Decim < 0) || (log2Decim > 6))
 		{
 			m_error = "Invalid log2 decimation factor";
+            std::cerr << "AirspySource::configure: " << m_error << std::endl;
 			return false;
 		}
 		else

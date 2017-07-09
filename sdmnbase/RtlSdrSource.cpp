@@ -101,6 +101,7 @@ bool RtlSdrSource::configure(parsekv::pairs_type& m)
 				|| (sample_rate > 3200000))
 		{
 			m_error = "Invalid sample rate";
+            std::cerr << "RtlSdrSource::configure: " << m_error << std::endl;
 			return false;
 		}
 
@@ -120,6 +121,7 @@ bool RtlSdrSource::configure(parsekv::pairs_type& m)
 		if ((frequency < 10000000) || (frequency > 2200000000))
 		{
 			m_error = "Invalid frequency";
+            std::cerr << "RtlSdrSource::configure: " << m_error << std::endl;
 			return false;
 		}
 
@@ -155,6 +157,7 @@ bool RtlSdrSource::configure(parsekv::pairs_type& m)
 		else if (strcasecmp(gain_str.c_str(), "list") == 0)
 		{
 			m_error = "Available gains (dB): " + m_gainsStr;
+            std::cerr << "RtlSdrSource::configure: " << m_error << std::endl;
 			return false;
 		}
 		else
@@ -164,6 +167,7 @@ bool RtlSdrSource::configure(parsekv::pairs_type& m)
 			if (!parse_dbl(gain_str.c_str(), tmpgain))
 			{
 				m_error = "Invalid gain";
+	            std::cerr << "RtlSdrSource::configure: " << m_error << std::endl;
 				return false;
 			}
 			else
@@ -172,6 +176,7 @@ bool RtlSdrSource::configure(parsekv::pairs_type& m)
 
 				if (tmpgain2 <= INT_MIN || tmpgain2 >= INT_MAX) {
 					m_error = "Invalid gain";
+		            std::cerr << "RtlSdrSource::configure: " << m_error << std::endl;
 					return false;
 				}
 				else
@@ -181,6 +186,7 @@ bool RtlSdrSource::configure(parsekv::pairs_type& m)
 					if (find(m_gains.begin(), m_gains.end(), tuner_gain) == m_gains.end())
 					{
 						m_error = "Gain not supported. Available gains (dB): " + m_gainsStr;
+			            std::cerr << "RtlSdrSource::configure: " << m_error << std::endl;
 						return false;
 					}
 				}
@@ -192,8 +198,8 @@ bool RtlSdrSource::configure(parsekv::pairs_type& m)
 
 	if (m.find("agc") != m.end())
 	{
-		std::cerr << "RtlSdrSource::configure(m): agc" << std::endl;
 		agcmode = atoi(m["agc"].c_str());
+        std::cerr << "RtlSdrSource::configure(m): agc " << (agcmode == 1 ? "on" : "off") << std::endl;
 
 		changeFlags |= 0x10;
 	}
@@ -206,6 +212,7 @@ bool RtlSdrSource::configure(parsekv::pairs_type& m)
 		if ((fcpos < 0) || (fcpos > 2))
 		{
 			m_error = "Invalid center frequency position";
+            std::cerr << "RtlSdrSource::configure: " << m_error << std::endl;
 			return false;
 		}
 		else
@@ -224,6 +231,7 @@ bool RtlSdrSource::configure(parsekv::pairs_type& m)
 		if ((log2Decim < 0) || (log2Decim > 6))
 		{
 			m_error = "Invalid log2 decimation factor";
+            std::cerr << "RtlSdrSource::configure: " << m_error << std::endl;
 			return false;
 		}
 		else
@@ -264,51 +272,95 @@ bool RtlSdrSource::configure(std::uint32_t changeFlags,
     if (changeFlags & 0x1)
     {
 		r = rtlsdr_set_sample_rate(m_dev, sample_rate);
-		if (r < 0) {
-			m_error = "rtlsdr_set_sample_rate failed";
-			return false;
+
+		if (r < 0)
+		{
+            std::ostringstream err_ostr;
+            err_ostr << "Could not set sample rate to " << sample_rate << " S/s";
+            m_error = err_ostr.str();
+            std::cerr << "RtlSdrSource::configure(flags): " << m_error << std::endl;
+            return false;
 		}
+        else
+        {
+            std::cerr << "RtlSdrSource::configure(flags): sample rate set to " << sample_rate << " S/s" << std::endl;;
+        }
     }
 
     if (changeFlags & 0x2)
     {
-    	std::cerr << "RtlSdrSource::configure: freq: " << frequency << std::endl;
 		r = rtlsdr_set_center_freq(m_dev, frequency);
+
 		if (r < 0) {
-			m_error = "rtlsdr_set_center_freq failed";
+            std::ostringstream err_ostr;
+            err_ostr << "Could not set center frequency to " << frequency << " Hz";
+            m_error = err_ostr.str();
+            std::cerr << "RtlSdrSource::configure(flags): " << m_error << std::endl;
 			return false;
 		}
+        else
+        {
+            std::cerr << "RtlSdrSource::configure(flags): center frequency set to " << frequency << " Hz" << std::endl;;
+        }
     }
 
     if (changeFlags & 0x4)
     {
 		r = rtlsdr_set_freq_correction(m_dev, ppm);
+
 		if (r < 0) {
 			m_error = "rtlsdr_set_freq_correction failed";
+            std::cerr << "RtlSdrSource::configure(flags): " << m_error << std::endl;
 			return false;
 		}
+        else
+        {
+            std::cerr << "RtlSdrSource::configure(flags): LO correction set to " << ppm << " ppm" << std::endl;;
+        }
     }
 
     if (changeFlags & 0x8)
     {
-		if (tuner_gain == INT_MIN) {
+		if (tuner_gain == INT_MIN)
+		{
 			r = rtlsdr_set_tuner_gain_mode(m_dev, 0);
-			if (r < 0) {
+
+			if (r < 0)
+			{
 				m_error = "rtlsdr_set_tuner_gain_mode could not set automatic gain";
+	            std::cerr << "RtlSdrSource::configure(flags): " << m_error << std::endl;
 				return false;
 			}
-		} else {
+	        else
+	        {
+	            std::cerr << "RtlSdrSource::configure(flags): set automatic tuner gain" << std::endl;;
+	        }
+		}
+		else
+		{
 			r = rtlsdr_set_tuner_gain_mode(m_dev, 1);
-			if (r < 0) {
+
+			if (r < 0)
+			{
 				m_error = "rtlsdr_set_tuner_gain_mode could not set manual gain";
+	            std::cerr << "RtlSdrSource::configure(flags): " << m_error << std::endl;
 				return false;
 			}
 
 			r = rtlsdr_set_tuner_gain(m_dev, tuner_gain);
-			if (r < 0) {
-				m_error = "rtlsdr_set_tuner_gain failed";
-				return false;
+
+			if (r < 0)
+			{
+	            std::ostringstream err_ostr;
+	            err_ostr << "Could not set tuner gain to " << tuner_gain << " dB";
+	            m_error = err_ostr.str();
+	            std::cerr << "RtlSdrSource::configure(flags): " << m_error << std::endl;
+	            return false;
 			}
+	        else
+	        {
+	            std::cerr << "RtlSdrSource::configure(flags): tuner gain set to " << tuner_gain << " dB" << std::endl;;
+	        }
 		}
     }
 
@@ -316,10 +368,19 @@ bool RtlSdrSource::configure(std::uint32_t changeFlags,
     {
 		// set RTL AGC mode
 		r = rtlsdr_set_agc_mode(m_dev, agcmode);
-		if (r < 0) {
-			m_error = "rtlsdr_set_agc_mode failed";
-			return false;
+
+		if (r < 0)
+		{
+            std::ostringstream err_ostr;
+            err_ostr << "Could not set AGC mode to " << agcmode;
+            m_error = err_ostr.str();
+            std::cerr << "RtlSdrSource::configure(flags): " << m_error << std::endl;
+            return false;
 		}
+        else
+        {
+            std::cerr << "RtlSdrSource::configure(flags): AGC mode set to " << agcmode << std::endl;;
+        }
     }
 
     return true;

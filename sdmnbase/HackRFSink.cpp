@@ -217,8 +217,9 @@ bool HackRFSink::configure(uint32_t changeFlags,
         if (rc != HACKRF_SUCCESS)
         {
             std::ostringstream err_ostr;
-            err_ostr << "HackRFSink::configure(flags): could not set center frequency to " << m_frequency << " Hz";
+            err_ostr << "Could not set center frequency to " << m_frequency << " Hz";
             m_error = err_ostr.str();
+            std::cerr << "HackRFSink::configure(flags): " + m_error << std::endl;
             return false;
         }
         else
@@ -234,8 +235,9 @@ bool HackRFSink::configure(uint32_t changeFlags,
         if (rc != HACKRF_SUCCESS)
         {
             std::ostringstream err_ostr;
-            err_ostr << "HackRFSink::configure(flags): could not set sample rate to " << sample_rate << " Hz";
+            err_ostr << "Could not set sample rate to " << sample_rate << " Hz";
             m_error = err_ostr.str();
+            std::cerr << "HackRFSink::configure(flags): " + m_error << std::endl;
             return false;
         }
         else
@@ -259,8 +261,9 @@ bool HackRFSink::configure(uint32_t changeFlags,
         if (rc != HACKRF_SUCCESS)
         {
             std::ostringstream err_ostr;
-            err_ostr << "HackRFSink::configure(flags): could not set VGA gain to " << m_vgaGain << " dB";
+            err_ostr << "Could not set VGA gain to " << m_vgaGain << " dB";
             m_error = err_ostr.str();
+            std::cerr << "HackRFSink::configure(flags): " + m_error << std::endl;
             return false;
         }
         else
@@ -278,8 +281,9 @@ bool HackRFSink::configure(uint32_t changeFlags,
         if (rc != HACKRF_SUCCESS)
         {
             std::ostringstream err_ostr;
-            err_ostr << "HackRFSink::configure(flags): could not set bias antenna to " << m_biasAnt;
+            err_ostr << "Could not set bias antenna to " << m_biasAnt;
             m_error = err_ostr.str();
+            std::cerr << "HackRFSink::configure(flags): " + m_error << std::endl;
             return false;
         }
         else
@@ -316,8 +320,9 @@ bool HackRFSink::configure(uint32_t changeFlags,
         if (rc != HACKRF_SUCCESS)
         {
             std::ostringstream err_ostr;
-            err_ostr << "HackRFSink::configure(flags): could not set bandwidth to " << hackRFBandwidth << " Hz (" << m_bandwidth << " Hz requested)";
+            err_ostr << "Could not set bandwidth to " << hackRFBandwidth << " Hz (" << m_bandwidth << " Hz requested)";
             m_error = err_ostr.str();
+            std::cerr << "HackRFSink::configure(flags): " + m_error << std::endl;
             return false;
         }
         else
@@ -498,6 +503,7 @@ bool HackRFSink::configure(parsekv::pairs_type& m)
         if (dbn < 0)
         {
             m_error = "Invalid peak power";
+            std::cerr << "HackRFSink::configure: " + m_error << std::endl;
             return false;
         }
 

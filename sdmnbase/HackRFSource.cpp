@@ -215,12 +215,12 @@ bool HackRFSource::configure(uint32_t changeFlags,
             std::ostringstream err_ostr;
             err_ostr << "Could not set center frequency to " << m_frequency << " Hz";
             m_error = err_ostr.str();
-            std::cerr << "HackRFSource::configure: " + m_error << std::endl;
+            std::cerr << "HackRFSource::configure(flags): " + m_error << std::endl;
             return false;
         }
         else
         {
-            std::cerr << "HackRFSource::configure: center frequency set to: " << m_frequency << " Hz" << std::endl;
+            std::cerr << "HackRFSource::configure(flags): center frequency set to: " << m_frequency << " Hz" << std::endl;
         }
     }
 
@@ -235,12 +235,12 @@ bool HackRFSource::configure(uint32_t changeFlags,
             std::ostringstream err_ostr;
             err_ostr << "Could not set sample rate to " << m_sampleRate << " Hz";
             m_error = err_ostr.str();
-            std::cerr << "HackRFSource::configure: " + m_error << std::endl;
+            std::cerr << "HackRFSource::configure(flags): " + m_error << std::endl;
             return false;
         }
         else
         {
-            std::cerr << "HackRFSource::configure: sample rate set to: " << m_sampleRate << " Hz" << std::endl;
+            std::cerr << "HackRFSource::configure(flags): sample rate set to: " << m_sampleRate << " Hz" << std::endl;
         }
     }
 
@@ -255,12 +255,12 @@ bool HackRFSource::configure(uint32_t changeFlags,
             std::ostringstream err_ostr;
             err_ostr << "Could not set LNA gain to " << m_lnaGain << " dB";
             m_error = err_ostr.str();
-            std::cerr << "HackRFSource::configure: " + m_error << std::endl;
+            std::cerr << "HackRFSource::configure(flags): " + m_error << std::endl;
             return false;
         }
         else
         {
-            std::cerr << "HackRFSource::configure: LNA gain set to: " << m_lnaGain << " dB" << std::endl;
+            std::cerr << "HackRFSource::configure(flags): LNA gain set to: " << m_lnaGain << " dB" << std::endl;
         }
     }
 
@@ -275,12 +275,12 @@ bool HackRFSource::configure(uint32_t changeFlags,
             std::ostringstream err_ostr;
             err_ostr << "Could not set VGA gain to " << m_vgaGain << " dB";
             m_error = err_ostr.str();
-            std::cerr << "HackRFSource::configure: " + m_error << std::endl;
+            std::cerr << "HackRFSource::configure(flags): " + m_error << std::endl;
             return false;
         }
         else
         {
-            std::cerr << "HackRFSource::configure: VGA gain set to: " << m_vgaGain << " dB" << std::endl;
+            std::cerr << "HackRFSource::configure(flags): VGA gain set to: " << m_vgaGain << " dB" << std::endl;
         }
     }
 
@@ -295,12 +295,12 @@ bool HackRFSource::configure(uint32_t changeFlags,
             std::ostringstream err_ostr;
             err_ostr << "Could not set bias antenna to " << m_biasAnt;
             m_error = err_ostr.str();
-            std::cerr << "HackRFSource::configure: " + m_error << std::endl;
+            std::cerr << "HackRFSource::configure(flags): " + m_error << std::endl;
             return false;
         }
         else
         {
-            std::cerr << "HackRFSource::configure: bias antenna set to: " << m_biasAnt << std::endl;
+            std::cerr << "HackRFSource::configure(flags): bias antenna set to: " << m_biasAnt << std::endl;
         }
     }
 
@@ -315,12 +315,12 @@ bool HackRFSource::configure(uint32_t changeFlags,
             std::ostringstream err_ostr;
             err_ostr << "Could not set extra amplifier to " << m_extAmp;
             m_error = err_ostr.str();
-            std::cerr << "HackRFSource::configure: " + m_error << std::endl;
+            std::cerr << "HackRFSource::configure(flags): " + m_error << std::endl;
             return false;
         }
         else
         {
-            std::cerr << "HackRFSource::configure: extra amplifier set to: " << m_extAmp << std::endl;
+            std::cerr << "HackRFSource::configure(flags): extra amplifier set to: " << m_extAmp << std::endl;
         }
     }
 
@@ -335,12 +335,12 @@ bool HackRFSource::configure(uint32_t changeFlags,
             std::ostringstream err_ostr;
             err_ostr << "Could not set bandwidth to " << hackRFBandwidth << " Hz (" << m_bandwidth << " Hz requested)";
             m_error = err_ostr.str();
-            std::cerr << "HackRFSource::configure: " + m_error << std::endl;
+            std::cerr << "HackRFSource::configure(flags): " + m_error << std::endl;
             return false;
         }
         else
         {
-            std::cerr << "HackRFSource::configure: bandwidth set to: " << hackRFBandwidth << " Hz" << std::endl;
+            std::cerr << "HackRFSource::configure(flags): bandwidth set to: " << hackRFBandwidth << " Hz" << std::endl;
         }
     }
 
@@ -362,13 +362,13 @@ bool HackRFSource::configure(parsekv::pairs_type& m)
 
 	if (m.find("srate") != m.end())
 	{
-		std::cerr << "HackRFSource::configure (parse): srate: " << m["srate"] << std::endl;
+		std::cerr << "HackRFSource::configure: srate: " << m["srate"] << std::endl;
 		sampleRate = atoi(m["srate"].c_str());
 
 		if ((sampleRate < 1000000) || (sampleRate > 20000000))
 		{
 			m_error = "Invalid sample rate";
-			std::cerr << "HackRFSource::configure (parse): " + m_error << std::endl;
+			std::cerr << "HackRFSource::configure: " + m_error << std::endl;
 			return false;
 		}
 
@@ -382,13 +382,13 @@ bool HackRFSource::configure(parsekv::pairs_type& m)
 
 	if (m.find("freq") != m.end())
 	{
-		std::cerr << "HackRFSource::configure (parse): freq: " << m["freq"] << std::endl;
+		std::cerr << "HackRFSource::configure: freq: " << m["freq"] << std::endl;
 		frequency = strtoll(m["freq"].c_str(), 0, 10);
 
 		if ((frequency < 1000000) || (frequency > 6000000000))
 		{
 			m_error = "Invalid frequency";
-            std::cerr << "HackRFSource::configure (parse): " + m_error << std::endl;
+            std::cerr << "HackRFSource::configure: " + m_error << std::endl;
 			return false;
 		}
 
@@ -397,12 +397,12 @@ bool HackRFSource::configure(parsekv::pairs_type& m)
 
 	if (m.find("lgain") != m.end())
 	{
-		std::cerr << "HackRFSource::configure (parse): lgain: " << m["lgain"] << std::endl;
+		std::cerr << "HackRFSource::configure: lgain: " << m["lgain"] << std::endl;
 
 		if (strcasecmp(m["lgain"].c_str(), "list") == 0)
 		{
 			m_error = "Available LNA gains (dB): " + m_lgainsStr;
-            std::cerr << "HackRFSource::configure (parse): " + m_error << std::endl;
+            std::cerr << "HackRFSource::configure: " + m_error << std::endl;
 			return false;
 		}
 
@@ -411,6 +411,7 @@ bool HackRFSource::configure(parsekv::pairs_type& m)
 		if (find(m_lgains.begin(), m_lgains.end(), lnaGain) == m_lgains.end())
 		{
 			m_error = "LNA gain not supported. Available gains (dB): " + m_lgainsStr;
+			std::cerr << "HackRFSource::configure: " + m_error << std::endl;
 			return false;
 		}
 
@@ -419,20 +420,20 @@ bool HackRFSource::configure(parsekv::pairs_type& m)
 
 	if (m.find("vgain") != m.end())
 	{
-		std::cerr << "HackRFSource::configure (parse): vgain: " << m["vgain"] << std::endl;
+		std::cerr << "HackRFSource::configure: vgain: " << m["vgain"] << std::endl;
 		vgaGain = atoi(m["vgain"].c_str());
 
 		if (strcasecmp(m["vgain"].c_str(), "list") == 0)
 		{
 			m_error = "Available VGA gains (dB): " + m_vgainsStr;
-            std::cerr << "HackRFSource::configure (parse): " + m_error << std::endl;
+            std::cerr << "HackRFSource::configure: " + m_error << std::endl;
 			return false;
 		}
 
 		if (find(m_vgains.begin(), m_vgains.end(), vgaGain) == m_vgains.end())
 		{
 			m_error = "VGA gain not supported. Available gains (dB): " + m_vgainsStr;
-            std::cerr << "HackRFSource::configure (parse): " + m_error << std::endl;
+            std::cerr << "HackRFSource::configure: " + m_error << std::endl;
 			return false;
 		}
 
@@ -441,13 +442,13 @@ bool HackRFSource::configure(parsekv::pairs_type& m)
 
 	if (m.find("bwfilter") != m.end())
 	{
-		std::cerr << "HackRFSource::configure (parse): bwfilter: " << m["bwfilter"] << std::endl;
+		std::cerr << "HackRFSource::configure: bwfilter: " << m["bwfilter"] << std::endl;
 		bandwidth = atoi(m["bwfilter"].c_str());
 
 		if (strcasecmp(m["bwfilter"].c_str(), "list") == 0)
 		{
 			m_error = "Available filter bandwidths (MHz): " + m_bwfiltStr;
-            std::cerr << "HackRFSource::configure (parse): " + m_error << std::endl;
+            std::cerr << "HackRFSource::configure: " + m_error << std::endl;
 			return false;
 		}
 
@@ -456,7 +457,7 @@ bool HackRFSource::configure(parsekv::pairs_type& m)
 		if (!parse_dbl(m["bwfilter"].c_str(), tmpbwd))
 		{
 			m_error = "Invalid filter bandwidth";
-            std::cerr << "HackRFSource::configure (parse): " + m_error << std::endl;
+            std::cerr << "HackRFSource::configure: " + m_error << std::endl;
 			return false;
 		}
 		else
@@ -465,7 +466,7 @@ bool HackRFSource::configure(parsekv::pairs_type& m)
 
 			if (tmpbwi <= INT_MIN || tmpbwi >= INT_MAX) {
 				m_error = "Invalid filter bandwidth";
-	            std::cerr << "HackRFSource::configure (parse): " + m_error << std::endl;
+	            std::cerr << "HackRFSource::configure: " + m_error << std::endl;
 				return false;
 			}
 			else
@@ -475,7 +476,7 @@ bool HackRFSource::configure(parsekv::pairs_type& m)
 				if (find(m_bwfilt.begin(), m_bwfilt.end(), bandwidth) == m_bwfilt.end())
 				{
 					m_error = "Filter bandwidth not supported. Available bandwidths (MHz): " + m_bwfiltStr;
-		            std::cerr << "HackRFSource::configure (parse): " + m_error << std::endl;
+		            std::cerr << "HackRFSource::configure: " + m_error << std::endl;
 					return false;
 				}
 			}
@@ -486,14 +487,14 @@ bool HackRFSource::configure(parsekv::pairs_type& m)
 
 	if (m.find("extamp") != m.end())
 	{
-		std::cerr << "HackRFSource::configure (parse): extamp: " << m["extamp"] << std::endl;
+		std::cerr << "HackRFSource::configure: extamp: " << m["extamp"] << std::endl;
         extAmp = m["extamp"] == "1";
         changeFlags |= 0x20;
 	}
 
 	if (m.find("antbias") != m.end())
 	{
-		std::cerr << "HackRFSource::configure (parse): antbias: " << m["antbias"] << std::endl;
+		std::cerr << "HackRFSource::configure: antbias: " << m["antbias"] << std::endl;
         antBias = m["antbias"] == "1";
         changeFlags |= 0x10;
 	}
@@ -513,7 +514,7 @@ bool HackRFSource::configure(parsekv::pairs_type& m)
 	}
     else if (m.find("ppmn") != m.end())
 	{
-		std::cerr << "HackRFSource::configure (parse): ppmn: " << m["ppmn"] << std::endl;
+		std::cerr << "HackRFSource::configure: ppmn: " << m["ppmn"] << std::endl;
 		errno = 0;
 		char * e;
 		ppm = std::strtod(m["ppmn"].c_str(), &e);
@@ -527,13 +528,13 @@ bool HackRFSource::configure(parsekv::pairs_type& m)
 
 	if (m.find("fcpos") != m.end())
 	{
-		std::cerr << "HackRFSource::configure (parse): fcpos: " << m["fcpos"] << std::endl;
+		std::cerr << "HackRFSource::configure: fcpos: " << m["fcpos"] << std::endl;
 		fcpos = atoi(m["fcpos"].c_str());
 
 		if ((fcpos < 0) || (fcpos > 2))
 		{
 			m_error = "Invalid center frequency position";
-            std::cerr << "HackRFSource::configure (parse): " + m_error << std::endl;
+            std::cerr << "HackRFSource::configure: " + m_error << std::endl;
 			return false;
 		}
 		else
@@ -546,13 +547,13 @@ bool HackRFSource::configure(parsekv::pairs_type& m)
 
 	if (m.find("decim") != m.end())
 	{
-		std::cerr << "HackRFSource::configure (parse): decim: " << m["decim"] << std::endl;
+		std::cerr << "HackRFSource::configure: decim: " << m["decim"] << std::endl;
 		int log2Decim = atoi(m["decim"].c_str());
 
 		if ((log2Decim < 0) || (log2Decim > 6))
 		{
 			m_error = "Invalid log2 decimation factor";
-            std::cerr << "HackRFSource::configure (parse): " + m_error << std::endl;
+            std::cerr << "HackRFSource::configure: " + m_error << std::endl;
 			return false;
 		}
 		else

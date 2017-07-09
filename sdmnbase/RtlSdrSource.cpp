@@ -306,16 +306,25 @@ bool RtlSdrSource::configure(std::uint32_t changeFlags,
 
     if (changeFlags & 0x4)
     {
-		r = rtlsdr_set_freq_correction(m_dev, ppm);
+        int corr = rtlsdr_get_freq_correction(m_dev);
 
-		if (r < 0) {
-			m_error = "rtlsdr_set_freq_correction failed";
-            std::cerr << "RtlSdrSource::configure(flags): " << m_error << std::endl;
-			return false;
-		}
+        if (corr != ppm)
+        {
+            r = rtlsdr_set_freq_correction(m_dev, ppm);
+
+            if (r < 0) {
+                m_error = "rtlsdr_set_freq_correction failed";
+                std::cerr << "RtlSdrSource::configure(flags): " << m_error << std::endl;
+                return false;
+            }
+            else
+            {
+                std::cerr << "RtlSdrSource::configure(flags): LO correction set to " << ppm << " ppm" << std::endl;;
+            }
+        }
         else
         {
-            std::cerr << "RtlSdrSource::configure(flags): LO correction set to " << ppm << " ppm" << std::endl;;
+            std::cerr << "RtlSdrSource::configure(flags): LO correction already set to " << ppm << " ppm" << std::endl;;
         }
     }
 

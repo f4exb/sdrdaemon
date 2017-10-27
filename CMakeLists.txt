@@ -37,7 +37,7 @@ endif()
 EXECUTE_PROCESS( COMMAND uname -m COMMAND tr -d '\n' OUTPUT_VARIABLE ARCHITECTURE )
 message( STATUS "Architecture: ${ARCHITECTURE}" )
 
-if (${ARCHITECTURE} MATCHES "x86_64|AMD64|x86")
+if (${ARCHITECTURE} MATCHES "x86_64|AMD64|x86|i686")
     EXECUTE_PROCESS( COMMAND grep flags /proc/cpuinfo OUTPUT_VARIABLE CPU_FLAGS )
 #    if (${CPU_FLAGS} MATCHES "avx2")
 #        set(HAS_AVX2 ON CACHE BOOL "Architecture has AVX2 SIMD enabled")

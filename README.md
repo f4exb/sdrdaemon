@@ -8,6 +8,7 @@ Soon SDRangel https://github.com/f4exb/sdrangel project is going to take over by
   - Better performance: early tests show at least a 2x improvement in CPU load (two times lower)
   - Integration of all devices supported by SDRangel
   - Possibility to run the Rx and Tx channels of the same device concurrently
+  - Use the same REST API as SDRangel to control all parameters. Makes nanomsg dependency obsolete.
   - Even more configuration options provided by SDRangel
   
 Consequently as soon as the new release (4.1) of SDRangel is out this project will be archived.

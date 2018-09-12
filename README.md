@@ -1,7 +1,7 @@
 SDRdaemon
 =========
 
-**SDRdaemon is going to the end of its life**
+<h1>SDRdaemon is going to the end of its life</h1>
 
 Soon SDRangel https://github.com/f4exb/sdrangel project is going to take over by absorbing the same functionnality in the form of two new channel plugins. There are many advantages:
 
@@ -13,11 +13,11 @@ Soon SDRangel https://github.com/f4exb/sdrangel project is going to take over by
   
 Consequently as soon as the new release (4.1) of SDRangel is out this project will be archived.
 
+<h1>Introduction</h1>
+
 **SDRdaemon** package can be used to:
   - send I/Q samples read from a SDR device over the network via UDP (Rx mode)
   - rceive I/Q samples from the network via UDP and send them to a SDR device (Tx mode) 
-
-<h1>Introduction</h1>
 
 **sdrdaemonrx** is a basic software-defined radio receiver that just sends the I/Q samples over the network via UDP. It was developed on the base of NGSoftFM (also found in this Github repo: https://github.com/f4exb/ngsoftfm) and shares a lot of the code for the interface with the SDR hardware devices.
 

@@ -1,6 +1,17 @@
 SDRdaemon
 =========
 
+**SDRdaemon is going to the end of its life**
+
+Soon SDRangel https://github.com/f4exb/sdrangel project is going to take over by absorbing the same functionnality in the form of two new channel plugins. There are many advantages:
+
+  - Better performance: early tests show at least a 2x improvement in CPU load (two times lower)
+  - Integration of all devices supported by SDRangel
+  - Possibility to run the Rx and Tx channels of the same device concurrently
+  - Even more configuration options provided by SDRangel
+  
+Consequently as soon as the new release (4.1) of SDRangel is out this project will be archived.
+
 **SDRdaemon** package can be used to:
   - send I/Q samples read from a SDR device over the network via UDP (Rx mode)
   - rceive I/Q samples from the network via UDP and send them to a SDR device (Tx mode) 
